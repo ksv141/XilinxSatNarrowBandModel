@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "mls.h"
+#include "constellation.h"
 
 using namespace std;
 

@@ -21,6 +21,9 @@
     <ClInclude Include="mls.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="constellation.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XilinxSatNarrowBandModel.cpp">
