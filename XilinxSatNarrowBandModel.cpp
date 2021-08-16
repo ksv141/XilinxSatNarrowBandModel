@@ -11,7 +11,7 @@
 #include <fstream> // for debug only
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
-#include "gmp.h"
+//#include "gmp.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

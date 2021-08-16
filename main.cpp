@@ -1,7 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include "mls.h"
-#include "constellation.h"
+#include "cmpy_v6_0_bitacc_cmodel.h"
+#include "SignalSource.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -10,8 +11,8 @@ int main()
 	// отладочный файл
 	ofstream dbg_out("dbg_out.txt");
 
-	// псевдослучайный источник символов (4-х позиционный)
-	mls symbol_source(32, 4);
+	// псевдослучайный источник сигнала
+	SignalSource signal_source;
 
 	// количество генерируемых символов
 	int symbol_count = 1000;
@@ -20,8 +21,8 @@ int main()
 	for (int i = 0; i < symbol_count; i++)
 	{
 		// генерация очередного символа
-		int current_symbol = symbol_source.nextSymbol();
-		dbg_out << current_symbol << endl;
+		xip_complex current_sample = signal_source.nextSample();
+		dbg_out << current_sample << endl;
 	}
 
 	dbg_out.close();
