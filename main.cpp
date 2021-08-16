@@ -11,8 +11,8 @@ int main()
 	// отладочный файл
 	ofstream dbg_out("dbg_out.txt");
 
-	// псевдослучайный источник сигнала
-	SignalSource signal_source;
+	// источник сигнала
+	SignalSource signal_source(20);
 
 	// количество генерируемых символов
 	int symbol_count = 1000;
@@ -23,6 +23,7 @@ int main()
 		// генерация очередного символа
 		xip_complex current_sample = signal_source.nextSample();
 		dbg_out << current_sample << endl;
+		//cout << current_sample << endl;
 	}
 
 	dbg_out.close();

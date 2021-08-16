@@ -6,4 +6,6 @@
 
 extern xip_complex constell_qam4[4];
 
+extern xip_complex constell_preamble[2];
+
 #endif // CONSTELLATION_H
