@@ -156,10 +156,12 @@
   <ItemGroup>
     <ClInclude Include="constellation.h" />
     <ClInclude Include="mls.h" />
+    <ClInclude Include="SignalSource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mls.cpp" />
+    <ClCompile Include="SignalSource.cpp" />
     <ClCompile Include="XilinxSatNarrowBandModel.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
