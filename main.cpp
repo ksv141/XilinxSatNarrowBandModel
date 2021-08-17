@@ -4,26 +4,43 @@
 #include "SignalSource.h"
 #include "utils.h"
 
+// Для тестов библиотек XIP
+#include "XilinxIpTests.h"
+
 using namespace std;
 
 int main()
 {
+	// тесты библиотек XIP
+	test_cmpy_v6_0_bitacc_cmodel();
+	return 0;
+
+	// количество генерируемых символов
+	int symbol_count = 10000;
+
+	// предварительная генерация символов в файл для тестирования
+	//SignalSource gen_to_file;
+	//gen_to_file.generateSamplesFile(symbol_count, "input_data.txt");
+	//return 0;   
+
 	// отладочный файл
 	ofstream dbg_out("dbg_out.txt");
 
 	// источник сигнала
 	SignalSource signal_source("input_data.txt", 20);
 
-	// количество генерируемых символов
-	int symbol_count = 1000;
-
-	//signal_source.generateSamplesFile(symbol_count, "input_data.txt");
-
 	// основной цикл обработки символов
-	for (int i = 0; i < symbol_count; i++)
+	int sample_count = symbol_count * 2;
+	for (int i = 0; i < sample_count; i++)
 	{
-		// генерация очередного символа
-		xip_complex current_sample = signal_source.nextSampleFromFile();
+		xip_complex current_sample;
+		if (i % 2)
+			// вставка 0 для увеличения Fd до 2B
+			current_sample = xip_complex{ 0, 0 };
+		else
+			// генерация очередного отсчета (с учетом кадра и преамбулы)
+			current_sample = signal_source.nextSampleFromFile();
+
 		dbg_out << current_sample << endl;
 		//cout << current_sample << endl;
 	}

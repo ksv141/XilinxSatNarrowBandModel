@@ -98,7 +98,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -112,7 +112,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -130,7 +130,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -148,7 +148,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -159,13 +159,14 @@
     <ClInclude Include="mls.h" />
     <ClInclude Include="SignalSource.h" />
     <ClInclude Include="utils.h" />
+    <ClInclude Include="XilinxIpTests.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="constellation.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mls.cpp" />
     <ClCompile Include="SignalSource.cpp" />
-    <ClCompile Include="XilinxSatNarrowBandModel.cpp" />
+    <ClCompile Include="XilinxIpTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -8,6 +8,7 @@
 #define _USE_MATH_DEFINES
 
 #include <math.h>
+#include <stdio.h>
 #include <fstream> // for debug only
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
@@ -24,8 +25,30 @@ using namespace std;
 
 static void msg_print(void* dummy, int error, const char* msg)
 {
-	std::cout << msg << std::endl;
+	printf("%s\n", msg);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+//Print a xip_array_real
+void print_array_real(const xip_array_real* x)
+{
+	putchar('[');
+	if (x && x->data && x->data_size)
+	{
+		const xip_real* p = x->data;
+		const xip_real* q = x->data;
+		const xip_real* r = x->data + x->data_size;
+		while (q != r)
+		{
+			if (q != p) putchar(' ');
+			printf("%g", *q);
+			q++;
+		}
+	}
+	putchar(']');
+	putchar('\n');
+}
+
 // End of debug functions
 
 #define DATA_SIZE 10
@@ -51,7 +74,7 @@ int test_cmpy_v6_0_bitacc_cmodel()
 	config.APortWidth = 16;
 	config.BPortWidth = 16;
 	config.OutputWidth = 33;
-	config.RoundMode = XIP_CMPY_V6_0_ROUND; //Note that the check later in this file assumes full width
+	config.RoundMode = XIP_CMPY_V6_0_TRUNCATE; //Note that the check later in this file assumes full width
 
 	// Create model object
 	xip_cmpy_v6_0* cmpy_std;
@@ -117,9 +140,8 @@ int test_cmpy_v6_0_bitacc_cmodel()
 	xip_complex a, b;
 	for (ii = 0; ii < DATA_SIZE; ii++)
 	{
-		//roundbit = ii % 2;
-		roundbit = 0;
-		a.re = (xip_real)(ii+0.1);
+		roundbit = ii % 2;
+		a.re = (xip_real)ii;
 		a.im = (xip_real)ii;
 		b.re = (xip_real)(16 - ii);
 		b.im = (xip_real)ii;
@@ -141,7 +163,7 @@ int test_cmpy_v6_0_bitacc_cmodel()
 	}
 
 	// Request memory for output data
-	xip_array_complex* response = xip_array_complex_create();
+	xip_array_complex * response = xip_array_complex_create();
 	xip_array_complex_reserve_dim(response, 1); //dimensions are (Number of samples)
 	response->dim_size = 1;
 	response->dim[0] = number_of_samples;
@@ -189,8 +211,8 @@ int test_cmpy_v6_0_bitacc_cmodel()
 
 		//Note that the following equations assume that the output width is the full
 		//width of the calculation, i.e. neither truncation nor rounding occurs
-		expected.re = x.re*y.re - x.im*y.im;
-		expected.im = x.re*y.im + x.im*y.re;
+		expected.re = x.re * y.re - x.im * y.im;
+		expected.im = x.re * y.im + x.im * y.re;
 		if (expected.re != got.re || expected.im != got.im) {
 			cerr << "ERROR: C model data output is incorrect for sample" << ii << "Expected real = " << expected.re << " imag = " << expected.im << " Got real = " << got.re << " imag = " << got.im << endl;
 
