@@ -33,6 +33,12 @@
     <ClInclude Include="XilinxIpTests.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="ChannelMatchedFir.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="debug.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mls.cpp">
@@ -48,6 +54,12 @@
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
     <ClCompile Include="XilinxIpTests.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ChannelMatchedFir.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="debug.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>

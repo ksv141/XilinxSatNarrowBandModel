@@ -155,14 +155,18 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ChannelMatchedFir.h" />
     <ClInclude Include="constellation.h" />
+    <ClInclude Include="debug.h" />
     <ClInclude Include="mls.h" />
     <ClInclude Include="SignalSource.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="XilinxIpTests.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ChannelMatchedFir.cpp" />
     <ClCompile Include="constellation.cpp" />
+    <ClCompile Include="debug.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mls.cpp" />
     <ClCompile Include="SignalSource.cpp" />

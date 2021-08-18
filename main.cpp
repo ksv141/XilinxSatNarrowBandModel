@@ -3,6 +3,7 @@
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "SignalSource.h"
 #include "utils.h"
+#include "debug.h"
 
 // Для тестов библиотек XIP
 #include "XilinxIpTests.h"
@@ -12,7 +13,8 @@ using namespace std;
 int main()
 {
 	// тесты библиотек XIP
-	test_cmpy_v6_0_bitacc_cmodel();
+	//test_cmpy_v6_0_bitacc_cmodel();
+	test_xip_fir_bitacc_cmodel();
 	return 0;
 
 	// количество генерируемых символов
