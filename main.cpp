@@ -4,6 +4,7 @@
 #include "SignalSource.h"
 #include "utils.h"
 #include "debug.h"
+#include "ChannelMatchedFir.h"
 
 // Для тестов библиотек XIP
 #include "XilinxIpTests.h"
@@ -14,7 +15,10 @@ int main()
 {
 	// тесты библиотек XIP
 	//test_cmpy_v6_0_bitacc_cmodel();
-	test_xip_fir_bitacc_cmodel();
+	//test_xip_fir_bitacc_cmodel();
+	init_channel_matched_fir();
+
+	destroy_channel_matched_fir();
 	return 0;
 
 	// количество генерируемых символов
