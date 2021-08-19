@@ -17,7 +17,7 @@ int main()
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
 	init_channel_matched_fir();
-
+	process_data_channel_matched_fir();
 	destroy_channel_matched_fir();
 	return 0;
 

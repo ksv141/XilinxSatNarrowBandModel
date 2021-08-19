@@ -28,33 +28,114 @@ const double rc_root_x2_25_19[19] =
 	-0.0013789727382389502
 };
 
+const double test_rc_root_x2_25_19[19] =
+{
+	-00137.89727382389502,
+	 01010.8258970470938,
+	-00881.58332983470158,
+	-01825.4667807044128,
+	 03204.0090881415004,
+	 02620.9138464556331,
+	-08457.623076097491,
+	-03202.2493980703122,
+	 31066.605580209167,
+	 53415.494309189537,
+	 31066.605580209167,
+	-03202.2493980703122,
+	-08457.623076097491,
+	 02620.9138464556331,
+	 03204.0090881415004,
+	-01825.4667807044128,
+	-00881.58332983470158,
+	 01010.8258970470938,
+	-00137.89727382389502
+};
+
 xip_fir_v7_2* fir_channel_matched;
+xip_fir_v7_2_config fir_channel_matched_cnfg;
 
 // инициализация канального/согласованного фильтра (SRRC)
-void init_channel_matched_fir()
+int init_channel_matched_fir()
 {
-	xip_fir_v7_2_config fir_cnfg;
-	xip_fir_v7_2_default_config(&fir_cnfg);
-	fir_cnfg.name = "srrc_fir";
-	fir_cnfg.filter_type = XIP_FIR_SINGLE_RATE;
-	fir_cnfg.coeff = rc_root_x2_25_19;
-	fir_cnfg.num_coeffs = 19;
-	fir_cnfg.quantization = XIP_FIR_QUANTIZED_ONLY;
-	fir_cnfg.output_rounding_mode = XIP_FIR_FULL_PRECISION;
+	xip_fir_v7_2_default_config(&fir_channel_matched_cnfg);
+	fir_channel_matched_cnfg.name = "srrc_fir";
+	fir_channel_matched_cnfg.filter_type = XIP_FIR_SINGLE_RATE;
+	fir_channel_matched_cnfg.coeff = rc_root_x2_25_19;
+	fir_channel_matched_cnfg.num_coeffs = 19;
+	fir_channel_matched_cnfg.quantization = XIP_FIR_MAXIMIZE_DYNAMIC_RANGE; // XIP_FIR_QUANTIZED_ONLY;
+	fir_channel_matched_cnfg.output_rounding_mode = XIP_FIR_FULL_PRECISION;
 
 	//Create filter instances
-	fir_channel_matched = xip_fir_v7_2_create(&fir_cnfg, &msg_print, 0);
+	fir_channel_matched = xip_fir_v7_2_create(&fir_channel_matched_cnfg, &msg_print, 0);
 	if (!fir_channel_matched) {
-		printf("Error creating instance %s\n", fir_cnfg.name);
-		return;
+		printf("Error creating instance %s\n", fir_channel_matched_cnfg.name);
+		return -1;
 	}
 	else {
-		printf("Created instance %s\n", fir_cnfg.name);
+		printf("Created instance %s\n", fir_channel_matched_cnfg.name);
 	}
+
+	return 0;
 }
 
-void destroy_channel_matched_fir()
+int destroy_channel_matched_fir()
 {
-	xip_fir_v7_2_destroy(fir_channel_matched);
+	if (xip_fir_v7_2_destroy(fir_channel_matched) != XIP_STATUS_OK) {
+		return -1;
+	}
 	printf("Deleted instance of SRRC\n");
+	return 0;
+}
+
+int process_data_channel_matched_fir()
+{
+	// Create input data packet
+	xip_array_real* din = xip_array_real_create();
+	xip_array_real_reserve_dim(din, 3);
+	din->dim_size = 3; // 3D array
+	din->dim[0] = fir_channel_matched_cnfg.num_paths;
+	din->dim[1] = fir_channel_matched_cnfg.num_channels;
+	din->dim[2] = fir_channel_matched_cnfg.num_coeffs; // vectors in a single packet
+	din->data_size = din->dim[0] * din->dim[1] * din->dim[2];
+	if (xip_array_real_reserve_data(din, din->data_size) != XIP_STATUS_OK) {
+		printf("Unable to reserve data!\n");
+		return -1;
+	}
+
+	// Create output data packet
+	//  - Automatically sized using xip_fir_v7_2_calc_size
+	xip_array_real* fir_default_out = xip_array_real_create();
+	xip_array_real_reserve_dim(fir_default_out, 3);
+	fir_default_out->dim_size = 3; // 3D array
+	if (xip_fir_v7_2_calc_size(fir_channel_matched, din, fir_default_out, 0) != XIP_STATUS_OK) {
+		printf("Unable to calculate output date size\n");
+		return -1;
+	}
+	if (xip_array_real_reserve_data(fir_default_out, fir_default_out->data_size) != XIP_STATUS_OK) {
+		printf("Unable to reserve data!\n");
+		return -1;
+	}
+
+	// единичный импульс
+	test_create_impulse(din);
+	print_array_real(din);
+
+	// Send input data and filter
+	if (xip_fir_v7_2_data_send(fir_channel_matched, din) != XIP_STATUS_OK) {
+		printf("Error sending data\n");
+		return -1;
+	}
+
+	// Retrieve filtered data
+	if (xip_fir_v7_2_data_get(fir_channel_matched, fir_default_out, 0) != XIP_STATUS_OK) {
+		printf("Error getting data\n");
+		return -1;
+	}
+
+	printf("Fetched result: ");
+	print_array_real(fir_default_out);
+
+	xip_array_real_destroy(din);
+	xip_array_real_destroy(fir_default_out);
+	return 0;
 }

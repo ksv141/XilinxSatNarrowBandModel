@@ -24,4 +24,8 @@ extern const char* seq_desc[2];
 // Print a summary of a filter configuration
 extern int print_config(const xip_fir_v7_2_config* cfg);
 
+//----------------------------------------------------------------------------------------------------------------------
+// Fill data array with a scaled impulse. Assumes 3-D array.
+extern int test_create_impulse(xip_array_real* x);
+
 #endif // DEBUG_H
