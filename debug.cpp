@@ -86,12 +86,12 @@ int print_config(const xip_fir_v7_2_config * cfg) {
 int test_create_impulse(xip_array_real* x) {
 	for (int path = 0; path < x->dim[0]; path++) {
 		for (int chan = 0; chan < x->dim[1]; chan++) {
-			//xip_fir_v7_2_xip_array_real_set_chan(x, 1, path, chan, 0, P_BASIC);
 			for (int i = 1; i < x->dim[2]; i++) {
 				xip_fir_v7_2_xip_array_real_set_chan(x, 0, path, chan, i, P_BASIC);
 			}
 		}
 	}
 	xip_fir_v7_2_xip_array_real_set_chan(x, 4096, 0, 0, 0, P_BASIC);
+	xip_fir_v7_2_xip_array_real_set_chan(x, 4096, 0, 1, 0, P_BASIC);
 	return 0;
 }

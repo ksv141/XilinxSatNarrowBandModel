@@ -28,29 +28,6 @@ const double rc_root_x2_25_19[19] =
 	-0.0013789727382389502
 };
 
-const double test_rc_root_x2_25_19[19] =
-{
-	-00137.89727382389502,
-	 01010.8258970470938,
-	-00881.58332983470158,
-	-01825.4667807044128,
-	 03204.0090881415004,
-	 02620.9138464556331,
-	-08457.623076097491,
-	-03202.2493980703122,
-	 31066.605580209167,
-	 53415.494309189537,
-	 31066.605580209167,
-	-03202.2493980703122,
-	-08457.623076097491,
-	 02620.9138464556331,
-	 03204.0090881415004,
-	-01825.4667807044128,
-	-00881.58332983470158,
-	 01010.8258970470938,
-	-00137.89727382389502
-};
-
 xip_fir_v7_2* fir_channel_matched;
 xip_fir_v7_2_config fir_channel_matched_cnfg;
 
@@ -62,8 +39,12 @@ int init_channel_matched_fir()
 	fir_channel_matched_cnfg.filter_type = XIP_FIR_SINGLE_RATE;
 	fir_channel_matched_cnfg.coeff = rc_root_x2_25_19;
 	fir_channel_matched_cnfg.num_coeffs = 19;
-	fir_channel_matched_cnfg.quantization = XIP_FIR_MAXIMIZE_DYNAMIC_RANGE; // XIP_FIR_QUANTIZED_ONLY;
+	fir_channel_matched_cnfg.coeff_fract_width = 24;
+	fir_channel_matched_cnfg.quantization = XIP_FIR_QUANTIZED_ONLY; // XIP_FIR_MAXIMIZE_DYNAMIC_RANGE;
 	fir_channel_matched_cnfg.output_rounding_mode = XIP_FIR_FULL_PRECISION;
+	// 2 канала для вещественной и мнимой части. 
+	// Тут по идее нужно настроить параллельную обработку двух каналов в режиме XIP_FIR_ADVANCED_CHAN_SEQ
+	fir_channel_matched_cnfg.num_channels = 2;	
 
 	//Create filter instances
 	fir_channel_matched = xip_fir_v7_2_create(&fir_channel_matched_cnfg, &msg_print, 0);
