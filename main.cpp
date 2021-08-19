@@ -16,10 +16,10 @@ int main()
 	// тесты библиотек XIP
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
+
+	// инициализация всех блоков
 	init_channel_matched_fir();
-	process_data_channel_matched_fir();
-	destroy_channel_matched_fir();
-	return 0;
+//	process_data_channel_matched_fir();
 
 	// количество генерируемых символов
 	int symbol_count = 10000;
@@ -47,9 +47,15 @@ int main()
 			// генерация очередного отсчета (с учетом кадра и преамбулы)
 			current_sample = signal_source.nextSampleFromFile();
 
-		dbg_out << current_sample << endl;
+		xip_complex sample_filtered;
+		process_sample_channel_matched_transmit(&current_sample, &sample_filtered);
+
+		dbg_out << sample_filtered << endl;
 		//cout << current_sample << endl;
 	}
+
+	// деинициализация
+	destroy_channel_matched_fir();
 
 	dbg_out.close();
 	return 0;

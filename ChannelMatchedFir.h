@@ -11,4 +11,8 @@ extern int destroy_channel_matched_fir();
 
 extern int process_data_channel_matched_fir();
 
+extern int process_sample_channel_matched_transmit(xip_complex* in, xip_complex* out);
+
+extern int process_sample_channel_matched_receive(xip_complex* in, xip_complex* out);
+
 #endif // CHANNELMATCHEDFIR_H
