@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "debug.h"
 #include "ChannelMatchedFir.h"
+#include "LagrangeInterp.h"
 
 // Для тестов библиотек XIP
 #include "XilinxIpTests.h"
@@ -17,9 +18,11 @@ int main()
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
 
+	lagrange_load_coeff();
+	return 0;
+
 	// инициализация всех блоков
 	init_channel_matched_fir();
-//	process_data_channel_matched_fir();
 
 	// количество генерируемых символов
 	int symbol_count = 10000;
@@ -40,6 +43,7 @@ int main()
 	for (int i = 0; i < sample_count; i++)
 	{
 		xip_complex current_sample;
+		// генерация отсчетов на 2B
 		if (i % 2)
 			// вставка 0 для увеличения Fd до 2B
 			current_sample = xip_complex{ 0, 0 };
@@ -47,10 +51,16 @@ int main()
 			// генерация очередного отсчета (с учетом кадра и преамбулы)
 			current_sample = signal_source.nextSampleFromFile();
 
+		// канальный фильтр на 2B
 		xip_complex sample_filtered;
 		process_sample_channel_matched_transmit(&current_sample, &sample_filtered);
 
-		dbg_out << sample_filtered << endl;
+		// согласованный фильтр на 2B
+		xip_complex sample_matched_filtered;
+		process_sample_channel_matched_receive(&sample_filtered, &sample_matched_filtered);
+
+//		dbg_out << sample_filtered << endl;
+		dbg_out << sample_matched_filtered << endl;
 		//cout << current_sample << endl;
 	}
 
