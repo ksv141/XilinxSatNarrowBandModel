@@ -34,6 +34,9 @@ int init_lagrange_interp()
 	lagrange_interp_fir_cnfg.coeff = lagrange_coeff;
 	lagrange_interp_fir_cnfg.num_coeffs = lagrange_n_coeff;
 	lagrange_interp_fir_cnfg.coeff_sets = lagrange_n_intervals;
+	lagrange_interp_fir_cnfg.output_rounding_mode = XIP_FIR_FULL_PRECISION;
+	lagrange_interp_fir_cnfg.data_width = 32;
+	lagrange_interp_fir_cnfg.data_fract_width = 16;
 
 	// 2 канала для вещественной и мнимой части. 
 	// Тут по идее нужно настроить параллельную обработку двух каналов в режиме XIP_FIR_ADVANCED_CHAN_SEQ

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "SignalSource.h"
 #include "utils.h"
@@ -10,6 +11,8 @@
 // Для тестов библиотек XIP
 #include "XilinxIpTests.h"
 
+#define M_PI		3.14159265358979323846
+
 using namespace std;
 
 int main()
@@ -19,22 +22,26 @@ int main()
 	//test_xip_fir_bitacc_cmodel();
 
 	// отладочный файл
-	ofstream dbg_out("dbg_out.txt");
+	ofstream dbg_out_sin("sin.txt");
+	ofstream dbg_out_sin_int("sin_interp.txt");
 
 	init_lagrange_interp();
+	int n = 30;
+	double step = M_PI * 2 / n;
 
-	for (int i = 0; i < 30; i++)
+	for (int i = 0; i < n; i++)
 	{
-		xip_complex current_sample{ 0, 0 };
-		if (i == 0)
-			current_sample = xip_complex{ 1, 1 };
+		xip_complex current_sample{ sin(i*step), 0 };
 		xip_complex sample_filtered;
-		process_sample_lagrange_interp(&current_sample, &sample_filtered, 0);
-		dbg_out << sample_filtered << endl;
+		process_sample_lagrange_interp(&current_sample, &sample_filtered, 1023);
+		dbg_out_sin << current_sample.re << endl;
+		if (i > 2)
+			dbg_out_sin_int << sample_filtered.re << endl;
 	}
 
 	destroy_lagrange_interp();
-	dbg_out.close();
+	dbg_out_sin.close();
+	dbg_out_sin_int.close();
 	return 0;
 
 	// инициализация всех блоков
@@ -48,7 +55,7 @@ int main()
 	//gen_to_file.generateSamplesFile(symbol_count, "input_data.txt");
 	//return 0;   
 
-
+	ofstream dbg_out("dbg_out.txt");
 	// источник сигнала
 	SignalSource signal_source("input_data.txt", 20);
 
