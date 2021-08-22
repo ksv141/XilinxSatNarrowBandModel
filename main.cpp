@@ -18,8 +18,23 @@ int main()
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
 
+	// отладочный файл
+	ofstream dbg_out("dbg_out.txt");
+
 	init_lagrange_interp();
+
+	for (int i = 0; i < 30; i++)
+	{
+		xip_complex current_sample{ 0, 0 };
+		if (i == 0)
+			current_sample = xip_complex{ 1, 1 };
+		xip_complex sample_filtered;
+		process_sample_lagrange_interp(&current_sample, &sample_filtered, 0);
+		dbg_out << sample_filtered << endl;
+	}
+
 	destroy_lagrange_interp();
+	dbg_out.close();
 	return 0;
 
 	// инициализация всех блоков
@@ -33,8 +48,6 @@ int main()
 	//gen_to_file.generateSamplesFile(symbol_count, "input_data.txt");
 	//return 0;   
 
-	// отладочный файл
-	ofstream dbg_out("dbg_out.txt");
 
 	// источник сигнала
 	SignalSource signal_source("input_data.txt", 20);

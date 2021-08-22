@@ -86,6 +86,27 @@ int init_lagrange_interp()
 // pos - смещение интерполятора [0, 1023]
 int process_sample_lagrange_interp(xip_complex* in, xip_complex* out, uint32_t pos)
 {
+	// Установка набора коэффициентов фильтра, соответствующего смещению pos
+	// Create config packet
+	xip_array_uint* fsel = xip_array_uint_create();
+	xip_array_uint_reserve_dim(fsel, 1);
+	fsel->dim_size = 1; // 1-D array
+	fsel->dim[0] = 1;   // одна конфигурация для двух каналов (XIP_FIR_CONFIG_SINGLE)
+	fsel->data_size = fsel->dim[0];
+	if (xip_array_uint_reserve_data(fsel, fsel->data_size) != XIP_STATUS_OK) {
+		printf("Unable to reserve data!\n");
+		return -1;
+	}
+	xip_fir_v7_2_cnfg_packet cnfg;
+	cnfg.fsel = fsel;
+	cnfg.fsel->data[0] = pos;
+	// Send config data
+	if (xip_fir_v7_2_config_send(lagrange_interp_fir, &cnfg) != XIP_STATUS_OK) {
+		printf("Error sending config packet\n");
+		return -1;
+	}
+
+	// инициализация входных данных
 	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in->re, 0, 0, 0, P_BASIC);	// re
 	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in->im, 0, 1, 0, P_BASIC);	// im
 
@@ -132,10 +153,12 @@ int lagrange_load_coeff()
 	}
 
 	//ofstream out("coeff_out.txt");
+	//int set_n = 0;
 	//for (int i = 0; i < lagrange_n_coeff * lagrange_n_intervals; i++)
 	//{
-	//	if (i % 8 == 0)
-	//		out << "*********" << endl;
+	//	if (i % 8 == 0) {
+	//		out << "***** " << set_n++ << " ****" << endl;
+	//	}
 	//	out << lagrange_coeff[i] << endl;
 	//}
 	//out.close();
