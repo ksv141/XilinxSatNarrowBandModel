@@ -145,6 +145,7 @@ int process_sample_channel_matched_fir(xip_fir_v7_2* fir, xip_complex* in, xip_c
 	return 0;
 }
 
+// для тестирования
 int process_data_channel_matched_fir()
 {
 	// Create input data packet

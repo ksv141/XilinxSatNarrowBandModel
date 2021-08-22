@@ -82,8 +82,28 @@ int init_lagrange_interp()
 	return 0;
 }
 
+// обработка одного отсчета
+// pos - смещение интерполятора [0, 1023]
 int process_sample_lagrange_interp(xip_complex* in, xip_complex* out, uint32_t pos)
 {
+	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in->re, 0, 0, 0, P_BASIC);	// re
+	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in->im, 0, 1, 0, P_BASIC);	// im
+
+	// Send input data and filter
+	if (xip_fir_v7_2_data_send(lagrange_interp_fir, lagrange_interp_in) != XIP_STATUS_OK) {
+		printf("Error sending data\n");
+		return -1;
+	}
+
+	// Retrieve filtered data
+	if (xip_fir_v7_2_data_get(lagrange_interp_fir, lagrange_interp_out, 0) != XIP_STATUS_OK) {
+		printf("Error getting data\n");
+		return -1;
+	}
+
+	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out->re, 0, 0, 0, P_BASIC);	// re
+	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out->im, 0, 1, 0, P_BASIC);	// im
+
 	return 0;
 }
 
@@ -123,6 +143,7 @@ int lagrange_load_coeff()
 	return 0;
 }
 
+// деинициализация
 int destroy_lagrange_interp()
 {
 	if (xip_fir_v7_2_destroy(lagrange_interp_fir) != XIP_STATUS_OK) {
