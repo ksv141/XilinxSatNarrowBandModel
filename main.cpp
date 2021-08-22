@@ -18,7 +18,8 @@ int main()
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
 
-	lagrange_load_coeff();
+	init_lagrange_interp();
+	destroy_lagrange_interp();
 	return 0;
 
 	// инициализация всех блоков

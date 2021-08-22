@@ -11,6 +11,10 @@
 #include "fir_compiler_v7_2_bitacc_cmodel.h"
 #include "debug.h"
 
-extern int lagrange_load_coeff();
+extern int init_lagrange_interp();
+
+extern int process_sample_lagrange_interp(xip_complex* in, xip_complex* out, uint32_t pos);
+
+extern int destroy_lagrange_interp();
 
 #endif // LAGRANGEINTERP_H
