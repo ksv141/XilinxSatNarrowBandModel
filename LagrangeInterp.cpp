@@ -172,13 +172,13 @@ int lagrange_load_coeff()
 // деинициализация
 int destroy_lagrange_interp()
 {
-	if (xip_fir_v7_2_destroy(lagrange_interp_fir) != XIP_STATUS_OK) {
-		return -1;
-	}
 	if (xip_array_real_destroy(lagrange_interp_in) != XIP_STATUS_OK) {
 		return -1;
 	}
 	if (xip_array_real_destroy(lagrange_interp_out) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_fir_v7_2_destroy(lagrange_interp_fir) != XIP_STATUS_OK) {
 		return -1;
 	}
 

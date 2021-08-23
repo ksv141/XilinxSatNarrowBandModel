@@ -60,17 +60,11 @@ int init_channel_matched_fir()
 		printf("Error creating instance %s\n", fir_channel_matched_cnfg.name);
 		return -1;
 	}
-	else {
-		printf("Created instance %s\n", fir_channel_matched_cnfg.name);
-	}
 
 	fir_channel_matched_receive = xip_fir_v7_2_create(&fir_channel_matched_cnfg, &msg_print, 0);
 	if (!fir_channel_matched_receive) {
 		printf("Error creating instance %s\n", fir_channel_matched_cnfg.name);
 		return -1;
-	}
-	else {
-		printf("Created instance %s\n", fir_channel_matched_cnfg.name);
 	}
 
 	// Резервируем память для входного отсчета
@@ -108,16 +102,16 @@ int init_channel_matched_fir()
 
 int destroy_channel_matched_fir()
 {
-	if (xip_fir_v7_2_destroy(fir_channel_matched_transmit) != XIP_STATUS_OK) {
-		return -1;
-	}
-	if (xip_fir_v7_2_destroy(fir_channel_matched_receive) != XIP_STATUS_OK) {
-		return -1;
-	}
 	if (xip_array_real_destroy(fir_channel_matched_in) != XIP_STATUS_OK) {
 		return -1;
 	}
 	if (xip_array_real_destroy(fir_channel_matched_out) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_fir_v7_2_destroy(fir_channel_matched_transmit) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_fir_v7_2_destroy(fir_channel_matched_receive) != XIP_STATUS_OK) {
 		return -1;
 	}
 
