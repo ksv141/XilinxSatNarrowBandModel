@@ -95,7 +95,7 @@ int destroy_xip_multiplier()
 	return 0;
 }
 
-int xip_multiply(const xip_complex& a, const xip_complex& b, xip_complex& out)
+int xip_multiply_complex(const xip_complex& a, const xip_complex& b, xip_complex& out)
 {
 	if (xip_cmpy_v6_0_xip_array_complex_set_data(xip_multiplier_reqa, a, 0) != XIP_STATUS_OK) {
 		printf("Error in xip_array_complex_set_data");
@@ -113,7 +113,7 @@ int xip_multiply(const xip_complex& a, const xip_complex& b, xip_complex& out)
 	if (xip_cmpy_v6_0_data_do(xip_multiplier, 
 							xip_multiplier_reqa, 
 							xip_multiplier_reqb, 
-							xip_multiplier_reqctrl, 
+							xip_multiplier_reqctrl,
 							xip_multiplier_response) != XIP_STATUS_OK) {
 		printf("ERROR: C model did not complete successfully");
 		return -1;
@@ -122,6 +122,21 @@ int xip_multiply(const xip_complex& a, const xip_complex& b, xip_complex& out)
 		printf("Error in xip_array_complex_get_data");
 		return -1;
 	}
+
+	return 0;
+}
+
+// умножение вещественных чисел реализовано как частный случай умножения комплексных
+int xip_multiply_real(const xip_real& a, const xip_real& b, xip_real& out)
+{
+	xip_complex a_cplx{ a, 0 };
+	xip_complex b_cplx{ b, 0 };
+	xip_complex out_cplx;
+
+	if (xip_multiply_complex(a_cplx, b_cplx, out_cplx) != 0)
+		return -1;
+
+	out = out_cplx.re;
 
 	return 0;
 }

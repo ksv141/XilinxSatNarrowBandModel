@@ -43,6 +43,14 @@ int main()
 	//dbg_out_sin.close();
 	//dbg_out_sin_int.close();
 
+	// тест умножителя
+	init_xip_multiplier();
+	xip_complex a{ 2, 0 };
+	xip_complex b{ 4, 0 };
+	xip_complex res;
+	xip_multiply_complex(a, b, res);
+	cout << res << endl;
+	destroy_xip_multiplier();
 
 	return 0;
 
