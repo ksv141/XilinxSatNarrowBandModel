@@ -11,6 +11,8 @@ extern int init_xip_multiplier();
 
 extern int destroy_xip_multiplier();
 
+extern int xip_multiply(const xip_complex& a, const xip_complex& b, xip_complex& out);
+
 extern ostream& operator<<(ostream& out, const xip_complex& data);
 
 #endif // UTILS_H
