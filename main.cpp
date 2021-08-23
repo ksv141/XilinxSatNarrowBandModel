@@ -3,7 +3,7 @@
 #include <cmath>
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "SignalSource.h"
-#include "utils.h"
+#include "xip_utils.h"
 #include "debug.h"
 #include "ChannelMatchedFir.h"
 #include "LagrangeInterp.h"
@@ -21,27 +21,29 @@ int main()
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
 
-	// отладочный файл
-	ofstream dbg_out_sin("sin.txt");
-	ofstream dbg_out_sin_int("sin_interp.txt");
+	// тест интерполятора Лагранжа
+	//ofstream dbg_out_sin("sin.txt");
+	//ofstream dbg_out_sin_int("sin_interp.txt");
 
-	init_lagrange_interp();
-	int n = 30;
-	double step = M_PI * 2 / n;
+	//init_lagrange_interp();
+	//int n = 30;
+	//double step = M_PI * 2 / n;
 
-	for (int i = 0; i < n; i++)
-	{
-		xip_complex current_sample{ sin(i*step), 0 };
-		xip_complex sample_filtered;
-		process_sample_lagrange_interp(&current_sample, &sample_filtered, 1023);
-		dbg_out_sin << current_sample.re << endl;
-		if (i > 2)
-			dbg_out_sin_int << sample_filtered.re << endl;
-	}
+	//for (int i = 0; i < n; i++)
+	//{
+	//	xip_complex current_sample{ sin(i*step), 0 };
+	//	xip_complex sample_filtered;
+	//	process_sample_lagrange_interp(&current_sample, &sample_filtered, 1023);
+	//	dbg_out_sin << current_sample.re << endl;
+	//	if (i > 2)
+	//		dbg_out_sin_int << sample_filtered.re << endl;
+	//}
 
-	destroy_lagrange_interp();
-	dbg_out_sin.close();
-	dbg_out_sin_int.close();
+	//destroy_lagrange_interp();
+	//dbg_out_sin.close();
+	//dbg_out_sin_int.close();
+
+
 	return 0;
 
 	// инициализация всех блоков

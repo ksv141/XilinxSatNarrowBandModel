@@ -160,8 +160,9 @@
     <ClInclude Include="debug.h" />
     <ClInclude Include="LagrangeInterp.h" />
     <ClInclude Include="mls.h" />
+    <ClInclude Include="Pif.h" />
     <ClInclude Include="SignalSource.h" />
-    <ClInclude Include="utils.h" />
+    <ClInclude Include="xip_utils.h" />
     <ClInclude Include="XilinxIpTests.h" />
   </ItemGroup>
   <ItemGroup>
@@ -171,8 +172,10 @@
     <ClCompile Include="LagrangeInterp.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mls.cpp" />
+    <ClCompile Include="Pif.cpp" />
     <ClCompile Include="SignalSource.cpp" />
     <ClCompile Include="XilinxIpTests.cpp" />
+    <ClCompile Include="xip_utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

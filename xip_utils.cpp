@@ -1,10 +1,4 @@
-#ifndef UTILS_H
-#define UTILS_H
-
-#include <ostream>
-#include "cmpy_v6_0_bitacc_cmodel.h"
-
-using namespace std;
+#include "xip_utils.h"
 
 ostream& operator<<(ostream& out, const xip_complex& data) {
 	out << data.re;
@@ -13,5 +7,3 @@ ostream& operator<<(ostream& out, const xip_complex& data) {
 	out << data.im << 'i';
 	return out;
 }
-
-#endif // UTILS_H
