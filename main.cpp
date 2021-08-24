@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "ChannelMatchedFir.h"
 #include "LagrangeInterp.h"
+#include "FirMultiplier.h"
 
 // Для тестов библиотек XIP
 #include "XilinxIpTests.h"
@@ -21,36 +22,36 @@ int main()
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
 
-	// тест интерполятора Лагранжа
-	ofstream dbg_out_sin("sin.txt");
-	ofstream dbg_out_sin_int("sin_interp.txt");
-
-	init_lagrange_interp();
-	int n = 30;
-	double step = M_PI * 2 / n;
-
-	for (int i = 0; i < n; i++)
-	{
-		xip_complex current_sample{ sin(i*step), 0 };
-		xip_complex sample_filtered;
-		process_sample_lagrange_interp(&current_sample, &sample_filtered, 1023);
-		dbg_out_sin << current_sample.re << endl;
-		if (i > 2)
-			dbg_out_sin_int << sample_filtered.re << endl;
-	}
-
-	destroy_lagrange_interp();
-	dbg_out_sin.close();
-	dbg_out_sin_int.close();
-
-	// тест умножителя
-	//init_xip_multiplier();
+	// тест fir умножителя
+	init_fir_real_multiplier();
 	//xip_real a = 2.1;
 	//xip_real b = 4.2;
 	//xip_real res;
 	//xip_multiply_real(a, b, res);
 	//cout << res << endl;
-	//destroy_xip_multiplier();
+	destroy_fir_real_multiplier();
+
+	// тест интерполятора Лагранжа
+	//ofstream dbg_out_sin("sin.txt");
+	//ofstream dbg_out_sin_int("sin_interp.txt");
+
+	//init_lagrange_interp();
+	//int n = 30;
+	//double step = M_PI * 2 / n;
+
+	//for (int i = 0; i < n; i++)
+	//{
+	//	xip_complex current_sample{ sin(i*step), 0 };
+	//	xip_complex sample_filtered;
+	//	process_sample_lagrange_interp(&current_sample, &sample_filtered, 1023);
+	//	dbg_out_sin << current_sample.re << endl;
+	//	if (i > 2)
+	//		dbg_out_sin_int << sample_filtered.re << endl;
+	//}
+
+	//destroy_lagrange_interp();
+	//dbg_out_sin.close();
+	//dbg_out_sin_int.close();
 
 	return 0;
 

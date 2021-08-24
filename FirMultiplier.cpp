@@ -4,7 +4,7 @@
 
 xip_fir_v7_2* fir_real_multiplier;			// фильтр
 xip_fir_v7_2_config fir_real_multiplier_cnfg;
-double fir_real_multiplier_coeff = 0;
+double fir_real_multiplier_coeff = 0.563;
 
 xip_array_real* fir_real_multiplier_in;		// 3-D массив, содержащий текущий отсчет для обработки
 xip_array_real* fir_real_multiplier_out;	// 3-D массив, содержащий результат обработки
@@ -82,5 +82,21 @@ int destroy_fir_real_multiplier()
 
 int process_multiply_real(const xip_real& a, const xip_real& b, xip_real& out)
 {
+	xip_fir_v7_2_xip_array_real_set_chan(fir_real_multiplier_in, a, 0, 0, 0, P_BASIC);
+
+	// Send input data and filter
+	if (xip_fir_v7_2_data_send(fir_real_multiplier, fir_real_multiplier_in) != XIP_STATUS_OK) {
+		printf("Error sending data\n");
+		return -1;
+	}
+
+	// Retrieve filtered data
+	if (xip_fir_v7_2_data_get(fir_real_multiplier, fir_real_multiplier_out, 0) != XIP_STATUS_OK) {
+		printf("Error getting data\n");
+		return -1;
+	}
+
+	xip_fir_v7_2_xip_array_real_get_chan(fir_real_multiplier_out, &out, 0, 0, 0, P_BASIC);
+
 	return 0;
 }
