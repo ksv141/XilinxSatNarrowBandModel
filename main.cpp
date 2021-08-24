@@ -24,11 +24,11 @@ int main()
 
 	// тест fir умножителя
 	init_fir_real_multiplier();
-	//xip_real a = 2.1;
-	//xip_real b = 4.2;
-	//xip_real res;
-	//xip_multiply_real(a, b, res);
-	//cout << res << endl;
+	xip_real a = 2.1;
+	xip_real b = 4.2;
+	xip_real res;
+	process_fir_real_multiply(a, b, res);
+	cout << res << endl;
 	destroy_fir_real_multiplier();
 
 	// тест интерполятора Лагранжа

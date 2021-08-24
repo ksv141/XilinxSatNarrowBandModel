@@ -1,10 +1,11 @@
 #include "FirMultiplier.h"
 
-// умножитель вещественных чисел на основе Fir
+// умножитель вещественных чисел на основе Fir без памяти с одним коэффициентом a0
 
 xip_fir_v7_2* fir_real_multiplier;			// фильтр
 xip_fir_v7_2_config fir_real_multiplier_cnfg;
-double fir_real_multiplier_coeff = 0.563;
+xip_fir_v7_2_rld_packet fir_real_multiplier_rld; // пакет для установки коэффициента a0
+double fir_real_multiplier_coeff = 0;		// начальное значение коэффициента a0
 
 xip_array_real* fir_real_multiplier_in;		// 3-D массив, содержащий текущий отсчет для обработки
 xip_array_real* fir_real_multiplier_out;	// 3-D массив, содержащий результат обработки
@@ -80,9 +81,28 @@ int destroy_fir_real_multiplier()
 	return 0;
 }
 
-int process_multiply_real(const xip_real& a, const xip_real& b, xip_real& out)
+int process_fir_real_multiply(const xip_real& a, const xip_real& b, xip_real& out)
 {
-	xip_fir_v7_2_xip_array_real_set_chan(fir_real_multiplier_in, a, 0, 0, 0, P_BASIC);
+	// первый множитель устанавливаем как коэффициент a0 фильтра через reload-пакет
+	fir_real_multiplier_rld.fsel = 0;
+	fir_real_multiplier_rld.coeff = xip_array_real_create();
+	xip_array_real_reserve_dim(fir_real_multiplier_rld.coeff, 1);
+	fir_real_multiplier_rld.coeff->dim_size = 1;
+	fir_real_multiplier_rld.coeff->dim[0] = 1;
+	fir_real_multiplier_rld.coeff->data_size = fir_real_multiplier_rld.coeff->dim[0];
+	if (xip_array_real_reserve_data(fir_real_multiplier_rld.coeff, fir_real_multiplier_rld.coeff->data_size) != XIP_STATUS_OK) {
+		printf("Unable to reserve coeff!\n");
+		return -1;
+	}
+	fir_real_multiplier_rld.coeff->data[0] = a;
+	// Send reload data
+	if (xip_fir_v7_2_reload_send(fir_real_multiplier, &fir_real_multiplier_rld) != XIP_STATUS_OK) {
+		printf("Error sending reload packet\n");
+		return -1;
+	}
+
+	// второй множитель отправляем как входной пакет
+	xip_fir_v7_2_xip_array_real_set_chan(fir_real_multiplier_in, b, 0, 0, 0, P_BASIC);
 
 	// Send input data and filter
 	if (xip_fir_v7_2_data_send(fir_real_multiplier, fir_real_multiplier_in) != XIP_STATUS_OK) {
