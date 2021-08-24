@@ -13,6 +13,9 @@ double* lagrange_coeff = nullptr;		// наборы коэффициентов фильтра, следуют по п
 xip_fir_v7_2* lagrange_interp_fir;		// фильтр на передаче
 xip_fir_v7_2_config lagrange_interp_fir_cnfg;
 
+xip_array_uint* lagrange_interp_fir_fsel;
+xip_fir_v7_2_cnfg_packet lagrange_interp_fir_cnfg_packet;
+
 xip_array_real* lagrange_interp_in;		// 3-D массив, содержащий текущий отсчет для обработки
 xip_array_real* lagrange_interp_out;	// 3-D массив, содержащий результат обработки
 
@@ -82,6 +85,18 @@ int init_lagrange_interp()
 		return -1;
 	}
 
+	// Резервируем память для config-пакета
+	lagrange_interp_fir_fsel = xip_array_uint_create();
+	xip_array_uint_reserve_dim(lagrange_interp_fir_fsel, 1);
+	lagrange_interp_fir_fsel->dim_size = 1; // 1-D array
+	lagrange_interp_fir_fsel->dim[0] = 1;   // одна конфигурация для двух каналов (XIP_FIR_CONFIG_SINGLE)
+	lagrange_interp_fir_fsel->data_size = lagrange_interp_fir_fsel->dim[0];
+	if (xip_array_uint_reserve_data(lagrange_interp_fir_fsel, lagrange_interp_fir_fsel->data_size) != XIP_STATUS_OK) {
+		printf("Unable to reserve data!\n");
+		return -1;
+	}
+	lagrange_interp_fir_cnfg_packet.fsel = lagrange_interp_fir_fsel;
+
 	return 0;
 }
 
@@ -90,21 +105,9 @@ int init_lagrange_interp()
 int process_sample_lagrange_interp(xip_complex* in, xip_complex* out, uint32_t pos)
 {
 	// Установка набора коэффициентов фильтра, соответствующего смещению pos
-	// Create config packet
-	xip_array_uint* fsel = xip_array_uint_create();
-	xip_array_uint_reserve_dim(fsel, 1);
-	fsel->dim_size = 1; // 1-D array
-	fsel->dim[0] = 1;   // одна конфигурация для двух каналов (XIP_FIR_CONFIG_SINGLE)
-	fsel->data_size = fsel->dim[0];
-	if (xip_array_uint_reserve_data(fsel, fsel->data_size) != XIP_STATUS_OK) {
-		printf("Unable to reserve data!\n");
-		return -1;
-	}
-	xip_fir_v7_2_cnfg_packet cnfg;
-	cnfg.fsel = fsel;
-	cnfg.fsel->data[0] = pos;
+	lagrange_interp_fir_cnfg_packet.fsel->data[0] = pos;
 	// Send config data
-	if (xip_fir_v7_2_config_send(lagrange_interp_fir, &cnfg) != XIP_STATUS_OK) {
+	if (xip_fir_v7_2_config_send(lagrange_interp_fir, &lagrange_interp_fir_cnfg_packet) != XIP_STATUS_OK) {
 		printf("Error sending config packet\n");
 		return -1;
 	}
@@ -176,6 +179,9 @@ int destroy_lagrange_interp()
 		return -1;
 	}
 	if (xip_array_real_destroy(lagrange_interp_out) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_array_uint_destroy(lagrange_interp_fir_fsel) != XIP_STATUS_OK) {
 		return -1;
 	}
 	if (xip_fir_v7_2_destroy(lagrange_interp_fir) != XIP_STATUS_OK) {

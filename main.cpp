@@ -24,8 +24,8 @@ int main()
 
 	// тест fir умножителя
 	init_fir_real_multiplier();
-	xip_real a = -2.25;
-	xip_real b = -4.125;
+	xip_real a = 9000.1;
+	xip_real b = 9000.1;
 	xip_real res;
 	process_fir_real_multiply(a, b, res);
 	cout << res << endl;

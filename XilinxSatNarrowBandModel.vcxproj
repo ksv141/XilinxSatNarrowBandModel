@@ -159,6 +159,7 @@
     <ClInclude Include="constellation.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="FirMultiplier.h" />
+    <ClInclude Include="FirSummator.h" />
     <ClInclude Include="LagrangeInterp.h" />
     <ClInclude Include="mls.h" />
     <ClInclude Include="Pif.h" />
@@ -171,6 +172,7 @@
     <ClCompile Include="constellation.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="FirMultiplier.cpp" />
+    <ClCompile Include="FirSummator.cpp" />
     <ClCompile Include="LagrangeInterp.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mls.cpp" />
