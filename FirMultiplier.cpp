@@ -14,7 +14,6 @@ xip_array_real* fir_real_multiplier_out;	// 3-D массив, содержащий результат обр
 
 int init_fir_real_multiplier()
 {
-	// конфигурация одинаковая для обоих фильтров
 	xip_fir_v7_2_default_config(&fir_real_multiplier_cnfg);
 	fir_real_multiplier_cnfg.name = "fir_real_multiplier";
 	fir_real_multiplier_cnfg.filter_type = XIP_FIR_SINGLE_RATE;

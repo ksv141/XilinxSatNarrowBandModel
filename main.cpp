@@ -8,6 +8,7 @@
 #include "ChannelMatchedFir.h"
 #include "LagrangeInterp.h"
 #include "FirMultiplier.h"
+#include "FirSummator.h"
 
 // Для тестов библиотек XIP
 #include "XilinxIpTests.h"
@@ -22,18 +23,18 @@ int main()
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
 
-	// тест fir умножителя
-	//init_fir_real_multiplier();
-	//xip_real a = 9000.1;
-	//xip_real b = 9000.1;
-	//xip_real res;
-	//process_fir_real_multiply(a, b, res);
-	//cout << res << endl;
-	//a = 7.25;
-	//b = 24.1261;
-	//process_fir_real_multiply(a, b, res);
-	//cout << res << endl;
-	//destroy_fir_real_multiplier();
+	// тест fir сумматора
+	init_fir_real_summator();
+	xip_real a = 1.1;
+	xip_real b = 2.2;
+	xip_real res;
+	process_fir_real_sum(a, b, res);
+	cout << res << endl;
+	a = 3.3;
+	b = 4.4;
+	process_fir_real_sum(a, b, res);
+	cout << res << endl;
+	destroy_fir_real_summator();
 
 	// тест интерполятора Лагранжа
 	//ofstream dbg_out_sin("sin.txt");
