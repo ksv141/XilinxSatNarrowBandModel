@@ -51,9 +51,6 @@ int init_lagrange_interp()
 		printf("Error creating instance %s\n", lagrange_interp_fir_cnfg.name);
 		return -1;
 	}
-	else {
-		printf("Created instance %s\n", lagrange_interp_fir_cnfg.name);
-	}
 
 	// Резервируем память для входного отсчета
 	lagrange_interp_in = xip_array_real_create();
