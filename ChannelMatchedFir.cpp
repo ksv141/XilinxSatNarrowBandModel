@@ -47,8 +47,8 @@ int init_channel_matched_fir()
 	fir_channel_matched_cnfg.coeff_fract_width = 24;
 	fir_channel_matched_cnfg.quantization = XIP_FIR_QUANTIZED_ONLY; // XIP_FIR_MAXIMIZE_DYNAMIC_RANGE;
 	fir_channel_matched_cnfg.output_rounding_mode = XIP_FIR_FULL_PRECISION;
-	fir_channel_matched_cnfg.data_width = 32;
-	fir_channel_matched_cnfg.data_fract_width = 16;
+	fir_channel_matched_cnfg.data_width = 26;
+	fir_channel_matched_cnfg.data_fract_width = 10;
 
 	// 2 канала для вещественной и мнимой части. 
 	// Тут по идее нужно настроить параллельную обработку двух каналов в режиме XIP_FIR_ADVANCED_CHAN_SEQ

@@ -22,35 +22,35 @@ int main()
 	//test_xip_fir_bitacc_cmodel();
 
 	// тест интерполятора Лагранжа
-	//ofstream dbg_out_sin("sin.txt");
-	//ofstream dbg_out_sin_int("sin_interp.txt");
+	ofstream dbg_out_sin("sin.txt");
+	ofstream dbg_out_sin_int("sin_interp.txt");
 
-	//init_lagrange_interp();
-	//int n = 30;
-	//double step = M_PI * 2 / n;
+	init_lagrange_interp();
+	int n = 30;
+	double step = M_PI * 2 / n;
 
-	//for (int i = 0; i < n; i++)
-	//{
-	//	xip_complex current_sample{ sin(i*step), 0 };
-	//	xip_complex sample_filtered;
-	//	process_sample_lagrange_interp(&current_sample, &sample_filtered, 1023);
-	//	dbg_out_sin << current_sample.re << endl;
-	//	if (i > 2)
-	//		dbg_out_sin_int << sample_filtered.re << endl;
-	//}
+	for (int i = 0; i < n; i++)
+	{
+		xip_complex current_sample{ sin(i*step), 0 };
+		xip_complex sample_filtered;
+		process_sample_lagrange_interp(&current_sample, &sample_filtered, 1023);
+		dbg_out_sin << current_sample.re << endl;
+		if (i > 2)
+			dbg_out_sin_int << sample_filtered.re << endl;
+	}
 
-	//destroy_lagrange_interp();
-	//dbg_out_sin.close();
-	//dbg_out_sin_int.close();
+	destroy_lagrange_interp();
+	dbg_out_sin.close();
+	dbg_out_sin_int.close();
 
 	// тест умножителя
-	init_xip_multiplier();
-	xip_complex a{ 2, 0 };
-	xip_complex b{ 4, 0 };
-	xip_complex res;
-	xip_multiply_complex(a, b, res);
-	cout << res << endl;
-	destroy_xip_multiplier();
+	//init_xip_multiplier();
+	//xip_real a = 2.1;
+	//xip_real b = 4.2;
+	//xip_real res;
+	//xip_multiply_real(a, b, res);
+	//cout << res << endl;
+	//destroy_xip_multiplier();
 
 	return 0;
 
@@ -90,8 +90,8 @@ int main()
 		xip_complex sample_matched_filtered;
 		process_sample_channel_matched_receive(&sample_filtered, &sample_matched_filtered);
 
-//		dbg_out << sample_filtered << endl;
-		dbg_out << sample_matched_filtered << endl;
+		dbg_out << sample_filtered << endl;
+//		dbg_out << sample_matched_filtered << endl;
 		//cout << current_sample << endl;
 	}
 

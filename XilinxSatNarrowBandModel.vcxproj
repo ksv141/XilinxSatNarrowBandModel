@@ -158,6 +158,7 @@
     <ClInclude Include="ChannelMatchedFir.h" />
     <ClInclude Include="constellation.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="FirMultiplier.h" />
     <ClInclude Include="LagrangeInterp.h" />
     <ClInclude Include="mls.h" />
     <ClInclude Include="Pif.h" />
@@ -169,6 +170,7 @@
     <ClCompile Include="ChannelMatchedFir.cpp" />
     <ClCompile Include="constellation.cpp" />
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="FirMultiplier.cpp" />
     <ClCompile Include="LagrangeInterp.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mls.cpp" />
