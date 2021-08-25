@@ -44,6 +44,7 @@ int init_channel_matched_fir()
 	fir_channel_matched_cnfg.filter_type = XIP_FIR_SINGLE_RATE;
 	fir_channel_matched_cnfg.coeff = rc_root_x2_25_19;
 	fir_channel_matched_cnfg.num_coeffs = 19;
+	fir_channel_matched_cnfg.coeff_width = 24;
 	fir_channel_matched_cnfg.coeff_fract_width = 24;
 	fir_channel_matched_cnfg.quantization = XIP_FIR_QUANTIZED_ONLY; // XIP_FIR_MAXIMIZE_DYNAMIC_RANGE;
 	fir_channel_matched_cnfg.output_rounding_mode = XIP_FIR_FULL_PRECISION;
