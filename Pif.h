@@ -20,6 +20,8 @@ public:
 		                                       // примеры: 0.0005 или 4.0 / 8000.0
 	~Pif();
 
+	int process(const xip_real& in, xip_real& out);
+
 private:
 	void calculate_g1_g2(double slb);
 

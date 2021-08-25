@@ -5,12 +5,14 @@ Pif::Pif(double g1, double g2)
 {
 	g[0] = g1;
 	g[1] = g2;
+	reg = 0;
 	init_xip_fir();
 }
 
 Pif::Pif(double specific_locking_band)
 {
 	calculate_g1_g2(specific_locking_band);
+	reg = 0;
 	init_xip_fir();
 }
 
@@ -18,6 +20,31 @@ Pif::Pif(double specific_locking_band)
 Pif::~Pif()
 {
 	destroy_xip_fir();
+}
+
+int Pif::process(const xip_real& in, xip_real& out)
+{
+	xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in, 0, 0, 0, P_BASIC);
+
+	// Send input data and filter
+	if (xip_fir_v7_2_data_send(xip_fir, xip_fir_in) != XIP_STATUS_OK) {
+		printf("Error sending data\n");
+		return -1;
+	}
+
+	// Retrieve filtered data
+	if (xip_fir_v7_2_data_get(xip_fir, xip_fir_out, 0) != XIP_STATUS_OK) {
+		printf("Error getting data\n");
+		return -1;
+	}
+
+	xip_real out_fir;
+	xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out_fir, 0, 0, 0, P_BASIC);
+	out_fir += reg;
+	reg = out_fir;
+	out = out_fir;
+
+	return 0;
 }
 
 void Pif::calculate_g1_g2(double slb)

@@ -26,6 +26,17 @@ int main()
 
 	// тест пиф
 	Pif pif(0.01);
+	for (int i = 0; i < 20; i++)
+	{
+		xip_real in;
+		xip_real out;
+		if (i == 0)
+			in = 1.0;
+		else
+			in = 0.0;
+		pif.process(in, out);
+		cout << out << endl;
+	}
 
 	// тест fir сумматора
 	//init_fir_real_summator();
