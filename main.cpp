@@ -26,18 +26,8 @@ int main()
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
 
-	// тест АРУ
+	// тест принятия решения решения
 	// init_fir_real_summator();
-	ofstream dbg_out_1("dbg_out.txt");
-	AutoGaneControl agc(128, pwr_constell_qam4);
-	for (int i = 0; i < 1000; i++)
-	{
-		xip_complex in{1,1};
-		xip_complex out;
-		agc.process(in, out);
-		dbg_out_1 << out << endl;
-	}
-	dbg_out_1.close();
 	// destroy_fir_real_summator();
 
 	// тест fir сумматора

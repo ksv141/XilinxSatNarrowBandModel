@@ -1,30 +1,20 @@
 #include "LagrangeInterp.h"
 
-using namespace std;
 
-// Интерполятор Лагранжа 7-й степени без передискретизации, используется для СТС
-// интервал между двумя смежными отсчетами делится на 1024 интервалов, 
-// для каждого из которых используется свой заранее рассчитанный набор из 8 коэффициентов
+LagrangeInterp::LagrangeInterp()
+{
+	init_lagrange_interp();
+}
 
-uint32_t lagrange_n_intervals = 1024;	// количество интервалов
-uint32_t lagrange_n_coeff = 8;			// количество коэффициентов
-double* lagrange_coeff = nullptr;		// наборы коэффициентов фильтра, следуют по порядку
-
-xip_fir_v7_2* lagrange_interp_fir;		// фильтр на передаче
-xip_fir_v7_2_config lagrange_interp_fir_cnfg;
-
-xip_array_uint* lagrange_interp_fir_fsel;
-xip_fir_v7_2_cnfg_packet lagrange_interp_fir_cnfg_packet;
-
-xip_array_real* lagrange_interp_in;		// 3-D массив, содержащий текущий отсчет для обработки
-xip_array_real* lagrange_interp_out;	// 3-D массив, содержащий результат обработки
-
-int lagrange_load_coeff();
+LagrangeInterp::~LagrangeInterp()
+{
+	destroy_lagrange_interp();
+}
 
 // инициализация фильтра-интерполятора Лагранжа
 // загружаются 1024 набора по 8 коэффициентов, каждый набор задействуется в зависимости от смещения интерполятора
 // смещение дискретное с величиной 1/1024 от интервала между отсчетами
-int init_lagrange_interp()
+int LagrangeInterp::init_lagrange_interp()
 {
 	if (lagrange_load_coeff()) {
 		printf("Enable to load Lagarnge coeffs\n");
@@ -99,7 +89,7 @@ int init_lagrange_interp()
 
 // обработка одного отсчета
 // pos - смещение интерполятора [0, 1023]
-int process_sample_lagrange_interp(xip_complex* in, xip_complex* out, uint32_t pos)
+int LagrangeInterp::process_sample_lagrange_interp(xip_complex* in, xip_complex* out, uint32_t pos)
 {
 	// Установка набора коэффициентов фильтра, соответствующего смещению pos
 	lagrange_interp_fir_cnfg_packet.fsel->data[0] = pos;
@@ -132,7 +122,7 @@ int process_sample_lagrange_interp(xip_complex* in, xip_complex* out, uint32_t p
 }
 
 // загрузка 1024 набора из 8 коэффициентов
-int lagrange_load_coeff()
+int LagrangeInterp::lagrange_load_coeff()
 {
 	lagrange_coeff = new double[(size_t)lagrange_n_coeff * (size_t)lagrange_n_intervals];
 
@@ -170,7 +160,7 @@ int lagrange_load_coeff()
 }
 
 // деинициализация
-int destroy_lagrange_interp()
+int LagrangeInterp::destroy_lagrange_interp()
 {
 	if (xip_array_real_destroy(lagrange_interp_in) != XIP_STATUS_OK) {
 		return -1;
