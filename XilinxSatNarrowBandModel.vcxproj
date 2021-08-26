@@ -155,6 +155,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="autoganecontrol.h" />
     <ClInclude Include="ChannelMatchedFir.h" />
     <ClInclude Include="constellation.h" />
     <ClInclude Include="debug.h" />
@@ -168,6 +169,7 @@
     <ClInclude Include="XilinxIpTests.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="autoganecontrol.cpp" />
     <ClCompile Include="ChannelMatchedFir.cpp" />
     <ClCompile Include="constellation.cpp" />
     <ClCompile Include="debug.cpp" />

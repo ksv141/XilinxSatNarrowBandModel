@@ -8,6 +8,7 @@
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "fir_compiler_v7_2_bitacc_cmodel.h"
 #include "debug.h"
+#include "FirSummator.h"
 
 // Пиф (Nezami - Loop Filter topology III)
 // Реализован как совокупность КИХ-фильтра 2-го порядка и интегратора

@@ -25,6 +25,7 @@ int main()
 	//test_xip_fir_bitacc_cmodel();
 
 	// тест пиф
+	init_fir_real_summator();
 	Pif pif(0.01);
 	for (int i = 0; i < 20; i++)
 	{
@@ -37,6 +38,7 @@ int main()
 		pif.process(in, out);
 		cout << out << endl;
 	}
+	destroy_fir_real_summator();
 
 	// тест fir сумматора
 	//init_fir_real_summator();

@@ -40,7 +40,9 @@ int Pif::process(const xip_real& in, xip_real& out)
 
 	xip_real out_fir;
 	xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out_fir, 0, 0, 0, P_BASIC);
-	out_fir += reg;
+
+	// интегратор на КИХ-фильтре
+	process_fir_real_sum(out_fir, reg, out_fir);
 	reg = out_fir;
 	out = out_fir;
 
