@@ -10,6 +10,8 @@
 #include "FirMultiplier.h"
 #include "FirSummator.h"
 #include "Pif.h"
+#include "autoganecontrol.h"
+#include "constellation.h"
 
 // Для тестов библиотек XIP
 //#include "XilinxIpTests.h"
@@ -24,21 +26,19 @@ int main()
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
 
-	// тест пиф
-	init_fir_real_summator();
-	Pif pif(0.01);
-	for (int i = 0; i < 20; i++)
+	// тест АРУ
+	// init_fir_real_summator();
+	ofstream dbg_out_1("dbg_out.txt");
+	AutoGaneControl agc(128, pwr_constell_qam4);
+	for (int i = 0; i < 1000; i++)
 	{
-		xip_real in;
-		xip_real out;
-		if (i == 0)
-			in = 1.0;
-		else
-			in = 0.0;
-		pif.process(in, out);
-		cout << out << endl;
+		xip_complex in{1,1};
+		xip_complex out;
+		agc.process(in, out);
+		dbg_out_1 << out << endl;
 	}
-	destroy_fir_real_summator();
+	dbg_out_1.close();
+	// destroy_fir_real_summator();
 
 	// тест fir сумматора
 	//init_fir_real_summator();

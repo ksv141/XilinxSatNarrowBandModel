@@ -1,6 +1,7 @@
 #include "FirSummator.h"
 
 // сумматор вещественных чисел на основе Fir 2-й степени с единичными коэффициентами
+// в данном проекте сумматор достаточно иметь один глобальный на все элементы схемы, т.к. код выполняется последовательно
 
 xip_fir_v7_2* fir_real_summator;					// фильтр
 xip_fir_v7_2_config fir_real_summator_cnfg;			// конфигурация фильтра
@@ -79,6 +80,9 @@ int destroy_fir_real_summator()
 
 int process_fir_real_sum(const xip_real& a, const xip_real& b, xip_real& out)
 {
+	// перед выполнением очередного сложения буфер фильтра сбрасывать не обязательно, 
+	// т.к. его длина 2 и результатом является последний элемент
+
 	xip_fir_v7_2_xip_array_real_set_chan(fir_real_summator_in, a, 0, 0, 0, P_BASIC);
 	xip_fir_v7_2_xip_array_real_set_chan(fir_real_summator_in, b, 0, 0, 1, P_BASIC);
 
@@ -94,6 +98,7 @@ int process_fir_real_sum(const xip_real& a, const xip_real& b, xip_real& out)
 		return -1;
 	}
 
+	// результатом является второй элемент выходного буфера
 	xip_fir_v7_2_xip_array_real_get_chan(fir_real_summator_out, &out, 0, 0, 1, P_BASIC);
 
 	return 0;

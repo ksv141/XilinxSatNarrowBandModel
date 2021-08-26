@@ -8,4 +8,6 @@ extern xip_complex constell_qam4[4];
 
 extern xip_complex constell_preamble[2];
 
+extern xip_real pwr_constell_qam4;
+
 #endif // CONSTELLATION_H

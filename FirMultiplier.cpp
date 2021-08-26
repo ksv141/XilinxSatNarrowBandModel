@@ -1,6 +1,7 @@
 #include "FirMultiplier.h"
 
 // умножитель вещественных чисел на основе Fir без памяти с одним коэффициентом a0
+// в данном проекте умножитель достаточно иметь один глобальный на все элементы схемы, т.к. код выполняется последовательно
 
 xip_fir_v7_2* fir_real_multiplier;						// фильтр
 xip_fir_v7_2_config fir_real_multiplier_cnfg;			// конфигурация фильтра
@@ -117,6 +118,9 @@ int destroy_fir_real_multiplier()
 
 int process_fir_real_multiply(const xip_real& a, const xip_real& b, xip_real& out)
 {
+	// перед выполнением очередного умножения буфер фильтра сбрасывать не обязательно, 
+	// т.к. он состоит всего из одного элемента и не влияет на последующий результат
+
 	// Send config data
 	if (xip_fir_v7_2_config_send(fir_real_multiplier, &fir_real_multiplier_cnfg_rld) != XIP_STATUS_OK) {
 		printf("Error sending config packet\n");
