@@ -1,7 +1,11 @@
 #include "LagrangeInterp.h"
 
 
-LagrangeInterp::LagrangeInterp()
+LagrangeInterp::LagrangeInterp(xip_real frac):
+	m_fraction(frac),
+	m_dk(1),
+	m_decim(0),
+	m_prevShift(0)
 {
 	init_lagrange_interp();
 }
@@ -9,6 +13,33 @@ LagrangeInterp::LagrangeInterp()
 LagrangeInterp::~LagrangeInterp()
 {
 	destroy_lagrange_interp();
+}
+
+void LagrangeInterp::process(xip_real shift)
+{
+	while (true) {
+		if (m_dk <= 0) {
+			m_decim = static_cast<int>(fabs(ceil(m_dk)));
+			if (m_decim > 0) {
+				cout << "m_decim = " << m_decim;
+				--m_decim;
+				cout << " reset to " << m_decim << endl;
+				//m_inputSamples.pop_back();
+				//m_inputSamples.push_front(in);
+			}
+			cout << "m_dk = " << m_dk;
+			m_dk += 1;
+			cout << " reset to " << m_dk << endl;
+			break;
+		}
+		//cplx_fl s = process(in, m_dk);
+		//out.push_back(s);
+		cout << "process m_dk = " << m_dk << endl;
+		m_dk = m_dk - m_prevShift + shift - m_fraction;
+		m_prevShift = shift;
+
+		cout << "m_dk = " << m_dk << "\tm_decim = " << m_decim << endl;
+	}
 }
 
 // инициализация фильтра-интерполятора Лагранжа
@@ -144,17 +175,6 @@ int LagrangeInterp::lagrange_load_coeff()
 			lagrange_coeff[i + j * lagrange_n_coeff] = val_int;
 		}
 	}
-
-	//ofstream out("coeff_out.txt");
-	//int set_n = 0;
-	//for (int i = 0; i < lagrange_n_coeff * lagrange_n_intervals; i++)
-	//{
-	//	if (i % 8 == 0) {
-	//		out << "***** " << set_n++ << " ****" << endl;
-	//	}
-	//	out << lagrange_coeff[i] << endl;
-	//}
-	//out.close();
 
 	return 0;
 }

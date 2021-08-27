@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <cstdio>
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "SignalSource.h"
 #include "xip_utils.h"
@@ -40,6 +41,13 @@ int main()
 	//destroy_fir_real_summator();
 
 	// тест интерполятора Лагранжа
+	freopen("interp_dbg.txt", "w", stdout);
+	LagrangeInterp interp(1);
+	for (int i = 0; i < 100; i++) {
+		cout << i << ":" << endl;
+		interp.process(0.01);
+	}
+//	fclose(stdout);
 	//ofstream dbg_out_sin("sin.txt");
 	//ofstream dbg_out_sin_int("sin_interp.txt");
 

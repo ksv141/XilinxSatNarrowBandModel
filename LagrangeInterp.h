@@ -18,10 +18,14 @@ using namespace std;
 // дл€ каждого из которых используетс€ свой заранее рассчитанный набор из 8 коэффициентов
 class LagrangeInterp {
 public:
-	LagrangeInterp();
+	// frac - отношение частоты дискретизации выходного сигнала ко входному
+	// если передискретизаци€ не требуетс€, то frac = 1
+	LagrangeInterp(xip_real frac = 1);
 
 	~LagrangeInterp();
 
+	// вычисление вектора отсчетов дл€ кратной интерпол€ции со смещением
+	void process(xip_real shift);
 
 private:
 	int init_lagrange_interp();
@@ -32,6 +36,11 @@ private:
 	const uint32_t lagrange_n_intervals = 1024;		// количество интервалов
 	const uint32_t lagrange_n_coeff = 8;			// количество коэффициентов
 	double* lagrange_coeff;					// наборы коэффициентов фильтра, следуют по пор€дку
+
+	xip_real m_fraction;          // отношение частоты дискретизации выходного сигнала ко входному
+	xip_real m_dk;                // текуща€ позици€ интерпол€ции [0; 1]
+	int m_decim;				  // счетчик децимируемых отсчетов
+	xip_real m_prevShift;         // предыдущий сдвиг
 
 	xip_fir_v7_2* lagrange_interp_fir;		// фильтр на передаче
 	xip_fir_v7_2_config lagrange_interp_fir_cnfg;
