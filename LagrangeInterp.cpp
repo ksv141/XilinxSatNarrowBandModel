@@ -42,6 +42,11 @@ void LagrangeInterp::process(xip_real shift)
 	}
 }
 
+void LagrangeInterp::process(const xip_complex& in, xip_complex& out, uint32_t pos)
+{
+	process_sample_lagrange_interp(in, out, pos);
+}
+
 // инициализация фильтра-интерполятора Лагранжа
 // загружаются 1024 набора по 8 коэффициентов, каждый набор задействуется в зависимости от смещения интерполятора
 // смещение дискретное с величиной 1/1024 от интервала между отсчетами
@@ -120,7 +125,7 @@ int LagrangeInterp::init_lagrange_interp()
 
 // обработка одного отсчета
 // pos - смещение интерполятора [0, 1023]
-int LagrangeInterp::process_sample_lagrange_interp(xip_complex* in, xip_complex* out, uint32_t pos)
+int LagrangeInterp::process_sample_lagrange_interp(const xip_complex& in, xip_complex& out, uint32_t pos)
 {
 	// Установка набора коэффициентов фильтра, соответствующего смещению pos
 	lagrange_interp_fir_cnfg_packet.fsel->data[0] = pos;
@@ -131,8 +136,8 @@ int LagrangeInterp::process_sample_lagrange_interp(xip_complex* in, xip_complex*
 	}
 
 	// инициализация входных данных
-	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in->re, 0, 0, 0, P_BASIC);	// re
-	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in->im, 0, 1, 0, P_BASIC);	// im
+	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in.re, 0, 0, 0, P_BASIC);	// re
+	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in.im, 0, 1, 0, P_BASIC);	// im
 
 	// Send input data and filter
 	if (xip_fir_v7_2_data_send(lagrange_interp_fir, lagrange_interp_in) != XIP_STATUS_OK) {
@@ -146,8 +151,8 @@ int LagrangeInterp::process_sample_lagrange_interp(xip_complex* in, xip_complex*
 		return -1;
 	}
 
-	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out->re, 0, 0, 0, P_BASIC);	// re
-	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out->im, 0, 1, 0, P_BASIC);	// im
+	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out.re, 0, 0, 0, P_BASIC);	// re
+	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out.im, 0, 1, 0, P_BASIC);	// im
 
 	return 0;
 }

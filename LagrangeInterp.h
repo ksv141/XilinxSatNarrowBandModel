@@ -27,10 +27,13 @@ public:
 	// вычисление вектора отсчетов для кратной интерполяции со смещением
 	void process(xip_real shift);
 
+	// for test
+	void process(const xip_complex& in, xip_complex& out, uint32_t pos);
+
 private:
 	int init_lagrange_interp();
 	int lagrange_load_coeff();
-	int process_sample_lagrange_interp(xip_complex* in, xip_complex* out, uint32_t pos);
+	int process_sample_lagrange_interp(const xip_complex& in, xip_complex& out, uint32_t pos);
 	int destroy_lagrange_interp();
 
 	const uint32_t lagrange_n_intervals = 1024;		// количество интервалов
