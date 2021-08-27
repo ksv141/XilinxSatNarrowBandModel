@@ -13,6 +13,7 @@
 #include "Pif.h"
 #include "autoganecontrol.h"
 #include "constellation.h"
+#include "StsEstimate.h"
 
 // Для тестов библиотек XIP
 //#include "XilinxIpTests.h"
@@ -84,8 +85,12 @@ int main()
 	// интерполятор для имитации тактового сдвига в канале
 	LagrangeInterp chan_interp(1);
 
+	// АРУ для жесткого решения, СТС и ФАПЧ
 	int agc_wnd = 128;
 	AutoGaneControl agc(agc_wnd, pwr_constell_qam4);
+
+	// Блок оценки ошибки тактовой синхры
+	StsEstimate sts_est;
 
 	// основной цикл обработки символов
 	int sample_count = symbol_count * 2;
@@ -115,7 +120,10 @@ int main()
 		agc.process(current_sample, current_sample);
 		if (i / 2 < agc_wnd)
 			continue;
-		dbg_out << current_sample << endl;
+
+		xip_complex est = nearest_point_qam4(current_sample);	// жесткое решение
+		xip_real sts_err = sts_est.getErr(current_sample, est);	// оценка ошибки тактовой синхры
+		dbg_out << sts_err << endl;
 		//cout << current_sample << endl;
 	}
 
