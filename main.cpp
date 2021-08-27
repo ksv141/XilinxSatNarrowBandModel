@@ -66,6 +66,8 @@ int main()
 
 	// инициализация всех блоков
 	init_channel_matched_fir();
+	init_fir_real_multiplier();
+	init_fir_real_summator();
 
 	// количество генерируемых символов
 	int symbol_count = 10000;
@@ -119,6 +121,8 @@ int main()
 
 	// деинициализация
 	destroy_channel_matched_fir();
+	destroy_fir_real_multiplier();
+	destroy_fir_real_summator();
 
 	dbg_out.close();
 	return 0;

@@ -165,6 +165,7 @@
     <ClInclude Include="mls.h" />
     <ClInclude Include="Pif.h" />
     <ClInclude Include="SignalSource.h" />
+    <ClInclude Include="StsEstimate.h" />
     <ClInclude Include="xip_utils.h" />
     <ClInclude Include="XilinxIpTests.h" />
   </ItemGroup>
@@ -180,6 +181,7 @@
     <ClCompile Include="mls.cpp" />
     <ClCompile Include="Pif.cpp" />
     <ClCompile Include="SignalSource.cpp" />
+    <ClCompile Include="StsEstimate.cpp" />
     <ClCompile Include="XilinxIpTests.cpp" />
     <ClCompile Include="xip_utils.cpp" />
   </ItemGroup>
