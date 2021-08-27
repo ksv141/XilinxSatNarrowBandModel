@@ -41,13 +41,6 @@ int main()
 	//destroy_fir_real_summator();
 
 	// тест интерполятора Лагранжа
-	freopen("interp_dbg.txt", "w", stdout);
-	LagrangeInterp interp(1);
-	for (int i = 0; i < 100; i++) {
-		cout << i << ":" << endl;
-		interp.process(0.01);
-	}
-//	fclose(stdout);
 	//ofstream dbg_out_sin("sin.txt");
 	//ofstream dbg_out_sin_int("sin_interp.txt");
 
@@ -69,7 +62,7 @@ int main()
 	//dbg_out_sin.close();
 	//dbg_out_sin_int.close();
 
-	return 0;
+	//return 0;
 
 	// инициализация всех блоков
 	init_channel_matched_fir();
@@ -86,6 +79,12 @@ int main()
 	// источник сигнала
 	SignalSource signal_source("input_data.txt", 20);
 
+	// интерполятор для имитации тактового сдвига в канале
+	LagrangeInterp chan_interp(1);
+
+	int agc_wnd = 128;
+	AutoGaneControl agc(agc_wnd, pwr_constell_qam4);
+
 	// основной цикл обработки символов
 	int sample_count = symbol_count * 2;
 	for (int i = 0; i < sample_count; i++)
@@ -100,15 +99,21 @@ int main()
 			current_sample = signal_source.nextSampleFromFile();
 
 		// канальный фильтр на 2B
-		xip_complex sample_filtered;
-		process_sample_channel_matched_transmit(&current_sample, &sample_filtered);
+		process_sample_channel_matched_transmit(&current_sample, &current_sample);
+
+		// имитация смещения тактов в канале
+		chan_interp.process(current_sample, current_sample, 0.1);
 
 		// согласованный фильтр на 2B
-		xip_complex sample_matched_filtered;
-		process_sample_channel_matched_receive(&sample_filtered, &sample_matched_filtered);
+		process_sample_channel_matched_receive(&current_sample, &current_sample);
 
-		dbg_out << sample_filtered << endl;
-//		dbg_out << sample_matched_filtered << endl;
+		if (i % 2 == 0)
+			continue;
+//		dbg_out << sample_filtered << endl;
+		agc.process(current_sample, current_sample);
+		if (i / 2 < agc_wnd)
+			continue;
+		dbg_out << current_sample << endl;
 		//cout << current_sample << endl;
 	}
 

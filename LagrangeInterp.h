@@ -28,7 +28,7 @@ public:
 	void process(xip_real shift);
 
 	// for test
-	void process(const xip_complex& in, xip_complex& out, uint32_t pos);
+	void process(const xip_complex& in, xip_complex& out, double shift);
 
 private:
 	int init_lagrange_interp();

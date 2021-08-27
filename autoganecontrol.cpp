@@ -15,8 +15,13 @@ bool AutoGaneControl::process(const xip_complex& in, xip_complex& out)
     m_pwrReg.push_front(pwr_x);
 
 	double norm = sqrt(m_currentPower/m_normPower);
-    out.re = in.re/norm;
-	out.im = in.im / norm;
+	if (norm == 0)
+		out = in;
+	else
+	{
+		out.re = in.re / norm;
+		out.im = in.im / norm;
+	}
 
     return true;
 }

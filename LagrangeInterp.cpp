@@ -42,8 +42,11 @@ void LagrangeInterp::process(xip_real shift)
 	}
 }
 
-void LagrangeInterp::process(const xip_complex& in, xip_complex& out, uint32_t pos)
+void LagrangeInterp::process(const xip_complex& in, xip_complex& out, double shift)
 {
+	uint32_t pos = shift * lagrange_n_intervals;
+	if (pos >= lagrange_n_intervals)
+		pos -= lagrange_n_intervals;
 	process_sample_lagrange_interp(in, out, pos);
 }
 
