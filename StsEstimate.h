@@ -2,6 +2,7 @@
 #define STSESTIMATE_H
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
+#include "constellation.h"
 #include "FirMultiplier.h"
 #include "FirSummator.h"
 

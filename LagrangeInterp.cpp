@@ -15,6 +15,26 @@ LagrangeInterp::~LagrangeInterp()
 	destroy_lagrange_interp();
 }
 
+void LagrangeInterp::setShift(xip_real shift)
+{
+	m_shift = shift;
+	m_shift <= -1.0 ? -1.0 : (m_shift >= 1.0 ? 1.0 : m_shift);
+}
+
+void LagrangeInterp::process(const xip_complex& in)
+{
+	m_currentSample = in;
+}
+
+bool LagrangeInterp::next(xip_complex& out)
+{
+	m_dk = 1 - m_shift;
+	if (m_dk > 1)
+		m_dk = 2 - m_dk;
+	process(m_currentSample, out, m_dk);
+	return true;
+}
+
 void LagrangeInterp::process(xip_real shift)
 {
 	while (true) {

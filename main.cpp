@@ -36,7 +36,7 @@ int main()
 	//ofstream dbg_out_sin("sin.txt");
 	//ofstream dbg_out_sin_int("sin_interp.txt");
 
-	//init_lagrange_interp();
+	//LagrangeInterp test_interp(1);
 	//int n = 30;
 	//double step = M_PI * 2 / n;
 
@@ -44,13 +44,12 @@ int main()
 	//{
 	//	xip_complex current_sample{ sin(i*step), 0 };
 	//	xip_complex sample_filtered;
-	//	process_sample_lagrange_interp(&current_sample, &sample_filtered, 1023);
+	//	test_interp.process(current_sample, sample_filtered, 0.1);
 	//	dbg_out_sin << current_sample.re << endl;
 	//	if (i > 2)
 	//		dbg_out_sin_int << sample_filtered.re << endl;
 	//}
 
-	//destroy_lagrange_interp();
 	//dbg_out_sin.close();
 	//dbg_out_sin_int.close();
 
@@ -76,11 +75,14 @@ int main()
 	// интерполятор для имитации тактового сдвига в канале
 	LagrangeInterp chan_interp(1);
 
+	// интерполятор для СТС
+	LagrangeInterp dmd_interp(1);
+
 	// АРУ для жесткого решения, СТС и ФАПЧ
 	int agc_wnd = 128;
 	AutoGaneControl agc(agc_wnd, pwr_constell_qam4);
 
-	Pif pif_sts(0.001);
+	Pif pif_sts(0.01);
 
 	// Блок оценки ошибки тактовой синхры
 	StsEstimate sts_est;
@@ -102,23 +104,28 @@ int main()
 		process_sample_channel_matched_transmit(&current_sample, &current_sample);
 
 		// имитация смещения тактов в канале
-		chan_interp.process(current_sample, current_sample, 0.1);
+		chan_interp.process(current_sample, current_sample, 0.2);
+
+		dmd_interp.process(current_sample);
+
+		dmd_interp.next(current_sample);
 
 		// согласованный фильтр на 2B
 		process_sample_channel_matched_receive(&current_sample, &current_sample);
 
-		if (i % 2 == 0)
-			continue;
-//		dbg_out << sample_filtered << endl;
 		agc.process(current_sample, current_sample);
 		if (i / 2 < agc_wnd)
+			continue;
+
+		if (i % 2 == 0)
 			continue;
 
 		xip_complex est = nearest_point_qam4(current_sample);	// жесткое решение
 		xip_real sts_err = sts_est.getErr(current_sample, est);	// оценка ошибки тактовой синхры
 		pif_sts.process(sts_err, sts_err);
-		dbg_out << sts_err << endl;
-		//cout << current_sample << endl;
+		dmd_interp.setShift(sts_err);
+		//dbg_out << sts_err << endl;
+		dbg_out << current_sample << endl;
 	}
 
 	// деинициализация

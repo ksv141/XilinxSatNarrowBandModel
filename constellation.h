@@ -3,6 +3,7 @@
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
 
+extern const xip_real constell_qam4_norm_val;
 
 extern xip_complex constell_qam4[4];
 

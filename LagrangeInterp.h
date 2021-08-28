@@ -24,6 +24,15 @@ public:
 
 	~LagrangeInterp();
 
+	// выставить смещение тактов [-1, +1]
+	void setShift(xip_real shift);
+
+	// обработать очередной отсчет
+	void process(const xip_complex& in);
+
+	// получить следующий отсчет. true - есть отсчет, false - нет отсчета (требуется подать на вход следующий)
+	bool next(xip_complex& out);
+
 	// вычисление вектора отсчетов для кратной интерполяции со смещением
 	void process(xip_real shift);
 
@@ -43,7 +52,9 @@ private:
 	xip_real m_fraction;          // отношение частоты дискретизации выходного сигнала ко входному
 	xip_real m_dk;                // текущая позиция интерполяции [0; 1]
 	int m_decim;				  // счетчик децимируемых отсчетов
+	xip_real m_shift;			  // текущий сдвиг
 	xip_real m_prevShift;         // предыдущий сдвиг
+	xip_complex m_currentSample;  // текущий входной отсчет
 
 	xip_fir_v7_2* lagrange_interp_fir;		// фильтр на передаче
 	xip_fir_v7_2_config lagrange_interp_fir_cnfg;
