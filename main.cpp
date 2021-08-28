@@ -32,15 +32,6 @@ int main()
 	// init_fir_real_summator();
 	// destroy_fir_real_summator();
 
-	// тест fir сумматора
-	//init_fir_real_summator();
-	//xip_real a = 1.1;
-	//xip_real b = 2.2;
-	//xip_real res;
-	//process_fir_real_sum(a, b, res);
-	//cout << res << endl;
-	//destroy_fir_real_summator();
-
 	// тест интерполятора Лагранжа
 	//ofstream dbg_out_sin("sin.txt");
 	//ofstream dbg_out_sin_int("sin_interp.txt");
@@ -89,6 +80,8 @@ int main()
 	int agc_wnd = 128;
 	AutoGaneControl agc(agc_wnd, pwr_constell_qam4);
 
+	Pif pif_sts(0.001);
+
 	// Блок оценки ошибки тактовой синхры
 	StsEstimate sts_est;
 
@@ -123,6 +116,7 @@ int main()
 
 		xip_complex est = nearest_point_qam4(current_sample);	// жесткое решение
 		xip_real sts_err = sts_est.getErr(current_sample, est);	// оценка ошибки тактовой синхры
+		pif_sts.process(sts_err, sts_err);
 		dbg_out << sts_err << endl;
 		//cout << current_sample << endl;
 	}

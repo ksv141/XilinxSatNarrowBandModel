@@ -6,18 +6,23 @@
 #include "FirSummator.h"
 
 // Оценка тактового смещения (для СТС)
-// Оценка ошибки тактовой синхронизации по Мюллеру-Меллеру
 class StsEstimate
 {
 public:
 	StsEstimate();
 	~StsEstimate();
 
+	// Оценка ошибки тактовой синхронизации по Мюллеру-Меллеру (на 1B)
 	xip_real getErr(const xip_complex& out_symb, const xip_complex& est);
+
+	// Оценка ошибки тактовой синхронизации по Гарднеру (на 2B)
+	xip_real getErrGardner(const xip_complex& sample);
 
 private:
 	xip_complex m_last_out_symb;
 	xip_complex m_last_est;
+
+	xip_complex y[3] = { {0,0},{0,0},{0,0} };	// последние 3 отсчета на 2B
 };
 
 #endif // STSESTIMATE_H
