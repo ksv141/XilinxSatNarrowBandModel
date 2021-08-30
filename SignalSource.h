@@ -41,7 +41,7 @@ public:
 	xip_complex nextSample();
 
 	// генерация следующего псевдослучайного отсчета из файла
-	xip_complex nextSampleFromFile();
+	bool nextSampleFromFile(xip_complex& out);
 
 	/**
 	 * @brief helper-функция. Генерация ПСП-символов и запись в текстовый файл
@@ -67,11 +67,14 @@ private:
 
 	ifstream inFile;			// входной файл с символами
 	bool binaryFile;			// признак бинарного файла
+	char readByte;				// очередной байт из файла
+	int bitShift;				// количество считываемых битов из бинарного файла
+	int bitPos;
 
 	// псевдослучайный источник символов
 	mls symbolSource{ /* 2^32 - длина M-последовательности */ 32, /* 4-позиционный источник */ 4 };
 
-	xip_complex __nextSample(bool from_file);
+	bool __nextSample(bool from_file, xip_complex& out);
 };
 
 #endif // SIGNALSOURCE_H

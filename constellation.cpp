@@ -1,7 +1,7 @@
 #include "constellation.h"
 
-Current_constell current_constell = PSK2;
-
+Current_constell current_constell = Current_constell::PSK2;
+      
 // нормальное значение уровня сигнала
 const xip_real constell_psk_norm_val = 4096;
 

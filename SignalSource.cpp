@@ -12,8 +12,16 @@ SignalSource::SignalSource(string input_file, bool is_binary, size_t data_length
 	binaryFile(is_binary),
 	dataLength(data_length)
 {
-	if (is_binary)
+	if (is_binary) {
 		inFile.open(input_file, ios::in | ios::binary);
+		if (current_constell == Current_constell::PSK2 || current_constell == Current_constell::PSK2_60) {
+			bitShift = 1;
+		}
+		else if (current_constell == Current_constell::PSK4)
+			bitShift = 2;
+
+		bitPos = 0;
+	}
 	else
 		inFile.open(input_file);
 
@@ -29,12 +37,14 @@ SignalSource::~SignalSource()
 
 xip_complex SignalSource::nextSample()
 {
-	return __nextSample(false);
+	xip_complex out;
+	__nextSample(false, out);
+	return out;
 }
 
-xip_complex SignalSource::nextSampleFromFile()
+bool SignalSource::nextSampleFromFile(xip_complex& out)
 {
-	return __nextSample(true);
+	return __nextSample(true, out);
 }
 
 void SignalSource::generateSymbolFile(int n_pos, size_t count, string file_name)
@@ -69,21 +79,27 @@ void SignalSource::generateBinFile(size_t byte_count, string file_name)
 	out.close();
 }
 
-xip_complex SignalSource::__nextSample(bool from_file)
+bool SignalSource::__nextSample(bool from_file, xip_complex& out)
 {
-	xip_complex current_sample;
-	int current_symbol;
+	int current_symbol = -1;
 
 	if (frameCounter < preambleLength) {
 		// первые 32 символа кадра - преамбула
 		current_symbol = preambleData[frameCounter];
-		current_sample = constell_preamble_psk4[current_symbol];
+		out = constell_preamble_psk4[current_symbol];
 	}
 	else {
 		// остальные символы - данные
 		if (from_file) {
+			if (inFile.eof())
+				return false;
 			if (binaryFile) {
-
+				bitPos += bitShift;
+				if (bitPos >= 8) {
+					inFile.read(&readByte, 1);
+					bitPos = 0;
+				}
+				current_symbol = (readByte >> (8 - bitPos - bitShift)) << (8 - bitShift);
 			}
 			else
 				inFile >> current_symbol;
@@ -91,12 +107,12 @@ xip_complex SignalSource::__nextSample(bool from_file)
 		else
 			current_symbol = symbolSource.nextSymbol();
 
-		current_sample = constell_psk4[current_symbol];
+		out = constell_psk4[current_symbol];
 	}
 
 	frameCounter++;
 	if (frameCounter == dataLength + preambleLength)
 		frameCounter = 0;
 
-	return current_sample;
+	return true;
 }

@@ -100,7 +100,7 @@ int main()
 			current_sample = xip_complex{ 0, 0 };
 		else
 			// генерация очередного отсчета (с учетом кадра и преамбулы)
-			current_sample = signal_source.nextSampleFromFile();
+			signal_source.nextSampleFromFile(current_sample);
 
 		// канальный фильтр на 2B
 		process_sample_channel_matched_transmit(&current_sample, &current_sample);
