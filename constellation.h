@@ -3,17 +3,37 @@
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
 
-extern const xip_real constell_qam4_norm_val;
+enum Current_constell {PSK2, PSK2_60, PSK4};
 
-extern xip_complex constell_qam4[4];
+// используемый вид сигнала
+extern Current_constell current_constell;
 
-extern xip_complex constell_preamble[2];
+extern const xip_real constell_psk_norm_val;
 
-extern xip_real pwr_constell_qam4;
+extern xip_complex constell_psk4[4];
+
+extern xip_complex constell_psk2[2];
+
+extern xip_complex constell_psk2_60[2];
+
+extern xip_complex constell_preamble_psk4[2];
+
+// нормированная мощность сигналов (используется для АРУ демодулятора)
+extern xip_real pwr_constell_psk4;
+extern xip_real pwr_constell_psk2;
+extern xip_real pwr_constell_psk2_60;
 
 // жесткое решение
-extern xip_complex nearest_point_qam4(const xip_complex& in);
+extern xip_complex nearest_point_psk4(const xip_complex& in);
 
-extern int nearest_index_qam4(const xip_complex& in);
+extern int nearest_index_psk4(const xip_complex& in);
+
+extern xip_complex nearest_point_psk2(const xip_complex& in);
+
+extern int nearest_index_psk2(const xip_complex& in);
+
+extern xip_complex nearest_point_psk2_60(const xip_complex& in);
+
+extern int nearest_index_psk2_60(const xip_complex& in);
 
 #endif // CONSTELLATION_H

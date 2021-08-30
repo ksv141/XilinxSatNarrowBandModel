@@ -18,11 +18,11 @@ xip_real StsEstimate::getErr(const xip_complex& out_symb, const xip_complex& est
 	// нормированное значение, приведенное к [0, 1]
 	// целесообразно реализовать сдвигом точки в fixed-point
 	xip_complex out_symb_norm;
-	out_symb_norm.re = out_symb.re / constell_qam4_norm_val;
-	out_symb_norm.im = out_symb.im / constell_qam4_norm_val;
+	out_symb_norm.re = out_symb.re / constell_psk_norm_val;
+	out_symb_norm.im = out_symb.im / constell_psk_norm_val;
 	xip_complex est_norm;
-	est_norm.re = est.re / constell_qam4_norm_val;
-	est_norm.im = est.im / constell_qam4_norm_val;
+	est_norm.re = est.re / constell_psk_norm_val;
+	est_norm.im = est.im / constell_psk_norm_val;
 
 	// ошибка тактовой синхронизации по ћюллеру-ћеллеру
 	xip_real a1, a2, b1, b2, c1, c2;
@@ -54,8 +54,8 @@ xip_real StsEstimate::getErrGardner(const xip_complex& sample)
 	// нормированное значение, приведенное к [0, 1]
 	// целесообразно реализовать сдвигом точки в fixed-point
 	xip_complex sample_norm;
-	sample_norm.re = sample.re / constell_qam4_norm_val;
-	sample_norm.im = sample.im / constell_qam4_norm_val;
+	sample_norm.re = sample.re / constell_psk_norm_val;
+	sample_norm.im = sample.im / constell_psk_norm_val;
 	// обновление последних 3 отсчетов, лучше реализовать на сдвиговом регистре
 	y[2] = y[1];
 	y[1] = y[0];

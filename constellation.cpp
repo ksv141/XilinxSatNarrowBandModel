@@ -1,28 +1,40 @@
 #include "constellation.h"
 
+Current_constell current_constell = PSK2;
+
 // нормальное значение уровня сигнала
-const xip_real constell_qam4_norm_val = 4096;
+const xip_real constell_psk_norm_val = 4096;
 
-// сигнальное созвездие для данных
-xip_complex constell_qam4[4] = { {constell_qam4_norm_val, constell_qam4_norm_val},
-								{constell_qam4_norm_val, -constell_qam4_norm_val},
-								{-constell_qam4_norm_val, constell_qam4_norm_val},
-								{-constell_qam4_norm_val, -constell_qam4_norm_val} };
+// сигнальное созвездие для данных (PSK4)
+xip_complex constell_psk4[4] = { {constell_psk_norm_val, constell_psk_norm_val},
+								{constell_psk_norm_val, -constell_psk_norm_val},
+								{-constell_psk_norm_val, constell_psk_norm_val},
+								{-constell_psk_norm_val, -constell_psk_norm_val} };
 
-// сигнальное созвездие для преамбулы
-xip_complex constell_preamble[2] = { {constell_qam4_norm_val, constell_qam4_norm_val},
-								{-constell_qam4_norm_val, -constell_qam4_norm_val} };
+// сигнальное созвездие для данных (PSK2 +/-90)
+xip_complex constell_psk2[2] = { {constell_psk_norm_val, 0},
+								{-constell_psk_norm_val, 0} };
 
-// нормированная мощность сигнала qam4 (используется для АРУ демодулятора)
-xip_real pwr_constell_qam4 = 2 * constell_qam4[0].re * constell_qam4[0].re;
+// сигнальное созвездие для данных (PSK2 +/-60)
+xip_complex constell_psk2_60[2] = { {4096, 2365},
+								   {-4096, 2365} };
+
+// сигнальное созвездие для преамбулы (режим PSK4)
+xip_complex constell_preamble_psk4[2] = { {constell_psk_norm_val, constell_psk_norm_val},
+										{-constell_psk_norm_val, -constell_psk_norm_val} };
+
+// нормированная мощность сигналов (используется для АРУ демодулятора)
+xip_real pwr_constell_psk4 = 2 * constell_psk4[0].re * constell_psk4[0].re;
+xip_real pwr_constell_psk2 = constell_psk2[0].re * constell_psk2[0].re;
+xip_real pwr_constell_psk2_60 = constell_psk2_60[0].re * constell_psk2_60[0].re + constell_psk2_60[0].im * constell_psk2_60[0].im;
 
 // жесткое решение
-xip_complex nearest_point_qam4(const xip_complex& in)
+xip_complex nearest_point_psk4(const xip_complex& in)
 {
-	return constell_qam4[nearest_index_qam4(in)];
+	return constell_psk4[nearest_index_psk4(in)];
 }
 
-int nearest_index_qam4(const xip_complex& in)
+int nearest_index_psk4(const xip_complex& in)
 {
 	if (in.re < 0) {
 		if (in.im < 0)
@@ -36,5 +48,29 @@ int nearest_index_qam4(const xip_complex& in)
 		else
 			return 0;
 	}
-	return 0;
+}
+
+xip_complex nearest_point_psk2(const xip_complex& in)
+{
+	return constell_psk2[nearest_index_psk2(in)];
+}
+
+int nearest_index_psk2(const xip_complex& in)
+{
+	if (in.re < 0) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
+xip_complex nearest_point_psk2_60(const xip_complex& in)
+{
+	return constell_psk2_60[nearest_index_psk2_60(in)];
+}
+
+int nearest_index_psk2_60(const xip_complex& in)
+{
+	return nearest_index_psk2(in);
 }

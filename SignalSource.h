@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <stdexcept>
+#include <bitset>
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "mls.h"
@@ -20,13 +21,19 @@ using namespace std;
 class SignalSource
 {
 public:
-	// конструктор для генерации из ПСП
+	/**
+	 * @brief конструктор для генерации из ПСП (по-умолчанию 4-чный)
+	 * @param data_length размер блока данных в кадре (байт)
+	*/
 	SignalSource(size_t data_length);
 
-	// конструктор для генерации из файла
-	SignalSource(string input_file, size_t data_length);
-
-	SignalSource();
+	/**
+	 * @brief конструктор для генерации из файла (текстовый или бинарный)
+	 * @param input_file файл
+	 * @param is_binary признак бинарного файла
+	 * @param data_length размер блока данных в кадре (байт)
+	*/
+	SignalSource(string input_file, bool is_binary, size_t data_length);
 
 	~SignalSource();
 
@@ -36,8 +43,20 @@ public:
 	// генерация следующего псевдослучайного отсчета из файла
 	xip_complex nextSampleFromFile();
 
-	// генерация ПСП-отсчетов и запись в файл
-	void generateSamplesFile(size_t count, string file_name);
+	/**
+	 * @brief helper-функция. Генерация ПСП-символов и запись в текстовый файл
+	 * @param n_pos число позиций (для сигнального созвездия)
+	 * @param count чисор символов
+	 * @param file_name текстовый файл
+	*/
+	static void generateSymbolFile(int n_pos, size_t count, string file_name);
+
+	/**
+	 * @brief helper-функция. Генерация 2-чной ПСП-последовательности и запись в бинарный файл
+	 * @param byte_count число байтов
+	 * @param file_name бинарный файл
+	*/
+	static void generateBinFile(size_t byte_count, string file_name);
 
 private:
 	size_t dataLength = 0;		// размер блока данных в кадре
@@ -47,6 +66,7 @@ private:
 	static const int8_t preambleData[preambleLength]; // преамбула
 
 	ifstream inFile;			// входной файл с символами
+	bool binaryFile;			// признак бинарного файла
 
 	// псевдослучайный источник символов
 	mls symbolSource{ /* 2^32 - длина M-последовательности */ 32, /* 4-позиционный источник */ 4 };

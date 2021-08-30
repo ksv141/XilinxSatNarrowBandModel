@@ -53,6 +53,8 @@ int main()
 	//dbg_out_sin.close();
 	//dbg_out_sin_int.close();
 
+	//SignalSource::generateBinFile(3000, "data.bin");
+
 	//return 0;
 
 	// инициализация всех блоков
@@ -70,7 +72,7 @@ int main()
 
 	ofstream dbg_out("dbg_out.txt");
 	// источник сигнала
-	SignalSource signal_source("input_data.txt", 20);
+	SignalSource signal_source("input_data.txt", true, 20);
 
 	// интерполятор для имитации тактового сдвига в канале
 	LagrangeInterp chan_interp(1);
@@ -80,7 +82,7 @@ int main()
 
 	// АРУ для жесткого решения, СТС и ФАПЧ
 	int agc_wnd = 128;
-	AutoGaneControl agc(agc_wnd, pwr_constell_qam4);
+	AutoGaneControl agc(agc_wnd, pwr_constell_psk4);
 
 	Pif pif_sts(0.01);
 
@@ -120,7 +122,7 @@ int main()
 		if (i % 2 == 0)
 			continue;
 
-		xip_complex est = nearest_point_qam4(current_sample);	// жесткое решение
+		xip_complex est = nearest_point_psk4(current_sample);	// жесткое решение
 		xip_real sts_err = sts_est.getErr(current_sample, est);	// оценка ошибки тактовой синхры
 		pif_sts.process(sts_err, sts_err);
 		dmd_interp.setShift(sts_err);
