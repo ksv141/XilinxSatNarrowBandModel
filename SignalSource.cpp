@@ -94,12 +94,12 @@ bool SignalSource::__nextSample(bool from_file, xip_complex& out)
 			if (inFile.eof())
 				return false;
 			if (binaryFile) {
-				bitPos += bitShift;
-				if (bitPos >= 8) {
+				if (bitPos == 0)
 					inFile.read(&readByte, 1);
-					bitPos = 0;
-				}
 				current_symbol = (readByte >> (8 - bitPos - bitShift)) << (8 - bitShift);
+				bitPos += bitShift;
+				if (bitPos >= 8)
+					bitPos = 0;
 			}
 			else
 				inFile >> current_symbol;

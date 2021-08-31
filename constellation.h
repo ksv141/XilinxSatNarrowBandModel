@@ -36,4 +36,10 @@ extern xip_complex nearest_point_psk2_60(const xip_complex& in);
 
 extern int nearest_index_psk2_60(const xip_complex& in);
 
+// установить вид сигнального созвездия
+extern void set_current_constell(Current_constell cur_cnstl);
+
+// получить отсчет сигнала из используемого созвездия
+extern xip_complex get_cur_constell_sample(unsigned int symbol);
+
 #endif // CONSTELLATION_H

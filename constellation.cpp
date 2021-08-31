@@ -1,5 +1,6 @@
 #include "constellation.h"
 
+// используемый вид созвездия
 Current_constell current_constell = Current_constell::PSK2;
       
 // нормальное значение уровня сигнала
@@ -22,6 +23,8 @@ xip_complex constell_psk2_60[2] = { {4096, 2365},
 // сигнальное созвездие для преамбулы (режим PSK4)
 xip_complex constell_preamble_psk4[2] = { {constell_psk_norm_val, constell_psk_norm_val},
 										{-constell_psk_norm_val, -constell_psk_norm_val} };
+
+xip_complex* constell_current_ref = constell_psk2;
 
 // нормированная мощность сигналов (используется для АРУ демодулятора)
 xip_real pwr_constell_psk4 = 2 * constell_psk4[0].re * constell_psk4[0].re;
@@ -73,4 +76,20 @@ xip_complex nearest_point_psk2_60(const xip_complex& in)
 int nearest_index_psk2_60(const xip_complex& in)
 {
 	return nearest_index_psk2(in);
+}
+
+void set_current_constell(Current_constell cur_cnstl)
+{
+	current_constell = cur_cnstl;
+	if (cur_cnstl == PSK2)
+		constell_current_ref = constell_psk2;
+	else if (cur_cnstl == PSK2_60)
+		constell_current_ref = constell_psk2_60;
+	else if (cur_cnstl == PSK4)
+		constell_current_ref = constell_psk4;
+}
+
+xip_complex get_cur_constell_sample(unsigned int symbol)
+{
+	return constell_current_ref[symbol];
 }

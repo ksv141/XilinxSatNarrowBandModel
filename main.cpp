@@ -53,9 +53,10 @@ int main()
 	//dbg_out_sin.close();
 	//dbg_out_sin_int.close();
 
-	//SignalSource::generateBinFile(3000, "data.bin");
+//	SignalSource::generateBinFile(3000, "data.bin");
+//	SignalSource::generateBinFile(3, "data_3.bin");
 
-	//return 0;
+//	return 0;
 
 	// инициализация всех блоков
 	init_channel_matched_fir();
@@ -72,7 +73,13 @@ int main()
 
 	ofstream dbg_out("dbg_out.txt");
 	// источник сигнала
-	SignalSource signal_source("input_data.txt", true, 20);
+	SignalSource signal_source("data_3.bin", true, 20);
+
+	xip_complex sample;
+	while (signal_source.nextSampleFromFile(sample)) {
+		dbg_out << sample << endl;
+	}
+	return 0;
 
 	// интерполятор для имитации тактового сдвига в канале
 	LagrangeInterp chan_interp(1);
