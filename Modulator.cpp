@@ -1,30 +1,49 @@
 #include "Modulator.h"
 
 
-
 Modulator::Modulator(const string& input_file, const string& output_file, size_t data_length):
 	m_signalSource(input_file, true, data_length)
 {
-	m_outFile.open(output_file, ios::out | ios::binary);
-	if (!m_outFile.is_open())
+	m_outFile = fopen(output_file.c_str(), "wb");
+	if (!m_outFile)
 		throw runtime_error("input file is not opened");
 }
 
-
 Modulator::~Modulator()
 {
-	if (m_outFile.is_open())
-		m_outFile.close();
+	if (m_outFile)
+		fclose(m_outFile);
 }
 
 void Modulator::process()
 {
-	if (!m_outFile.is_open())
+	if (!m_outFile)
 		return;
 
+	// кодирование данных из файла и модул€ци€
 	xip_complex sample;
-	while (m_signalSource.nextSampleFromFile(sample)) {
-		m_outFile.write((char*)&sample.re, sizeof(sample.re));
-		m_outFile.write((char*)&sample.im, sizeof(sample.im));
+	size_t sample_counter = 0;
+	while (true) {
+		// B --> 2B
+		if (sample_counter % 2)
+			sample = xip_complex{ 0, 0 };
+		else
+			if (!m_signalSource.nextSampleFromFile(sample))
+				break;
+
+		// канальный фильтр фильтр на 2B
+		process_sample_channel_matched_receive(&sample, &sample);
+
+		// повышаем точность на 2 бита
+		sample.re *= 4;
+		sample.im *= 4;
+
+		fx_cmpl_point fx_sample;
+		fx_sample.set_val((int16_t)sample.re, (int16_t)sample.im);
+
+		tC::write_real<int16_t>(m_outFile, fx_sample.real.i_val);
+		tC::write_real<int16_t>(m_outFile, fx_sample.imag.i_val);
+
+		sample_counter++;
 	}
 }

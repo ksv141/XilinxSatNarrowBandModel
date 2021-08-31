@@ -14,6 +14,8 @@
 #include "autoganecontrol.h"
 #include "constellation.h"
 #include "StsEstimate.h"
+#include "Modulator.h"
+#include "fx_point.h"
 
 // Для тестов библиотек XIP
 //#include "XilinxIpTests.h"
@@ -24,6 +26,7 @@ using namespace std;
 
 int main()
 {
+
 	// тесты библиотек XIP
 	//test_cmpy_v6_0_bitacc_cmodel();
 	//test_xip_fir_bitacc_cmodel();
@@ -72,6 +75,11 @@ int main()
 	//return 0;   
 
 	set_current_constell(Current_constell::PSK4);
+
+	Modulator mdl("data.bin", "out_mod.pcm", 1115);
+	mdl.process();
+	return 0;
+	
 
 	ofstream dbg_out("dbg_out.txt");
 	// источник сигнала

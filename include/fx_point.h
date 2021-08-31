@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FXPOINT_H
+#define FXPOINT_H
 
 #include <iostream>
 #include <limits> 
@@ -711,3 +712,5 @@ namespace xilinx_m
 
     void print(fx_point* arr, int size_);
 };
+
+#endif // FXPOINT_H

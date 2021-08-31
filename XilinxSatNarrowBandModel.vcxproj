@@ -178,6 +178,8 @@
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="FirMultiplier.cpp" />
     <ClCompile Include="FirSummator.cpp" />
+    <ClCompile Include="fx_cmpl_point.cpp" />
+    <ClCompile Include="fx_point.cpp" />
     <ClCompile Include="LagrangeInterp.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mls.cpp" />

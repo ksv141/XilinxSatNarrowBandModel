@@ -1,10 +1,15 @@
 #ifndef MODULATOR_H
 #define MODULATOR_H
 
-#include <fstream>
+#include <cstdio>
 #include "fx_point.h"
 #include "fx_cmpl_point.h"
+#include "func_templates.h"
 #include "SignalSource.h"
+#include "ChannelMatchedFir.h"
+
+using namespace std;
+using namespace xilinx_m;
 
 /**
  * @brief модулятор
@@ -33,7 +38,7 @@ public:
 
 private:
 	SignalSource m_signalSource;
-	ofstream m_outFile;
+	FILE* m_outFile;
 };
 
 #endif // MODULATOR_H
