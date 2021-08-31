@@ -42,4 +42,7 @@ extern void set_current_constell(Current_constell cur_cnstl);
 // получить отсчет сигнала из используемого созвездия
 extern xip_complex get_cur_constell_sample(unsigned int symbol);
 
+// получить отсчет сигнала преамбулы из используемого созвездия
+extern xip_complex get_cur_constell_preamble_sample(unsigned int symbol);
+
 #endif // CONSTELLATION_H

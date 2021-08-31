@@ -69,6 +69,7 @@ private:
 	bool binaryFile;			// признак бинарного файла
 	char readByte;				// очередной байт из файла
 	int bitShift;				// количество считываемых битов из бинарного файла
+	unsigned int bitMask;
 	int bitPos;
 
 	// псевдослучайный источник символов

@@ -25,6 +25,7 @@ xip_complex constell_preamble_psk4[2] = { {constell_psk_norm_val, constell_psk_n
 										{-constell_psk_norm_val, -constell_psk_norm_val} };
 
 xip_complex* constell_current_ref = constell_psk2;
+xip_complex* constell_preamble_current_ref = constell_psk2;
 
 // нормированная мощность сигналов (используется для АРУ демодулятора)
 xip_real pwr_constell_psk4 = 2 * constell_psk4[0].re * constell_psk4[0].re;
@@ -81,15 +82,26 @@ int nearest_index_psk2_60(const xip_complex& in)
 void set_current_constell(Current_constell cur_cnstl)
 {
 	current_constell = cur_cnstl;
-	if (cur_cnstl == PSK2)
+	if (cur_cnstl == PSK2) {
 		constell_current_ref = constell_psk2;
-	else if (cur_cnstl == PSK2_60)
+		constell_preamble_current_ref = constell_psk2;
+	}
+	else if (cur_cnstl == PSK2_60) {
 		constell_current_ref = constell_psk2_60;
-	else if (cur_cnstl == PSK4)
+		constell_preamble_current_ref = constell_psk2_60;
+	}
+	else if (cur_cnstl == PSK4) {
 		constell_current_ref = constell_psk4;
+		constell_preamble_current_ref = constell_preamble_psk4;
+	}
 }
 
 xip_complex get_cur_constell_sample(unsigned int symbol)
 {
 	return constell_current_ref[symbol];
+}
+
+xip_complex get_cur_constell_preamble_sample(unsigned int symbol)
+{
+	return constell_preamble_current_ref[symbol];
 }
