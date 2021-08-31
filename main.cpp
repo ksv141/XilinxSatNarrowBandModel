@@ -71,9 +71,11 @@ int main()
 	//gen_to_file.generateSamplesFile(symbol_count, "input_data.txt");
 	//return 0;   
 
+	set_current_constell(Current_constell::PSK4);
+
 	ofstream dbg_out("dbg_out.txt");
 	// источник сигнала
-	SignalSource signal_source("data_3.bin", true, 20);
+	SignalSource signal_source("data.bin", true, 100);
 
 	xip_complex sample;
 	while (signal_source.nextSampleFromFile(sample)) {

@@ -33,7 +33,7 @@ public:
 	 * @param is_binary признак бинарного файла
 	 * @param data_length размер блока данных в кадре (байт)
 	*/
-	SignalSource(string input_file, bool is_binary, size_t data_length);
+	SignalSource(const string& input_file, bool is_binary, size_t data_length);
 
 	~SignalSource();
 
@@ -59,7 +59,7 @@ public:
 	static void generateBinFile(size_t byte_count, string file_name);
 
 private:
-	size_t dataLength = 0;		// размер блока данных в кадре
+	size_t dataLength = 0;		// размер блока данных в кадре (в символах)
 	size_t frameCounter = 0;	// счетчик символов в кадре
 
 	static const size_t preambleLength = 32;	// размер преамбулы
@@ -76,6 +76,9 @@ private:
 	mls symbolSource{ /* 2^32 - длина M-последовательности */ 32, /* 4-позиционный источник */ 4 };
 
 	bool __nextSample(bool from_file, xip_complex& out);
+	
+	// пересчет длины данных из байтов в отсчеты
+	void countDataLength(size_t bytes);
 };
 
 #endif // SIGNALSOURCE_H

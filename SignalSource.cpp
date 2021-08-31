@@ -3,15 +3,16 @@
 // преамбула, вставляемая в начало каждого кадра 0x1ACFFC1D
 const int8_t SignalSource::preambleData[SignalSource::preambleLength] = {0,0,0,1,1,0,1,0,1,1,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,1};
 
-SignalSource::SignalSource(size_t data_length) :
-	dataLength(data_length)
+SignalSource::SignalSource(size_t data_length)
 {
+	countDataLength(data_length);
 }
 
-SignalSource::SignalSource(string input_file, bool is_binary, size_t data_length) :
-	binaryFile(is_binary),
-	dataLength(data_length)
+SignalSource::SignalSource(const string& input_file, bool is_binary, size_t data_length) :
+	binaryFile(is_binary)
 {
+	countDataLength(data_length);
+
 	if (is_binary) {
 		inFile.open(input_file, ios::in | ios::binary);
 		if (current_constell == Current_constell::PSK2 || current_constell == Current_constell::PSK2_60) {
@@ -98,7 +99,8 @@ bool SignalSource::__nextSample(bool from_file, xip_complex& out)
 				return false;
 			if (binaryFile) {
 				if (bitPos == 0)
-					inFile.read(&readByte, 1);
+					if (!inFile.read(&readByte, 1))
+						return false;
 				current_symbol = (readByte >> bitPos) & bitMask;
 				bitPos += bitShift;
 				if (bitPos >= 8)
@@ -118,4 +120,14 @@ bool SignalSource::__nextSample(bool from_file, xip_complex& out)
 		frameCounter = 0;
 
 	return true;
+}
+
+void SignalSource::countDataLength(size_t bytes)
+{
+	if (current_constell == Current_constell::PSK2 || current_constell == Current_constell::PSK2_60) {
+		dataLength = bytes * 8;
+	}
+	else if (current_constell == Current_constell::PSK4) {
+		dataLength = bytes * 4;
+	}
 }
