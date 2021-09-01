@@ -958,40 +958,40 @@ int test_xip_dds_bitacc_cmodel()
 	}
 
 	//Now modify the configuration as desired for your particular configuration
-	config.name = "dds_compiler_v6_0";
-	config.PartsPresent = XIP_DDS_PHASE_GEN_AND_SIN_COS_LUT;
-	config.DDS_Clock_Rate = 100.0;
-	config.Channels = 1;
-	config.Mode_of_Operation = XIP_DDS_MOO_RASTERIZED;
-	config.Modulus = 3000;
-	config.ParameterEntry = XIP_DDS_HARDWARE_PARAMS;
-	config.Spurious_Free_Dynamic_Range = 45.0;
-	config.Frequency_Resolution = 0.4;
-	config.Noise_Shaping = XIP_DDS_NS_NONE;
-	config.Phase_Increment = XIP_DDS_PINCPOFF_FIXED;
-	config.Resync = XIP_DDS_ABSENT;
-	config.Phase_Offset = XIP_DDS_PINCPOFF_NONE;
-	config.Output_Selection = XIP_DDS_OUT_SIN_AND_COS;
-	config.Negative_Sine = XIP_DDS_ABSENT;
-	config.Negative_Cosine = XIP_DDS_ABSENT;
-	config.Amplitude_Mode = XIP_DDS_FULL_RANGE;
-	config.Memory_Type = XIP_DDS_MEM_AUTO;
-	config.Optimization_Goal = XIP_DDS_OPTGOAL_AUTO;
-	config.DSP48_Use = XIP_DDS_DSP_MIN;
-	config.Has_TREADY = XIP_DDS_ABSENT;
-	config.S_CONFIG_Sync_Mode = XIP_DDS_CONFIG_SYNC_VECTOR;
-	config.Output_Form = XIP_DDS_OUTPUT_TWOS;
-	config.Latency_Configuration = XIP_DDS_LATENCY_AUTO;
-	config.Has_ARESETn = XIP_DDS_ABSENT;
-	config.PINC[0] = 1; // 1101000110110111
-	// config.PINC[1]                  = 0;
+	config.name							= "dds_compiler_v6_0";
+	config.PartsPresent					= XIP_DDS_PHASE_GEN_AND_SIN_COS_LUT;
+	config.DDS_Clock_Rate				= 100.0;
+	config.Channels						= 1;
+	config.Mode_of_Operation			= XIP_DDS_MOO_RASTERIZED;
+	config.Modulus						= 3000;
+	config.ParameterEntry				= XIP_DDS_HARDWARE_PARAMS;
+	config.Spurious_Free_Dynamic_Range	= 45.0;
+	config.Frequency_Resolution			= 0.4;
+	config.Noise_Shaping				= XIP_DDS_NS_NONE;
+	config.Phase_Increment				= XIP_DDS_PINCPOFF_FIXED;
+	config.Resync						= XIP_DDS_ABSENT;
+	config.Phase_Offset					= XIP_DDS_PINCPOFF_NONE;
+	config.Output_Selection				= XIP_DDS_OUT_SIN_AND_COS;
+	config.Negative_Sine				= XIP_DDS_ABSENT;
+	config.Negative_Cosine				= XIP_DDS_ABSENT;
+	config.Amplitude_Mode				= XIP_DDS_FULL_RANGE;
+	config.Memory_Type					= XIP_DDS_MEM_AUTO;
+	config.Optimization_Goal			= XIP_DDS_OPTGOAL_AUTO;
+	config.DSP48_Use					= XIP_DDS_DSP_MIN;
+	config.Has_TREADY					= XIP_DDS_ABSENT;
+	config.S_CONFIG_Sync_Mode			= XIP_DDS_CONFIG_SYNC_VECTOR;
+	config.Output_Form					= XIP_DDS_OUTPUT_TWOS;
+	config.Latency_Configuration		= XIP_DDS_LATENCY_AUTO;
+	config.Has_ARESETn					= XIP_DDS_ABSENT;
+	config.PINC[0]						= 1; // 1101000110110111
+	// config.PINC[1]					= 0;
 	// ...
-	config.POFF[0] = 0;
-	// config.POFF[1]                  = 0;
+	config.POFF[0]						= 0;
+	// config.POFF[1]					= 0;
 	// ...
-	config.Latency = 4;
-	config.Output_Width = 8;
-	config.Phase_Width = 12;
+	config.Latency						= 4;
+	config.Output_Width					= 8;
+	config.Phase_Width					= 12;
 
 	// Set up some objects to hold state and the configuration data
 	// for programmable phase increment and phase offset

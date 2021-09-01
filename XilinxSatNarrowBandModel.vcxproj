@@ -159,6 +159,7 @@
     <ClInclude Include="autoganecontrol.h" />
     <ClInclude Include="ChannelMatchedFir.h" />
     <ClInclude Include="constellation.h" />
+    <ClInclude Include="DDS.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="FirMultiplier.h" />
     <ClInclude Include="FirSummator.h" />
@@ -175,6 +176,7 @@
     <ClCompile Include="autoganecontrol.cpp" />
     <ClCompile Include="ChannelMatchedFir.cpp" />
     <ClCompile Include="constellation.cpp" />
+    <ClCompile Include="DDS.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="FirMultiplier.cpp" />
     <ClCompile Include="FirSummator.cpp" />
