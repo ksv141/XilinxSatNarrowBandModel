@@ -16,17 +16,18 @@
 #include "StsEstimate.h"
 #include "Modulator.h"
 #include "fx_point.h"
+#include "DDS.h"
 
 // Для тестов библиотек XIP
-#include "XilinxIpTests.h"
+//#include "XilinxIpTests.h"
 
 using namespace std;
 
 int main()
 {
-	test_xip_dds_bitacc_cmodel();
-	return 0;
+	DDS dds;
 
+	return 0;
 	// инициализация xip fir
 	init_channel_matched_fir();
 
