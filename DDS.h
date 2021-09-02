@@ -1,6 +1,7 @@
 #ifndef DDS_H
 #define DDS_H
 
+#include <stdexcept>
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "dds_compiler_v6_0_bitacc_cmodel.h"
 #include "debug.h"
@@ -11,7 +12,7 @@
 class DDS
 {
 public:
-	DDS();
+	DDS(int phase_modulus);
 
 	~DDS();
 
@@ -29,6 +30,8 @@ private:
 
 	xip_uint no_of_input_fields;	// число полей во входной структуре
 	xip_uint no_of_output_fields;	// число полей в выходной структуре
+
+	int m_phaseModulus;				// диапазон изменения фазы [0, 16383] --> [0, 2pi]
 };
 
 #endif // DDS_H

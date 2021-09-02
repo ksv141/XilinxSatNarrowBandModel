@@ -1,7 +1,10 @@
 #include "DDS.h"
 
-DDS::DDS()
+DDS::DDS(int phase_modulus)
 {
+	if (phase_modulus < 0 || phase_modulus > 16384)
+		throw std::runtime_error("invalid phase modulus");
+	m_phaseModulus = phase_modulus;
 	init_dds_lib();
 }
 
@@ -36,17 +39,18 @@ int DDS::process(double dph, double& out_phase, double& out_sin, double& out_cos
 	}
 	out_phase = value;
 
+	const int SCALE_FACTOR = sizeof(int) * CHAR_BIT - dds_cnfg.Output_Width;
 	if (xip_dds_v6_0_xip_array_real_get_data(dds_out, &value, 0, 0, 1) != XIP_STATUS_OK) {
 		printf("ERROR: Could not get data from dds output array\n");
 		return -1;
 	}
-	out_sin = value;
+	out_sin = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
 
 	if (xip_dds_v6_0_xip_array_real_get_data(dds_out, &value, 0, 0, 2) != XIP_STATUS_OK) {
 		printf("ERROR: Could not get data from dds output array\n");
 		return -1;
 	}
-	out_cos = value;
+	out_cos = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
 
 	return 0;
 }
@@ -68,8 +72,8 @@ int DDS::init_dds_lib()
 	dds_cnfg.PartsPresent = XIP_DDS_PHASE_GEN_AND_SIN_COS_LUT;
 	dds_cnfg.DDS_Clock_Rate = 100.0;
 	dds_cnfg.Channels = 1;
-	dds_cnfg.Mode_of_Operation = XIP_DDS_MOO_CONVENTIONAL; // XIP_DDS_MOO_RASTERIZED;
-	dds_cnfg.Modulus = 3000;
+	dds_cnfg.Mode_of_Operation = XIP_DDS_MOO_RASTERIZED; // XIP_DDS_MOO_CONVENTIONAL
+	dds_cnfg.Modulus = m_phaseModulus;			// диапазон изменения фазы [0, 16383] --> [0, 2pi]
 	dds_cnfg.ParameterEntry = XIP_DDS_HARDWARE_PARAMS;
 	dds_cnfg.Spurious_Free_Dynamic_Range = 45.0;
 	dds_cnfg.Frequency_Resolution = 0.4;
@@ -89,17 +93,9 @@ int DDS::init_dds_lib()
 	dds_cnfg.Output_Form = XIP_DDS_OUTPUT_TWOS;
 	dds_cnfg.Latency_Configuration = XIP_DDS_LATENCY_AUTO;
 	dds_cnfg.Has_ARESETn = XIP_DDS_ABSENT;
-	dds_cnfg.PINC[0] = 0; 
-	// dds_cnfg.PINC[1]					= 0;
-	// ...
-	dds_cnfg.POFF[0] = 0;
-	// dds_cnfg.POFF[1]					= 0;
-	// ...
-	dds_cnfg.Latency = 4;
+	dds_cnfg.Latency = 1;		// нужно подбирать исходя из реализации в железе
 	dds_cnfg.Output_Width = 16;
-	dds_cnfg.Phase_Width = 16;
-
-	xip_dds_v6_0_config_pkt* pinc_poff_config = nullptr;
+	dds_cnfg.Phase_Width = 14;
 
 	// Create model object with your particular configuration
 	dds_model = xip_dds_v6_0_create(&dds_cnfg, &msg_print, 0);

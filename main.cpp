@@ -23,16 +23,21 @@
 
 using namespace std;
 
+// глобальные параметры
+const int DDS_PHASE_MODULUS = 16384;	// диапазон изменения фазы [0, 16383] --> [0, 2pi]
+
 int main()
 {
-	DDS dds;
+	ofstream dbg_out("dbg_out.txt");
+	DDS dds(DDS_PHASE_MODULUS);
 	double dds_phase, dds_sin, dds_cos;
-	for (int i = 0; i < 1000; i++) {
-		double dph = 100.5;
+	for (int i = 0; i < 17000; i++) {
+		double dph = 1.0;
 		dds.process(dph, dds_phase, dds_sin, dds_cos);
-		cout << "ph = " << dds_phase << "\tsin = " << dds_sin << "\tcos = " << dds_cos << endl;
+		dbg_out << "ph = " << dds_phase << "\tsin = " << dds_sin << "\tcos = " << dds_cos << endl;
 	}
 
+	dbg_out.close();
 	return 0;
 	// инициализация xip fir
 	init_channel_matched_fir();
