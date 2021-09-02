@@ -15,6 +15,8 @@ public:
 
 	~DDS();
 
+	int process(double dph, double& out_phase, double& out_sin, double& out_cos);
+
 private:
 	int init_dds_lib();
 	int destroy_dds_lib();
@@ -24,6 +26,9 @@ private:
 
 	xip_array_real* dds_in;		// 3-D массив, содержащий текущий отсчет для обработки
 	xip_array_real* dds_out;	// 3-D массив, содержащий результат обработки
+
+	xip_uint no_of_input_fields;	// число полей во входной структуре
+	xip_uint no_of_output_fields;	// число полей в выходной структуре
 };
 
 #endif // DDS_H

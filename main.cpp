@@ -26,6 +26,12 @@ using namespace std;
 int main()
 {
 	DDS dds;
+	double dds_phase, dds_sin, dds_cos;
+	for (int i = 0; i < 1000; i++) {
+		double dph = 100.5;
+		dds.process(dph, dds_phase, dds_sin, dds_cos);
+		cout << "ph = " << dds_phase << "\tsin = " << dds_sin << "\tcos = " << dds_cos << endl;
+	}
 
 	return 0;
 	// инициализация xip fir
