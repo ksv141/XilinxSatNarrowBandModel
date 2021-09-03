@@ -55,6 +55,11 @@ int DDS::process(double dph, double& out_phase, double& out_sin, double& out_cos
 	return 0;
 }
 
+unsigned int DDS::getOutputWidth()
+{
+	return dds_cnfg.Output_Width;
+}
+
 /**
  * @brief инициализация библиотеки xip dds
  * @return 

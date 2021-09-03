@@ -141,7 +141,22 @@ int xip_multiply_real(const xip_real& a, const xip_real& b, xip_real& out)
 	return 0;
 }
 
-ostream& operator<<(ostream& out, const xip_complex& data) 
+void xip_real_shift(xip_real& in_out, int pos)
+{
+	uint64_t coeff = 1 << abs(pos);
+	if (pos > 0)
+		in_out *= coeff;
+	else if (pos < 0)
+		in_out /= coeff;
+}
+
+void xip_complex_shift(xip_complex& in_out, int pos)
+{
+	xip_real_shift(in_out.re, pos);
+	xip_real_shift(in_out.im, pos);
+}
+
+ostream& operator<<(ostream& out, const xip_complex& data)
 {
 	out << data.re;
 	if (data.im >= 0)

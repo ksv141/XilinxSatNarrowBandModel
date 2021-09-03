@@ -6,7 +6,7 @@ Modulator::Modulator(const string& input_file, const string& output_file, size_t
 {
 	m_outFile = fopen(output_file.c_str(), "wb");
 	if (!m_outFile)
-		throw runtime_error("input file is not opened");
+		throw runtime_error("output file is not opened");
 }
 
 Modulator::~Modulator()

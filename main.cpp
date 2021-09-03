@@ -17,8 +17,14 @@ const int FRAME_DATA_SIZE = 1115;		// размер данных в кадре (байт)
 int main()
 {
 	init_xip_multiplier();
-	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 1024);
+	init_channel_matched_fir();
+	//signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 512);
+	Demodulator dmd("out_mod_shift.pcm", "out_mod_shift.bin", FRAME_DATA_SIZE);
+	dmd.process();
+
 	destroy_xip_multiplier();
+	destroy_channel_matched_fir();
+
 	return 0;
 
 	//ofstream dbg_out("dbg_out.txt");

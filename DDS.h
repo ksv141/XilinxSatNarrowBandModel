@@ -18,6 +18,12 @@ public:
 
 	int process(double dph, double& out_phase, double& out_sin, double& out_cos);
 
+	/**
+	 * @brief возвращает ширину возвращаемых sin/cos в битах
+	 * @return 
+	*/
+	unsigned int getOutputWidth();
+
 private:
 	int init_dds_lib();
 	int destroy_dds_lib();
