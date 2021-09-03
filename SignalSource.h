@@ -58,12 +58,12 @@ public:
 	*/
 	static void generateBinFile(size_t byte_count, string file_name);
 
+	static const size_t preambleLength = 32;	// размер преамбулы
+	static const int8_t preambleData[preambleLength]; // преамбула
+
 private:
 	size_t dataLength = 0;		// размер блока данных в кадре (в символах)
 	size_t frameCounter = 0;	// счетчик символов в кадре
-
-	static const size_t preambleLength = 32;	// размер преамбулы
-	static const int8_t preambleData[preambleLength]; // преамбула
 
 	ifstream inFile;			// входной файл с символами
 	bool binaryFile;			// признак бинарного файла

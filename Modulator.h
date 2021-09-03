@@ -2,6 +2,7 @@
 #define MODULATOR_H
 
 #include <cstdio>
+#include <cstring>
 #include "fx_point.h"
 #include "fx_cmpl_point.h"
 #include "func_templates.h"

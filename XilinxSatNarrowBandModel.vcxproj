@@ -156,6 +156,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="all_headers.h" />
     <ClInclude Include="autoganecontrol.h" />
     <ClInclude Include="ChannelMatchedFir.h" />
     <ClInclude Include="constellation.h" />
@@ -170,6 +171,7 @@
     <ClInclude Include="Pif.h" />
     <ClInclude Include="SignalSource.h" />
     <ClInclude Include="StsEstimate.h" />
+    <ClInclude Include="test_utils.h" />
     <ClInclude Include="xip_utils.h" />
     <ClInclude Include="XilinxIpTests.h" />
   </ItemGroup>
@@ -191,6 +193,7 @@
     <ClCompile Include="Pif.cpp" />
     <ClCompile Include="SignalSource.cpp" />
     <ClCompile Include="StsEstimate.cpp" />
+    <ClCompile Include="test_utils.cpp" />
     <ClCompile Include="XilinxIpTests.cpp" />
     <ClCompile Include="xip_utils.cpp" />
   </ItemGroup>

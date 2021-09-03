@@ -2,21 +2,8 @@
 #include <fstream>
 #include <cmath>
 #include <cstdio>
-#include "cmpy_v6_0_bitacc_cmodel.h"
-#include "SignalSource.h"
-#include "xip_utils.h"
-#include "debug.h"
-#include "ChannelMatchedFir.h"
-#include "LagrangeInterp.h"
-#include "FirMultiplier.h"
-#include "FirSummator.h"
-#include "Pif.h"
-#include "autoganecontrol.h"
-#include "constellation.h"
-#include "StsEstimate.h"
-#include "Modulator.h"
-#include "fx_point.h"
-#include "DDS.h"
+
+#include "all_headers.h"
 
 // Для тестов библиотек XIP
 //#include "XilinxIpTests.h"
@@ -24,10 +11,19 @@
 using namespace std;
 
 // глобальные параметры
-const int DDS_PHASE_MODULUS = 16384;	// диапазон изменения фазы [0, 16383] --> [0, 2pi]
+const int DDS_PHASE_MODULUS = 16384;	// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
+const int FRAME_DATA_SIZE = 1115;		// размер данных в кадре (байт)
 
 int main()
 {
+	init_xip_multiplier();
+	xip_real a = 10000;
+	xip_real b = 0.9999;
+	xip_real c;
+	xip_multiply_real(a, b, c);
+	destroy_xip_multiplier();
+	return 0;
+
 	//ofstream dbg_out("dbg_out.txt");
 	//DDS dds(DDS_PHASE_MODULUS);
 	//double dds_phase, dds_sin, dds_cos;
@@ -47,7 +43,7 @@ int main()
 	//set_current_constell(Current_constell::PSK4);
 
 	//// настройка и запуск модулятора
-	//Modulator mdl("1.zip", "out_mod_zip.pcm", 1115);
+	//Modulator mdl("1.zip", "out_mod_zip.pcm", FRAME_DATA_SIZE);
 	//mdl.process();
 
 	//destroy_channel_matched_fir();
