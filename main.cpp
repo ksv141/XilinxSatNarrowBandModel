@@ -17,10 +17,7 @@ const int FRAME_DATA_SIZE = 1115;		// размер данных в кадре (байт)
 int main()
 {
 	init_xip_multiplier();
-	xip_real a = 10000;
-	xip_real b = 0.9999;
-	xip_real c;
-	xip_multiply_real(a, b, c);
+	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 1024);
 	destroy_xip_multiplier();
 	return 0;
 
@@ -43,7 +40,7 @@ int main()
 	//set_current_constell(Current_constell::PSK4);
 
 	//// настройка и запуск модулятора
-	//Modulator mdl("1.zip", "out_mod_zip.pcm", FRAME_DATA_SIZE);
+	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
 	//mdl.process();
 
 	//destroy_channel_matched_fir();
