@@ -161,6 +161,7 @@
     <ClInclude Include="constellation.h" />
     <ClInclude Include="DDS.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="Demodulator.h" />
     <ClInclude Include="FirMultiplier.h" />
     <ClInclude Include="FirSummator.h" />
     <ClInclude Include="LagrangeInterp.h" />
@@ -178,6 +179,7 @@
     <ClCompile Include="constellation.cpp" />
     <ClCompile Include="DDS.cpp" />
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="Demodulator.cpp" />
     <ClCompile Include="FirMultiplier.cpp" />
     <ClCompile Include="FirSummator.cpp" />
     <ClCompile Include="fx_cmpl_point.cpp" />

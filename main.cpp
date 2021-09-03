@@ -28,29 +28,30 @@ const int DDS_PHASE_MODULUS = 16384;	// диапазон изменения фазы [0, 16383] --> [
 
 int main()
 {
-	ofstream dbg_out("dbg_out.txt");
-	DDS dds(DDS_PHASE_MODULUS);
-	double dds_phase, dds_sin, dds_cos;
-	for (int i = 0; i < 17000; i++) {
-		double dph = 1.0;
-		dds.process(dph, dds_phase, dds_sin, dds_cos);
-		dbg_out << "ph = " << dds_phase << "\tsin = " << dds_sin << "\tcos = " << dds_cos << endl;
-	}
+	//ofstream dbg_out("dbg_out.txt");
+	//DDS dds(DDS_PHASE_MODULUS);
+	//double dds_phase, dds_sin, dds_cos;
+	//for (int i = 0; i < 17000; i++) {
+	//	double dph = 1.0;
+	//	dds.process(dph, dds_phase, dds_sin, dds_cos);
+	//	dbg_out << "ph = " << dds_phase << "\tsin = " << dds_sin << "\tcos = " << dds_cos << endl;
+	//}
 
-	dbg_out.close();
-	return 0;
-	// инициализация xip fir
-	init_channel_matched_fir();
+	//dbg_out.close();
+	//return 0;
 
-	// вид сигнала
-	set_current_constell(Current_constell::PSK4);
+	//// инициализация xip fir
+	//init_channel_matched_fir();
 
-	// настройка и запуск модулятора
-	Modulator mdl("data.bin", "out_mod.pcm", 1115);
-	mdl.process();
+	//// вид сигнала
+	//set_current_constell(Current_constell::PSK4);
 
-	destroy_channel_matched_fir();
-	return 0;
+	//// настройка и запуск модулятора
+	//Modulator mdl("1.zip", "out_mod_zip.pcm", 1115);
+	//mdl.process();
+
+	//destroy_channel_matched_fir();
+	//return 0;
 	
 
 	//ofstream dbg_out("dbg_out.txt");
