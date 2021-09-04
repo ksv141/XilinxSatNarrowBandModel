@@ -13,6 +13,8 @@
 
 using namespace std;
 
+extern const int LAGRANGE_INTERVALS;
+
 // Интерполятор Лагранжа 7-й степени. Обеспечивает сдвиг тактов и дробную передискретизацию
 // интервал между двумя смежными отсчетами делится на 1024 интервалов, 
 // для каждого из которых используется свой заранее рассчитанный набор из 8 коэффициентов
@@ -37,7 +39,7 @@ public:
 	void process(xip_real shift);
 
 	// for test
-	void process(const xip_complex& in, xip_complex& out, double shift);
+	void process(const xip_complex& in, xip_complex& out, int time_shift);
 
 private:
 	int init_lagrange_interp();
@@ -45,9 +47,9 @@ private:
 	int process_sample_lagrange_interp(const xip_complex& in, xip_complex& out, uint32_t pos);
 	int destroy_lagrange_interp();
 
-	const uint32_t lagrange_n_intervals = 1024;		// количество интервалов
-	const uint32_t lagrange_n_coeff = 8;			// количество коэффициентов
-	double* lagrange_coeff;					// наборы коэффициентов фильтра, следуют по порядку
+	const uint32_t lagrange_n_intervals = LAGRANGE_INTERVALS;		// количество интервалов
+	const uint32_t lagrange_n_coeff = 8;							// количество коэффициентов
+	double* lagrange_coeff;											// наборы коэффициентов фильтра, следуют по порядку
 
 	xip_real m_fraction;          // отношение частоты дискретизации выходного сигнала ко входному
 	xip_real m_dk;                // текущая позиция интерполяции [0; 1]

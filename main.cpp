@@ -13,12 +13,13 @@ using namespace std;
 // глобальные параметры
 const int DDS_PHASE_MODULUS = 16384;	// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
 const int FRAME_DATA_SIZE = 1115;		// размер данных в кадре (байт)
+const int AGC_WND_SIZE = 128;			// окно усреднения АРУ
 
 int main()
 {
 	init_xip_multiplier();
 	init_channel_matched_fir();
-	//signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 512);
+	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 128);
 	Demodulator dmd("out_mod_shift.pcm", "out_mod_shift.bin", FRAME_DATA_SIZE);
 	dmd.process();
 

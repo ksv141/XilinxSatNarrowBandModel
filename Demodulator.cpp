@@ -1,6 +1,8 @@
 #include "Demodulator.h"
 
-Demodulator::Demodulator(const string& input_file, const string& output_file, size_t data_length)
+Demodulator::Demodulator(const string& input_file, const string& output_file, size_t data_length):
+	m_agc(AGC_WND_SIZE, pwr_constell_psk4),
+	pif_sts(0.01)
 {
 	m_inFile = fopen(input_file.c_str(), "rb");
 	if (!m_inFile)
@@ -34,8 +36,14 @@ void Demodulator::process()
 		tC::read_real<int16_t, int16_t>(m_inFile, im)) {
 		xip_complex sample{ re, im };
 
+		// СТС
+		dmd_interp.process(sample);
+		dmd_interp.next(sample);
+
 		// согласованный фильтр на 2B
 		process_sample_channel_matched_receive(&sample, &sample);
+
+		//agc.process(sample, sample);
 
 		if (i == 1) {	// берем каждый 2-й отсчет
 			i = 0;
@@ -43,7 +51,22 @@ void Demodulator::process()
 		}
 		i = 1;
 
-		dbg_out << sample << endl;
+		// АРУ
+		m_agc.process(sample, sample);
+		xip_complex est = nearest_point_psk4(sample);		// жесткое решение
+		xip_real sts_err = m_stsEst.getErr(sample, est);	// оценка ошибки тактовой синхры
+
+		// для сигнального созвездия размером 4096 ошибка будет в диапазоне [-2^26, 2^26]
+		// уменьшаем динамический диапазон до [-2^15, 2^15]
+		xip_real_shift(sts_err, -11);
+
+		pif_sts.process(sts_err, sts_err);	// сглаживание сигнала ошибки в ПИФ
+
+		// уменьшаем динамический диапазон до [-2^10, 2^10] для интерполятора
+		xip_real_shift(sts_err, -5);
+		dmd_interp.setShift(sts_err);
+
+		dbg_out << sts_err << endl;
 		//tC::write_real<int16_t>(out_file, res.re);
 		//tC::write_real<int16_t>(out_file, res.im);
 	}

@@ -1,5 +1,6 @@
 #include "LagrangeInterp.h"
 
+const int LAGRANGE_INTERVALS = 1024;	// количество интервалов разбиени€ одного интервала интерпол€ции (одного такта)
 
 LagrangeInterp::LagrangeInterp(xip_real frac):
 	m_fraction(frac),
@@ -62,12 +63,12 @@ void LagrangeInterp::process(xip_real shift)
 	}
 }
 
-void LagrangeInterp::process(const xip_complex& in, xip_complex& out, double shift)
+void LagrangeInterp::process(const xip_complex& in, xip_complex& out, int time_shift)
 {
-	uint32_t pos = shift * lagrange_n_intervals;
-	if (pos >= lagrange_n_intervals)
-		pos -= lagrange_n_intervals;
-	process_sample_lagrange_interp(in, out, pos);
+	//uint32_t pos = shift * lagrange_n_intervals;
+	//if (pos >= lagrange_n_intervals)
+	//	pos -= lagrange_n_intervals;
+	process_sample_lagrange_interp(in, out, time_shift);
 }
 
 // инициализаци€ фильтра-интерпол€тора Ћагранжа

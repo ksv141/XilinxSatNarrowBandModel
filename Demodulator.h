@@ -9,9 +9,16 @@
 #include "SignalSource.h"
 #include "ChannelMatchedFir.h"
 #include "xip_utils.h"
+#include "autoganecontrol.h"
+#include "constellation.h"
+#include "StsEstimate.h"
+#include "Pif.h"
+#include "LagrangeInterp.h"
 
 using namespace std;
 using namespace xilinx_m;
+
+extern const int AGC_WND_SIZE;
 
 class Demodulator
 {
@@ -34,6 +41,11 @@ public:
 private:
 	FILE* m_inFile;
 	FILE* m_outFile;
+
+	AutoGaneControl m_agc;
+	StsEstimate m_stsEst;
+	Pif pif_sts;
+	LagrangeInterp dmd_interp;
 };
 
 #endif // DEMODULATOR_H

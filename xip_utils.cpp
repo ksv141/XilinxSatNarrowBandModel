@@ -6,6 +6,8 @@ xip_array_complex* xip_multiplier_reqa;		// первый аргумент
 xip_array_complex* xip_multiplier_reqb;		// второй аргумент
 xip_array_uint* xip_multiplier_reqctrl;		// бит округления
 xip_array_complex* xip_multiplier_response;	// результат
+int a_max;
+int b_max;
 
 // инициализация комплексного умножителя
 // умножает 2 единичных комплексных значения
@@ -25,6 +27,8 @@ int init_xip_multiplier()
 		printf("Error creating xip_multiplier instance\n");
 		return -1;
 	}
+	a_max = (1 << (xip_multiplier_cnfg.APortWidth - 1)) - 1;
+	b_max = (1 << (xip_multiplier_cnfg.BPortWidth - 1)) - 1;
 
 	// Create input data packet for operand A
 	xip_multiplier_reqa = xip_array_complex_create();
@@ -129,8 +133,19 @@ int xip_multiply_complex(const xip_complex& a, const xip_complex& b, xip_complex
 // умножение вещественных чисел реализовано как частный случай умножения комплексных
 int xip_multiply_real(const xip_real& a, const xip_real& b, xip_real& out)
 {
-	xip_complex a_cplx{ a, 0 };
-	xip_complex b_cplx{ b, 0 };
+	xip_real a_arg = a;
+	xip_real b_arg = b;
+	if (a_arg > a_max)
+		a_arg = a_max;
+	if (a_arg < -a_max)
+		a_arg = -a_max;
+	if (b_arg > b_max)
+		b_arg = b_max;
+	if (b_arg < -b_max)
+		b_arg = -b_max;
+
+	xip_complex a_cplx{ a_arg, 0 };
+	xip_complex b_cplx{ b_arg, 0 };
 	xip_complex out_cplx;
 
 	if (xip_multiply_complex(a_cplx, b_cplx, out_cplx) != 0)
