@@ -178,6 +178,10 @@ int LagrangeInterp::process_sample_lagrange_interp(const xip_complex& in, xip_co
 	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out.re, 0, 0, 0, P_BASIC);	// re
 	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out.im, 0, 1, 0, P_BASIC);	// im
 
+	// нормализация сдвигом
+	//xip_complex_shift(out, -(int)(lagrange_interp_fir_cnfg.data_width - lagrange_interp_fir_cnfg.data_fract_width - 1));
+	xip_complex_shift(out, -15);
+
 	return 0;
 }
 

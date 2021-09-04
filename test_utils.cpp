@@ -1,5 +1,8 @@
 #include "test_utils.h"
 
+static const double PI = 3.141592653589793238463;
+static const double _2_PI = PI * 2;
+
 void signal_freq_shift(const string& in, const string& out, double dph)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");
@@ -51,7 +54,7 @@ void signal_time_shift(const string& in, const string& out, int time_shift)
 	if (!out_file)
 		return;
 
-	//ofstream dbg_out("dbg_out.txt");
+	ofstream dbg_out("dbg_out.txt");
 
 	LagrangeInterp itrp;
 	int16_t re;
@@ -65,10 +68,35 @@ void signal_time_shift(const string& in, const string& out, int time_shift)
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
 
-		//dbg_out << res << endl;
+		dbg_out << res << endl;
 	}
 
-	//dbg_out.close();
+	dbg_out.close();
 	fclose(in_file);
+	fclose(out_file);
+}
+
+void generate_sin_signal(const string& out, double freq, double sample_freq, size_t count, int bits)
+{
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	ofstream dbg_out("dbg_out.txt");
+
+	double dph = _2_PI * freq / sample_freq;	// набег фазы за такт
+	double ph = 0;						// текущая фаза
+	complex<double> sample;
+	complex<double> _im_j{ 0, 1 };		// мнимая единица
+	for (size_t i = 0; i < count; i++) {
+		ph = fmod(ph + dph, _2_PI);
+		sample = exp(_im_j * (ph));		// сигнал с амплитудой 1
+		xip_complex res{ sample.real(), sample.imag() };
+		xip_complex_shift(res, bits-1);
+		tC::write_real<int16_t>(out_file, res.re);
+		tC::write_real<int16_t>(out_file, res.im);
+		dbg_out << res << endl;
+	}
+	dbg_out.close();
 	fclose(out_file);
 }
