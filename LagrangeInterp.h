@@ -39,7 +39,12 @@ public:
 	// вычисление вектора отсчетов дл€ кратной интерпол€ции со смещением
 	void process(xip_real shift);
 
-	// for test
+	/**
+	 * @brief дл€ тестировани€ интерпол€тора
+	 * @param in вход
+	 * @param out выход
+	 * @param time_shift сдвиг в диапазоне [-1023, 1023]
+	*/
 	void process(const xip_complex& in, xip_complex& out, int time_shift);
 
 private:
@@ -55,7 +60,7 @@ private:
 	xip_real m_fraction;          // отношение частоты дискретизации выходного сигнала ко входному
 	xip_real m_dk;                // текуща€ позици€ интерпол€ции [0; 1]
 	int m_decim;				  // счетчик децимируемых отсчетов
-	xip_real m_shift;			  // текущий сдвиг
+	uint32_t m_shift;			  // текущий сдвиг
 	xip_real m_prevShift;         // предыдущий сдвиг
 	xip_complex m_currentSample;  // текущий входной отсчет
 

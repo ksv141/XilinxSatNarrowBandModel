@@ -19,13 +19,16 @@ int main()
 {
 //	generate_sin_signal("sin.pcm", 1, 20, 40, 13);
 //	signal_time_shift("sin.pcm", "sin_shift.pcm", 256);
-	signal_time_shift("sin_shift.pcm", "sin_unshift.pcm", 1024-256);
-	return 0;
+//	signal_time_shift("sin_shift.pcm", "sin_unshift.pcm", -256);
+//	return 0;
 
+	set_current_constell(Current_constell::PSK4);
 	init_xip_multiplier();
 	init_channel_matched_fir();
-	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 128);
-	Demodulator dmd("out_mod_shift.pcm", "out_mod_shift.bin", FRAME_DATA_SIZE);
+//	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 128);
+	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
+	//mdl.process();
+	Demodulator dmd("out_mod.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

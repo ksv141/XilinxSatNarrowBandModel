@@ -9,11 +9,11 @@
 #include "SignalSource.h"
 #include "ChannelMatchedFir.h"
 #include "xip_utils.h"
-#include "autoganecontrol.h"
 #include "constellation.h"
 #include "StsEstimate.h"
 #include "Pif.h"
 #include "LagrangeInterp.h"
+#include "xip_utils.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -26,10 +26,11 @@ public:
 	/**
 	 * @brief Установка параметров демодулятора
 	 * @param input_file входной PCM-файл (16-бит стерео I/Q)
-	 * @param output_file выходной бинарный файл
+	 * @output_dmd_file выходной PCM-файл на входе блока принятия решения
+	 * @param output_bin_file выходной бинарный файл с принятыми данными
 	 * @param data_length размер данных в кадре (байт)
 	*/
-	Demodulator(const string& input_file, const string& output_file, size_t data_length);
+	Demodulator(const string& input_file, const string& output_dmd_file, const string& output_bin_file, size_t data_length);
 
 	~Demodulator();
 
@@ -40,9 +41,9 @@ public:
 
 private:
 	FILE* m_inFile;
-	FILE* m_outFile;
+	FILE* m_outDmdFile;
+	FILE* m_outBinFile;
 
-	AutoGaneControl m_agc;
 	StsEstimate m_stsEst;
 	Pif pif_sts;
 	LagrangeInterp dmd_interp;

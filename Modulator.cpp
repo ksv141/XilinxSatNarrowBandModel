@@ -34,9 +34,10 @@ void Modulator::process()
 		// канальный фильтр фильтр на 2B
 		process_sample_channel_matched_receive(&sample, &sample);
 
-		// повышаем точность на 2 бита
-		sample.re *= 4;
-		sample.im *= 4;
+		// если диапазон сигнала +/-4096, то с выхода фильра 13-битный отсчет
+
+		// повышаем точность на 2 бита (до 15 бит)
+		xip_complex_shift(sample, 2);
 
 		fx_cmpl_point fx_sample;
 		fx_sample.set_val((int16_t)sample.re, (int16_t)sample.im);

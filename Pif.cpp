@@ -50,6 +50,15 @@ int Pif::process(const xip_real& in, xip_real& out)
 	return 0;
 }
 
+int Pif::process_1(const xip_real& in, xip_real& out)
+{
+	double x = in * g[1] + reg;
+	double res = in * g[0] + x;
+	reg = x;
+	out = reg;
+	return 0;
+}
+
 void Pif::calculate_g1_g2(double slb)
 {
 	using namespace std;

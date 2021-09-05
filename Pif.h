@@ -23,6 +23,8 @@ public:
 
 	int process(const xip_real& in, xip_real& out);
 
+	int process_1(const xip_real& in, xip_real& out);
+
 private:
 	void calculate_g1_g2(double slb);
 

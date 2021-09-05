@@ -6,6 +6,7 @@ LagrangeInterp::LagrangeInterp(xip_real frac):
 	m_fraction(frac),
 	m_dk(1),
 	m_decim(0),
+	m_shift(0),
 	m_prevShift(0)
 {
 	init_lagrange_interp();
@@ -18,8 +19,22 @@ LagrangeInterp::~LagrangeInterp()
 
 void LagrangeInterp::setShift(xip_real shift)
 {
-	m_shift = shift;
-	m_shift <= -1.0 ? -1.0 : (m_shift >= 1.0 ? 1.0 : m_shift);
+	int time_shift = m_shift;
+	time_shift += shift;
+	// time_shift в диапазоне [-1023, 1023]
+	// приведение сдвига к интервалу [0, 1023]
+	if (time_shift >= 0) {
+		if (time_shift < lagrange_n_intervals)
+			m_shift = (uint32_t)time_shift;
+		else
+			m_shift = lagrange_n_intervals - 1;
+	}
+	else {
+		if (time_shift > -(int)lagrange_n_intervals)
+			m_shift = lagrange_n_intervals + time_shift;
+		else
+			m_shift = 1;
+	}
 }
 
 void LagrangeInterp::process(const xip_complex& in)
@@ -29,10 +44,7 @@ void LagrangeInterp::process(const xip_complex& in)
 
 bool LagrangeInterp::next(xip_complex& out)
 {
-	m_dk = 1 - m_shift;
-	if (m_dk > 1)
-		m_dk = 2 - m_dk;
-	process(m_currentSample, out, m_dk);
+	process(m_currentSample, out, m_shift);
 	return true;
 }
 
@@ -65,10 +77,22 @@ void LagrangeInterp::process(xip_real shift)
 
 void LagrangeInterp::process(const xip_complex& in, xip_complex& out, int time_shift)
 {
-	//uint32_t pos = shift * lagrange_n_intervals;
-	//if (pos >= lagrange_n_intervals)
-	//	pos -= lagrange_n_intervals;
-	process_sample_lagrange_interp(in, out, time_shift);
+	// time_shift в диапазоне [-1023, 1023]
+	// приведение сдвига к интервалу [0, 1023]
+	//uint32_t pos;
+	//if (time_shift >= 0) {
+	//	if (time_shift < lagrange_n_intervals)
+	//		pos = (uint32_t)time_shift;
+	//	else
+	//		pos = lagrange_n_intervals - 1;
+	//}
+	//else {
+	//	if (time_shift > -(int)lagrange_n_intervals)
+	//		pos = lagrange_n_intervals + time_shift;
+	//	else
+	//		pos = 1;
+	//}
+	process_sample_lagrange_interp(in, out, m_shift);
 }
 
 // инициализация фильтра-интерполятора Лагранжа
