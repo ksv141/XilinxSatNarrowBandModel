@@ -62,8 +62,11 @@ void signal_time_shift(const string& in, const string& out, int time_shift)
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
-		xip_complex res;
-		itrp.process(sample, res, time_shift);
+		xip_complex res{0,0};
+		itrp.process(sample);
+		if (!itrp.next(res))
+			continue;
+		//itrp.process(sample, res, time_shift);
 
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);

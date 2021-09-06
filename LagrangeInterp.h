@@ -33,32 +33,24 @@ public:
 
 	~LagrangeInterp();
 
-	// выставить смещение тактов [-1, +1]
-	void setShift(xip_real shift);
-
-	// обработать очередной отсчет
+	/**
+	 * @brief обработка очередного отсчета. в буфер отсчетов добавл€етс€ очередной отсчет (FIFO)
+	 * @param in 
+	*/
 	void process(const xip_complex& in);
 
-	// получить следующий отсчет. true - есть отсчет, false - нет отсчета (требуетс€ подать на вход следующий)
-	bool next(xip_complex& out);
-
-	// вычисление вектора отсчетов дл€ кратной интерпол€ции со смещением
-	void process(xip_real shift);
-
 	/**
-	 * @brief дл€ тестировани€ интерпол€тора
-	 * @param in вход
-	 * @param out выход
-	 * @param time_shift сдвиг в диапазоне [-1023, 1023]
-	*/
-	void process(const xip_complex& in, xip_complex& out, int time_shift);
-
-	/**
-	 * @brief приведение величины сдвига из [-inf, +inf] к полю [0, 1023]
-	 * @param cur_shift текущий сдвиг
+	 * @brief получить следующий отсчет. true - есть отсчет, false - нет отсчета (требуетс€ подать на вход следующий)
+	 * @param out 
 	 * @return 
 	*/
-	uint32_t countPos(int cur_shift);
+	bool next(xip_complex& out);
+	
+	/**
+	 * @brief установить смещение тактов относительно выходных отсчетов
+	 * @param value -> [-1.0, 1.0] относительно выходных отсчетов, производитс€ приведение value в пределы [-1.0, 1.0]
+	*/
+	void shift(double value);
 
 private:
 	/**
@@ -66,19 +58,22 @@ private:
 	 * @return 
 	*/
 	int init_lagrange_interp();
+
 	/**
 	 * @brief загрузка наборов коэффициентов фильтра в пам€ть
 	 * @return 
 	*/
 	int lagrange_load_coeff();
+
 	/**
 	 * @brief интерпол€ци€ очередного отсчета
-	 * @param in вход
+	 * @param values массив интерполируемых значений
 	 * @param out результат интерпол€ции
 	 * @param pos позици€ интерпол€ции --> [0, LAGRANGE_INTERVALS-1]
 	 * @return 
 	*/
-	int interpolate(const xip_complex& in, xip_complex& out, uint32_t pos);
+	int interpolate(xip_complex* values, xip_complex& out, uint32_t pos);
+
 	/**
 	 * @brief инициализаци€ библиотеки xip fir и освобождение пам€ти
 	 * @return 
@@ -94,7 +89,7 @@ private:
 	double* lagrange_coeff;											// наборы коэффициентов фильтра, следуют по пор€дку
 	const uint32_t FixPointPosition = 20;
 
-	vector<xip_complex> samples;	// буфер отсчетов
+	vector<xip_complex> samples;	// FIFO-буфер отсчетов
 
 	// переменные состо€ни€ интерпол€тора
 	int32_t dx;
@@ -104,16 +99,6 @@ private:
 	xip_complex* x_ptr;
 	xip_complex* pos_ptr;
 	xip_complex* end_ptr;
-
-
-	//************** to delete **********************
-	xip_real m_fraction;          // отношение частоты дискретизации выходного сигнала ко входному
-	xip_real m_dk;                // текуща€ позици€ интерпол€ции [0; 1]
-	int m_decim;				  // счетчик децимируемых отсчетов
-	uint32_t m_pos;			  // текущий сдвиг
-	xip_real m_prevShift;         // предыдущий сдвиг
-	xip_complex m_currentSample;  // текущий входной отсчет
-	//***********************************************
 
 	// паременные дл€ работы с xip fir
 	xip_fir_v7_2* lagrange_interp_fir;		// фильтр на передаче
