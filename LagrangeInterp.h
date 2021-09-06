@@ -6,6 +6,9 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
+#include <cmath>
+#include <vector>
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "fir_compiler_v7_2_bitacc_cmodel.h"
@@ -14,16 +17,19 @@
 
 using namespace std;
 
-extern const int LAGRANGE_INTERVALS;
+extern const unsigned int LAGRANGE_INTERVALS;
+extern const unsigned int LAGRANGE_ORDER;
 
 // »нтерпол€тор Ћагранжа 7-й степени. ќбеспечивает сдвиг тактов и дробную передискретизацию
 // интервал между двум€ смежными отсчетами делитс€ на 1024 интервалов, 
 // дл€ каждого из которых используетс€ свой заранее рассчитанный набор из 8 коэффициентов
 class LagrangeInterp {
 public:
-	// frac - отношение частоты дискретизации выходного сигнала ко входному
-	// если передискретизаци€ не требуетс€, то frac = 1
+	// frac - отношение частоты дискретизации входного сигнала к выходному --> [0.001, 1000]
+	// если передискретизаци€ не требуетс€, то frac = 1 
 	LagrangeInterp(xip_real frac = 1);
+
+	LagrangeInterp(xip_real from_sampling_freq, xip_real to_sampling_freq);
 
 	~LagrangeInterp();
 
@@ -47,7 +53,6 @@ public:
 	*/
 	void process(const xip_complex& in, xip_complex& out, int time_shift);
 
-	uint32_t getPos();
 	/**
 	 * @brief приведение величины сдвига из [-inf, +inf] к полю [0, 1023]
 	 * @param cur_shift текущий сдвиг
@@ -56,22 +61,61 @@ public:
 	uint32_t countPos(int cur_shift);
 
 private:
+	/**
+	 * @brief инициализаци€ библиотеки xip fir и загрузка наборов коэффициентов
+	 * @return 
+	*/
 	int init_lagrange_interp();
+	/**
+	 * @brief загрузка наборов коэффициентов фильтра в пам€ть
+	 * @return 
+	*/
 	int lagrange_load_coeff();
-	int process_sample_lagrange_interp(const xip_complex& in, xip_complex& out, uint32_t pos);
+	/**
+	 * @brief интерпол€ци€ очередного отсчета
+	 * @param in вход
+	 * @param out результат интерпол€ции
+	 * @param pos позици€ интерпол€ции --> [0, LAGRANGE_INTERVALS-1]
+	 * @return 
+	*/
+	int interpolate(const xip_complex& in, xip_complex& out, uint32_t pos);
+	/**
+	 * @brief инициализаци€ библиотеки xip fir и освобождение пам€ти
+	 * @return 
+	*/
 	int destroy_lagrange_interp();
 
-	const uint32_t lagrange_n_intervals = LAGRANGE_INTERVALS;		// количество интервалов
-	const uint32_t lagrange_n_coeff = 8;							// количество коэффициентов
-	double* lagrange_coeff;											// наборы коэффициентов фильтра, следуют по пор€дку
+	size_t samples_count(double inv_factor);
+	int to_dx_value(double inv_factor);
+	void init(double dx_value);
 
+	const uint32_t lagrange_n_intervals = LAGRANGE_INTERVALS;		// количество интервалов
+	const uint32_t lagrange_n_coeff = LAGRANGE_ORDER;				// количество коэффициентов (пор€док фильтра)
+	double* lagrange_coeff;											// наборы коэффициентов фильтра, следуют по пор€дку
+	const uint32_t FixPointPosition = 20;
+
+	vector<xip_complex> samples;	// буфер отсчетов
+
+	// переменные состо€ни€ интерпол€тора
+	int32_t dx;
+	int32_t fx;		// дробна€ часть
+	uint32_t block_size;
+	uint32_t block_offset;
+	xip_complex* x_ptr;
+	xip_complex* pos_ptr;
+	xip_complex* end_ptr;
+
+
+	//************** to delete **********************
 	xip_real m_fraction;          // отношение частоты дискретизации выходного сигнала ко входному
 	xip_real m_dk;                // текуща€ позици€ интерпол€ции [0; 1]
 	int m_decim;				  // счетчик децимируемых отсчетов
 	uint32_t m_pos;			  // текущий сдвиг
 	xip_real m_prevShift;         // предыдущий сдвиг
 	xip_complex m_currentSample;  // текущий входной отсчет
+	//***********************************************
 
+	// паременные дл€ работы с xip fir
 	xip_fir_v7_2* lagrange_interp_fir;		// фильтр на передаче
 	xip_fir_v7_2_config lagrange_interp_fir_cnfg;
 

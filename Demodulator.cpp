@@ -48,6 +48,8 @@ void Demodulator::process()
 		dmd_interp.process(sample);
 		dmd_interp.next(sample);
 
+		dbg_out << sample << endl;
+
 		// согласованный фильтр на 2B
 		process_sample_channel_matched_receive(&sample, &sample);
 
@@ -63,21 +65,23 @@ void Demodulator::process()
 		if (!m_agc.process(sample, sample))
 			continue;
 
+		//dbg_out << sample << endl;
+
 		xip_complex est = nearest_point_psk4(sample);		// жесткое решение
 		xip_real sts_err = m_stsEst.getErr(sample, est);	// оценка ошибки тактовой синхры
 
 		// для сигнального созвездия +/-4096 ошибка будет в диапазоне [-2^26, 2^26]
 		// уменьшаем динамический диапазон до [-2^15, 2^15]
 		//xip_real_shift(sts_err, -11);
-		xip_real_shift(sts_err, -16);
+		//xip_real_shift(sts_err, -16);
 		//dbg_out << sts_err << endl;
 
 		pif_sts.process_1(sts_err, sts_err);	// сглаживание сигнала ошибки в ПИФ
-		dbg_out << sts_err << endl;
+		//dbg_out << sts_err << endl;
 
 		// уменьшаем динамический диапазон до [-2^10, 2^10] для интерполятора
 		//xip_real_shift(sts_err, -16);
-		dmd_interp.setShift(-sts_err);
+		//dmd_interp.setShift(-sts_err);
 
 		//dbg_out << sts_err << endl;
 		//dbg_out << dmd_interp.getPos() << endl;

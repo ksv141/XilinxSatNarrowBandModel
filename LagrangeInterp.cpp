@@ -1,14 +1,21 @@
 #include "LagrangeInterp.h"
 
-const int LAGRANGE_INTERVALS = 1024;	// количество интервалов разбиени€ одного интервала интерпол€ции (одного такта)
+const unsigned int LAGRANGE_INTERVALS = 1024;	// количество интервалов разбиени€ одного интервала интерпол€ции (одного такта)
+const unsigned int LAGRANGE_ORDER = 8;			// пор€док интерпол€тора
 
 LagrangeInterp::LagrangeInterp(xip_real frac):
-	m_fraction(frac),
-	m_dk(1),
-	m_decim(0),
-	m_pos(0),
-	m_prevShift(0)
+	samples(samples_count(frac), xip_complex{ 0, 0 })
 {
+	int dx_value = to_dx_value(1.0 / frac);
+	init(dx_value);
+	init_lagrange_interp();
+}
+
+LagrangeInterp::LagrangeInterp(xip_real from_sampling_freq, xip_real to_sampling_freq):
+	samples(samples_count(from_sampling_freq / to_sampling_freq), xip_complex{ 0, 0 })
+{
+	int dx_value = to_dx_value(from_sampling_freq / to_sampling_freq);
+	init(dx_value);
 	init_lagrange_interp();
 }
 
@@ -65,12 +72,7 @@ void LagrangeInterp::process(xip_real shift)
 void LagrangeInterp::process(const xip_complex& in, xip_complex& out, int time_shift)
 {
 	countPos(time_shift);
-	process_sample_lagrange_interp(in, out, m_pos);
-}
-
-uint32_t LagrangeInterp::getPos()
-{
-	return m_pos;
+	interpolate(in, out, m_pos);
 }
 
 uint32_t LagrangeInterp::countPos(int cur_shift)
@@ -169,8 +171,11 @@ int LagrangeInterp::init_lagrange_interp()
 
 // обработка одного отсчета
 // pos - смещение интерпол€тора [0, 1023]
-int LagrangeInterp::process_sample_lagrange_interp(const xip_complex& in, xip_complex& out, uint32_t pos)
+int LagrangeInterp::interpolate(const xip_complex& in, xip_complex& out, uint32_t pos)
 {
+	if (pos >= LAGRANGE_INTERVALS)
+		throw std::range_error("pos must be less then LAGRANGE_INTERVALS");
+
 	// ”становка набора коэффициентов фильтра, соответствующего смещению pos
 	lagrange_interp_fir_cnfg_packet.fsel->data[0] = pos;
 	// Send config data
@@ -254,4 +259,28 @@ int LagrangeInterp::destroy_lagrange_interp()
 	printf("Deleted instance of Lagrange interp and free memory\n");
 
 	return 0;
+}
+
+size_t LagrangeInterp::samples_count(double inv_factor)
+{
+	return LAGRANGE_ORDER * 32 + 2 * static_cast<int>(ceil(inv_factor));
+}
+
+int LagrangeInterp::to_dx_value(double inv_factor)
+{
+	if (inv_factor <= 0.0 || inv_factor < 2e-6 || 1000.0 < inv_factor)
+		throw invalid_argument("invalid 'interpolation_factor' value");
+
+	return static_cast<int>(inv_factor * (1 << FixPointPosition));
+}
+
+void LagrangeInterp::init(double dx_value)
+{
+	dx = dx_value;
+	fx = 0;
+	block_size = LAGRANGE_ORDER + (dx >> FixPointPosition) + 1;
+	block_offset = static_cast<uint32_t>(samples.size() - block_size);
+	x_ptr = &samples[0] + block_size;
+	end_ptr = &samples[0] + samples.size();
+	pos_ptr = x_ptr - LAGRANGE_ORDER / 2 - 1;
 }
