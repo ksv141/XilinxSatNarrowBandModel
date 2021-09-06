@@ -45,7 +45,7 @@ void signal_freq_shift(const string& in, const string& out, double dph)
 	fclose(out_file);
 }
 
-void signal_time_shift(const string& in, const string& out, int time_shift)
+void signal_time_shift(const string& in, const string& out, int32_t time_shift)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");
 	if (!in_file)
@@ -57,6 +57,7 @@ void signal_time_shift(const string& in, const string& out, int time_shift)
 	//ofstream dbg_out("dbg_out.txt");
 
 	LagrangeInterp itrp;
+	itrp.shift(time_shift);
 	int16_t re;
 	int16_t im;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&

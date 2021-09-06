@@ -19,6 +19,7 @@ using namespace std;
 
 extern const unsigned int LAGRANGE_INTERVALS;
 extern const unsigned int LAGRANGE_ORDER;
+extern const unsigned int LAGRANGE_FIXED_POINT_POSITION;
 
 // Интерполятор Лагранжа 7-й степени. Обеспечивает сдвиг тактов и дробную передискретизацию
 // интервал между двумя смежными отсчетами делится на 1024 интервалов, 
@@ -47,10 +48,17 @@ public:
 	bool next(xip_complex& out);
 	
 	/**
-	 * @brief установить смещение тактов относительно выходных отсчетов
+	 * @brief установить смещение тактов относительно выходных отсчетов. вещественная версия
 	 * @param value -> [-1.0, 1.0] относительно выходных отсчетов, производится приведение value в пределы [-1.0, 1.0]
 	*/
 	void shift(double value);
+
+	/**
+	 * @brief установить смещение тактов относительно выходных отсчетов. целочисленная версия
+	 * @param value -> [-2^FixPointPosition, 2^FixPointPosition] относительно выходных отсчетов, 
+	 * производится приведение value в указанный диапазон
+	*/
+	void shift(int32_t value);
 
 private:
 	/**
@@ -87,7 +95,8 @@ private:
 	const uint32_t lagrange_n_intervals = LAGRANGE_INTERVALS;		// количество интервалов
 	const uint32_t lagrange_n_coeff = LAGRANGE_ORDER;				// количество коэффициентов (порядок фильтра)
 	double* lagrange_coeff;											// наборы коэффициентов фильтра, следуют по порядку
-	const uint32_t FixPointPosition = 20;
+	const uint32_t FixPointPosition = LAGRANGE_FIXED_POINT_POSITION;
+	const uint32_t FixPointPosMaxVal = 1 << FixPointPosition;
 
 	vector<xip_complex> samples;	// FIFO-буфер отсчетов
 

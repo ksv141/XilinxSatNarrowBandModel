@@ -73,7 +73,7 @@ void Demodulator::process()
 		// для сигнального созвездия +/-4096 ошибка будет в диапазоне [-2^26, 2^26]
 		// уменьшаем динамический диапазон до [-2^15, 2^15]
 		//xip_real_shift(sts_err, -11);
-		//xip_real_shift(sts_err, -16);
+		xip_real_shift(sts_err, -16);
 		//dbg_out << sts_err << endl;
 
 		pif_sts.process_1(sts_err, sts_err);	// сглаживание сигнала ошибки в ПИФ
@@ -81,7 +81,7 @@ void Demodulator::process()
 
 		// уменьшаем динамический диапазон до [-2^10, 2^10] для интерполятора
 		//xip_real_shift(sts_err, -16);
-		//dmd_interp.setShift(-sts_err);
+		dmd_interp.shift(-(int32_t)sts_err);
 
 		//dbg_out << sts_err << endl;
 		//dbg_out << dmd_interp.getPos() << endl;

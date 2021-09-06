@@ -44,8 +44,8 @@ int main()
 //	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 128);
 	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
 	//mdl.process();
-	//signal_time_shift("out_mod.pcm", "out_mod_shift.pcm", 32);
-	Demodulator dmd("out_mod_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	signal_time_shift("out_mod.pcm", "out_mod_shift_new.pcm", 32);
+	Demodulator dmd("out_mod_shift_new.pcm", "out_mod_dmd_new.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

@@ -1,8 +1,9 @@
 #include "LagrangeInterp.h"
 
-const unsigned int LAGRANGE_INTERVALS = 1024;	// количество интервалов разбиения одного интервала интерполяции (одного такта)
-const unsigned int LAGRANGE_INTERVALS_LOG2 = 10;// log2(1024)
-const unsigned int LAGRANGE_ORDER = 8;			// порядок интерполятора
+const unsigned int LAGRANGE_INTERVALS = 1024;			// количество интервалов разбиения одного интервала интерполяции (одного такта)
+const unsigned int LAGRANGE_INTERVALS_LOG2 = 10;		// log2(1024)
+const unsigned int LAGRANGE_ORDER = 8;					// порядок интерполятора
+const unsigned int LAGRANGE_FIXED_POINT_POSITION = 10;	// точность значения сдвига --> [-1.0, 1.0] (в битах)
 
 LagrangeInterp::LagrangeInterp(xip_real frac):
 	samples(samples_count(frac), xip_complex{ 0, 0 })
@@ -29,7 +30,20 @@ void LagrangeInterp::shift(double value)
 {
 	value <= -1.0 ? -1.0 : (value >= 1.0 ? 1.0 : value);	// ограничение value диапазоном [-1.0, 1.0]
 	int32_t x = fx + static_cast<int32_t>(dx * value);
-	fx = x & ((1 << FixPointPosition) - 1);
+	fx = x & (FixPointPosMaxVal - 1);
+	x_ptr += x >> FixPointPosition;
+}
+
+void LagrangeInterp::shift(int32_t value)
+{
+	// ограничение value диапазоном [-2^FixPointPosition, 2^FixPointPosition]
+	if (value < -(int32_t)FixPointPosMaxVal)
+		value = -(int32_t)FixPointPosMaxVal;
+	else if (value > (int32_t)FixPointPosMaxVal)
+		value = (int32_t)FixPointPosMaxVal;
+
+	int32_t x = fx + value;
+	fx = x & (FixPointPosMaxVal - 1);
 	x_ptr += x >> FixPointPosition;
 }
 
@@ -56,7 +70,7 @@ bool LagrangeInterp::next(xip_complex& out)
 	const uint32_t coeffs_shift = FixPointPosition - LAGRANGE_INTERVALS_LOG2;
 	interpolate(x_ptr - LAGRANGE_ORDER, out, static_cast<unsigned>(fx >> coeffs_shift));
 	int32_t x = fx + dx;
-	fx = x & ((1 << FixPointPosition) - 1);
+	fx = x & (FixPointPosMaxVal - 1);
 	x_ptr += x >> FixPointPosition;
 
 	return true;
@@ -242,7 +256,7 @@ int LagrangeInterp::to_dx_value(double inv_factor)
 	if (inv_factor <= 0.0 || inv_factor < 2e-6 || 1000.0 < inv_factor)
 		throw invalid_argument("invalid 'interpolation_factor' value");
 
-	return static_cast<int>(inv_factor * (1 << FixPointPosition));
+	return static_cast<int>(inv_factor * FixPointPosMaxVal);
 }
 
 void LagrangeInterp::init(double dx_value)
