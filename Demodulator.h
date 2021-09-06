@@ -14,6 +14,7 @@
 #include "Pif.h"
 #include "LagrangeInterp.h"
 #include "xip_utils.h"
+#include "autoganecontrol.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -47,6 +48,7 @@ private:
 	StsEstimate m_stsEst;
 	Pif pif_sts;
 	LagrangeInterp dmd_interp;
+	AutoGaneControl m_agc;
 };
 
 #endif // DEMODULATOR_H

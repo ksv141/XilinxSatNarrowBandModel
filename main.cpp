@@ -17,6 +17,22 @@ const int AGC_WND_SIZE = 128;			// окно усреднения АРУ
 
 int main()
 {
+	//Pif pif(0.1);
+	//ofstream dbg_out("dbg_out.txt");
+	//for (int i = 0; i < 100; i++) {
+	//	xip_real x = 32;
+	//	pif.process_1(x, x);
+	//	dbg_out << x << endl;
+	//}
+	//dbg_out.close();
+	//return 0;
+	//ofstream dbg_out("dbg_out.txt");
+	//LagrangeInterp itrp;
+	//for (int i = -5000; i <= 5000; i++)
+	//	dbg_out << i << "\t" << itrp.countPos(i) << endl;
+	//dbg_out.close();
+	//return 0;
+	// 
 //	generate_sin_signal("sin.pcm", 1, 20, 40, 13);
 //	signal_time_shift("sin.pcm", "sin_shift.pcm", 256);
 //	signal_time_shift("sin_shift.pcm", "sin_unshift.pcm", -256);
@@ -28,7 +44,8 @@ int main()
 //	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 128);
 	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
 	//mdl.process();
-	Demodulator dmd("out_mod.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	//signal_time_shift("out_mod.pcm", "out_mod_shift.pcm", 32);
+	Demodulator dmd("out_mod_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

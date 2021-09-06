@@ -47,6 +47,14 @@ public:
 	*/
 	void process(const xip_complex& in, xip_complex& out, int time_shift);
 
+	uint32_t getPos();
+	/**
+	 * @brief приведение величины сдвига из [-inf, +inf] к полю [0, 1023]
+	 * @param cur_shift текущий сдвиг
+	 * @return 
+	*/
+	uint32_t countPos(int cur_shift);
+
 private:
 	int init_lagrange_interp();
 	int lagrange_load_coeff();
@@ -60,7 +68,7 @@ private:
 	xip_real m_fraction;          // отношение частоты дискретизации выходного сигнала ко входному
 	xip_real m_dk;                // текущая позиция интерполяции [0; 1]
 	int m_decim;				  // счетчик децимируемых отсчетов
-	uint32_t m_shift;			  // текущий сдвиг
+	uint32_t m_pos;			  // текущий сдвиг
 	xip_real m_prevShift;         // предыдущий сдвиг
 	xip_complex m_currentSample;  // текущий входной отсчет
 

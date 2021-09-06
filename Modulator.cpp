@@ -40,7 +40,7 @@ void Modulator::process()
 		xip_complex_shift(sample, 2);
 
 		fx_cmpl_point fx_sample;
-		fx_sample.set_val((int16_t)sample.re, (int16_t)sample.im);
+		fx_sample.set_val((int16_t)sample.re + 1, (int16_t)sample.im + 1);
 
 		tC::write_real<int16_t>(m_outFile, fx_sample.real.i_val);
 		tC::write_real<int16_t>(m_outFile, fx_sample.imag.i_val);

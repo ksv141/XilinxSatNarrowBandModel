@@ -1,7 +1,10 @@
 #include "autoganecontrol.h"
 
 AutoGaneControl::AutoGaneControl(int window_size, double norm_power):
-    m_normPower(norm_power), m_windowSize(window_size), m_currentPower(0)
+    m_normPower(norm_power), 
+    m_windowSize(window_size), 
+    m_currentPower(0),
+    m_counter(0)
 {
     m_pwrReg.resize(window_size, 0);
 }
@@ -13,6 +16,11 @@ bool AutoGaneControl::process(const xip_complex& in, xip_complex& out)
     m_currentPower -= m_pwrReg.back();
     m_pwrReg.pop_back();
     m_pwrReg.push_front(pwr_x);
+
+    if (m_counter < m_windowSize) {
+        m_counter++;
+        return false;
+    }
 
 	double norm = sqrt(m_currentPower/m_normPower);
 	if (norm == 0)

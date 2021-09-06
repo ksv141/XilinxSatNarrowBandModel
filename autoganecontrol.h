@@ -27,6 +27,8 @@ private:
 	double m_currentPower;
 
     int m_windowSize;
+
+    size_t m_counter;
 };
 
 #endif // AUTOGANECONTROL_H

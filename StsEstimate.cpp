@@ -15,6 +15,10 @@ StsEstimate::~StsEstimate()
 
 xip_real StsEstimate::getErr(const xip_complex& out_symb, const xip_complex& est)
 {
+	//xip_real pwr_out = out_symb.re * out_symb.im + out_symb.im * out_symb.im;
+	//xip_real pwr_est = est.re * est.im + est.im * est.im;
+	//return pwr_out - pwr_est;
+
 	xip_real a1, a2, b1, b2;
 	xip_multiply_real(m_last_est.re, out_symb.re, a1);
 	xip_multiply_real(est.re, m_last_out_symb.re, a2);

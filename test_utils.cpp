@@ -54,7 +54,7 @@ void signal_time_shift(const string& in, const string& out, int time_shift)
 	if (!out_file)
 		return;
 
-	ofstream dbg_out("dbg_out.txt");
+	//ofstream dbg_out("dbg_out.txt");
 
 	LagrangeInterp itrp;
 	int16_t re;
@@ -68,10 +68,10 @@ void signal_time_shift(const string& in, const string& out, int time_shift)
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
 
-		dbg_out << res << endl;
+		//dbg_out << res << endl;
 	}
 
-	dbg_out.close();
+	//dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
 }
@@ -82,7 +82,7 @@ void generate_sin_signal(const string& out, double freq, double sample_freq, siz
 	if (!out_file)
 		return;
 
-	ofstream dbg_out("dbg_out.txt");
+	//ofstream dbg_out("dbg_out.txt");
 
 	double dph = _2_PI * freq / sample_freq;	// набег фазы за такт
 	double ph = 0;						// текущая фаза
@@ -95,8 +95,8 @@ void generate_sin_signal(const string& out, double freq, double sample_freq, siz
 		xip_complex_shift(res, bits-1);
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
-		dbg_out << res << endl;
+		//dbg_out << res << endl;
 	}
-	dbg_out.close();
+	//dbg_out.close();
 	fclose(out_file);
 }

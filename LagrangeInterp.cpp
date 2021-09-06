@@ -6,7 +6,7 @@ LagrangeInterp::LagrangeInterp(xip_real frac):
 	m_fraction(frac),
 	m_dk(1),
 	m_decim(0),
-	m_shift(0),
+	m_pos(0),
 	m_prevShift(0)
 {
 	init_lagrange_interp();
@@ -19,22 +19,9 @@ LagrangeInterp::~LagrangeInterp()
 
 void LagrangeInterp::setShift(xip_real shift)
 {
-	int time_shift = m_shift;
-	time_shift += shift;
-	// time_shift в диапазоне [-1023, 1023]
-	// приведение сдвига к интервалу [0, 1023]
-	if (time_shift >= 0) {
-		if (time_shift < lagrange_n_intervals)
-			m_shift = (uint32_t)time_shift;
-		else
-			m_shift = lagrange_n_intervals - 1;
-	}
-	else {
-		if (time_shift > -(int)lagrange_n_intervals)
-			m_shift = lagrange_n_intervals + time_shift;
-		else
-			m_shift = 1;
-	}
+	int time_shift = m_pos;
+	time_shift += (int)shift;
+	countPos(time_shift);
 }
 
 void LagrangeInterp::process(const xip_complex& in)
@@ -44,7 +31,7 @@ void LagrangeInterp::process(const xip_complex& in)
 
 bool LagrangeInterp::next(xip_complex& out)
 {
-	process(m_currentSample, out, m_shift);
+	process(m_currentSample, out, m_pos);
 	return true;
 }
 
@@ -77,22 +64,31 @@ void LagrangeInterp::process(xip_real shift)
 
 void LagrangeInterp::process(const xip_complex& in, xip_complex& out, int time_shift)
 {
-	// time_shift в диапазоне [-1023, 1023]
-	// приведение сдвига к интервалу [0, 1023]
-	//uint32_t pos;
-	//if (time_shift >= 0) {
-	//	if (time_shift < lagrange_n_intervals)
-	//		pos = (uint32_t)time_shift;
-	//	else
-	//		pos = lagrange_n_intervals - 1;
-	//}
-	//else {
-	//	if (time_shift > -(int)lagrange_n_intervals)
-	//		pos = lagrange_n_intervals + time_shift;
-	//	else
-	//		pos = 1;
-	//}
-	process_sample_lagrange_interp(in, out, m_shift);
+	countPos(time_shift);
+	process_sample_lagrange_interp(in, out, m_pos);
+}
+
+uint32_t LagrangeInterp::getPos()
+{
+	return m_pos;
+}
+
+uint32_t LagrangeInterp::countPos(int cur_shift)
+{
+	uint32_t sh;
+	if (cur_shift >= 0)
+		sh = (uint32_t)cur_shift;
+	else
+		sh = (uint32_t)(-cur_shift);
+	// находим значение по модулю без учета направления сдвига
+	while (sh >= lagrange_n_intervals)
+		sh -= lagrange_n_intervals;
+	// учитываем направление сдвига
+	if (cur_shift < 0 && sh != 0)
+		sh = lagrange_n_intervals - sh;
+
+	m_pos = sh;
+	return sh;
 }
 
 // инициализация фильтра-интерполятора Лагранжа
