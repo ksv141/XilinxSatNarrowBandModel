@@ -10,7 +10,7 @@
 #include "debug.h"
 #include "FirSummator.h"
 
-// Пиф (Nezami - Loop Filter topology III)
+// Пиф (Nezami - Loop Filter topology II)
 // Реализован как совокупность КИХ-фильтра 2-го порядка и интегратора
 class Pif
 {

@@ -14,6 +14,8 @@ using namespace std;
 const int DDS_PHASE_MODULUS = 16384;	// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
 const int FRAME_DATA_SIZE = 1115;		// размер данных в кадре (байт)
 const int AGC_WND_SIZE = 128;			// окно усреднения АРУ
+const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)
+const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
 
 int main()
 {

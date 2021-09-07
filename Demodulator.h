@@ -20,6 +20,9 @@ using namespace std;
 using namespace xilinx_m;
 
 extern const int AGC_WND_SIZE;
+extern const double PIF_STS_Kp;		// коэффициент пропорциональной составляющей ПИФ СТС
+extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТС
+
 
 class Demodulator
 {
