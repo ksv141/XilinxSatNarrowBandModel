@@ -1,8 +1,5 @@
 #include "test_utils.h"
 
-static const double PI = 3.141592653589793238463;
-static const double _2_PI = PI * 2;
-
 void signal_freq_shift(const string& in, const string& out, double dph)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");

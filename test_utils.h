@@ -19,7 +19,8 @@ using namespace std;
 using namespace xilinx_m;
 
 // утилиты для тестирования модема
-
+extern const double PI;
+extern const double _2_PI;
 extern const int DDS_PHASE_MODULUS;
 
 /**

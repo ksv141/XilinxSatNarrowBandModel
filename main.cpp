@@ -10,8 +10,12 @@
 
 using namespace std;
 
+static const double PI = 3.141592653589793238463;
+static const double _2_PI = PI * 2;
+
 // глобальные параметры
 const int DDS_PHASE_MODULUS = 16384;	// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
+const int DDS_RAD_CONST = (int)(DDS_PHASE_MODULUS * 8 / _2_PI);	// радиан на одну позицию фазы << 3 == 20860 (16 бит)
 const int FRAME_DATA_SIZE = 1115;		// размер данных в кадре (байт)
 const int AGC_WND_SIZE = 128;			// окно усреднения АРУ
 const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)

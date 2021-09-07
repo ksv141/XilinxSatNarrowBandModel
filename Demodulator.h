@@ -26,6 +26,7 @@ extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТ
 extern const double PIF_PLL_Kp;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ
 extern const double PIF_PLL_Ki;		// коэффициент интегральной составляющей ПИФ ФАПЧ
 extern const int DDS_PHASE_MODULUS; // диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
+extern const int DDS_RAD_CONST;		// радиан на одну позицию фазы << 3 == 20860 (16 бит)
 
 class Demodulator
 {
