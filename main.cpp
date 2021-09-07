@@ -49,13 +49,14 @@ int main()
 	set_current_constell(Current_constell::PSK4);
 	init_xip_multiplier();
 	init_channel_matched_fir();
-	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 0);
 	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
+	//Modulator mdl("1.zip", "out_mod.pcm", FRAME_DATA_SIZE);
 	//mdl.process();
 
-	//signal_time_shift("out_mod.pcm", "out_mod_shift.pcm", 512);
+	signal_freq_shift("out_mod.pcm", "out_mod_fr_shift.pcm", 3);
+	signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
 	//signal_time_shift_dyn("out_mod.pcm", "out_mod_shift.pcm", 10);
-	Demodulator dmd("out_mod_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	Demodulator dmd("out_mod_tm_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

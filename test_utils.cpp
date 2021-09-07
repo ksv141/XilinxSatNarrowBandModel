@@ -15,24 +15,21 @@ void signal_freq_shift(const string& in, const string& out, double dph)
 	int16_t re;
 	int16_t im;
 	double dds_phase, dds_sin, dds_cos;
-	double min_val = 1000000;
-	double max_val = -1000000;
+	int counter = 0;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 			tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
-		dds.process(dph, dds_phase, dds_sin, dds_cos);
+		if (counter % 10 == 0)
+			dds.process(dph, dds_phase, dds_sin, dds_cos);
 		xip_complex mod_sample{ dds_cos, dds_sin };
 		xip_complex res;
 		xip_multiply_complex(sample, mod_sample, res);
 		xip_complex_shift(res, -(int)(dds.getOutputWidth()-1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
 		
-		if (min_val > res.im)	// для подбора коэффициента масштабирования
-			min_val = res.im;
-		if (max_val < res.im)
-			max_val = res.im;
-
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
+
+		counter++;
 
 		//dbg_out << res << endl;
 	}
