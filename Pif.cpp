@@ -55,7 +55,7 @@ int Pif::process_1(const xip_real& in, xip_real& out)
 	double x = in * g[1] + reg;
 	double res = in * g[0] + x;
 	reg = x;
-	out = reg;
+	out = res;
 	return 0;
 }
 
