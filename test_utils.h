@@ -21,6 +21,7 @@ using namespace xilinx_m;
 // утилиты дл€ тестировани€ модема
 
 extern const int DDS_PHASE_MODULUS;
+
 /**
  * @brief частотное смещение сигнала
  * @param in входной файл (PCM стерео I/Q 16-бит)
@@ -28,6 +29,7 @@ extern const int DDS_PHASE_MODULUS;
  * @param dph набег фазы в диапазоне [0, 16383] --> [0, 2pi]
 */
 extern void signal_freq_shift(const string& in, const string& out, double dph);
+
 /**
  * @brief тактовое смещение сигнала.
  * @param in входной файл (PCM стерео I/Q 16-бит)
@@ -36,6 +38,15 @@ extern void signal_freq_shift(const string& in, const string& out, double dph);
  * результирующий сигнал будет отставать от входного на величину T/time_shift
 */
 extern void signal_time_shift(const string& in, const string& out, int32_t time_shift);
+
+/**
+ * @brief измен€ющеес€ тактовое смещение сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param shift_step через сколько тактов смещение будет приращатьс€ на 1 из диапазона [0, 1000]
+*/
+extern void signal_time_shift_dyn(const string& in, const string& out, int shift_step);
+
 /**
  * @brief генератор гармонического квадратурного сигнала
  * @param out выходной файл (PCM стерео I/Q 16-бит)

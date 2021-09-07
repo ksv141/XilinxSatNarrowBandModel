@@ -16,6 +16,8 @@ const int FRAME_DATA_SIZE = 1115;		// размер данных в кадре (байт)
 const int AGC_WND_SIZE = 128;			// окно усреднения АРУ
 const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)
 const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
+const double PIF_PLL_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
+const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
 
 int main()
 {
@@ -43,10 +45,12 @@ int main()
 	set_current_constell(Current_constell::PSK4);
 	init_xip_multiplier();
 	init_channel_matched_fir();
-//	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 128);
+	signal_freq_shift("out_mod.pcm", "out_mod_shift.pcm", 0);
 	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
 	//mdl.process();
-	signal_time_shift("out_mod.pcm", "out_mod_shift.pcm", 128);
+
+	//signal_time_shift("out_mod.pcm", "out_mod_shift.pcm", 512);
+	//signal_time_shift_dyn("out_mod.pcm", "out_mod_shift.pcm", 10);
 	Demodulator dmd("out_mod_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 

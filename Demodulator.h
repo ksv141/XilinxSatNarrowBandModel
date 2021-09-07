@@ -15,6 +15,7 @@
 #include "LagrangeInterp.h"
 #include "xip_utils.h"
 #include "autoganecontrol.h"
+#include "DDS.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -22,7 +23,9 @@ using namespace xilinx_m;
 extern const int AGC_WND_SIZE;
 extern const double PIF_STS_Kp;		// коэффициент пропорциональной составляющей ПИФ СТС
 extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТС
-
+extern const double PIF_PLL_Kp;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ
+extern const double PIF_PLL_Ki;		// коэффициент интегральной составляющей ПИФ ФАПЧ
+extern const int DDS_PHASE_MODULUS; // диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
 
 class Demodulator
 {
@@ -48,10 +51,12 @@ private:
 	FILE* m_outDmdFile;
 	FILE* m_outBinFile;
 
-	StsEstimate m_stsEst;
-	Pif pif_sts;
-	LagrangeInterp dmd_interp;
-	AutoGaneControl m_agc;
+	StsEstimate m_stsEst;		// блок оценки ошибки тактовой синхры
+	Pif pif_sts;				// ПИФ СТС
+	Pif pif_pll;				// ПИФ ФАПЧ
+	LagrangeInterp dmd_interp;	// интерполятор СТС
+	AutoGaneControl m_agc;		// АРУ
+	DDS dds;					// ГУН петли ФАПЧ
 };
 
 #endif // DEMODULATOR_H

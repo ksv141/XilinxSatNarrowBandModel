@@ -2,7 +2,9 @@
 
 Demodulator::Demodulator(const string& input_file, const string& output_dmd_file, const string& output_bin_file, size_t data_length):
 	m_agc(AGC_WND_SIZE, pwr_constell_psk4),
-	pif_sts(PIF_STS_Kp, PIF_STS_Ki)
+	pif_sts(PIF_STS_Kp, PIF_STS_Ki),
+	pif_pll(PIF_PLL_Kp, PIF_PLL_Ki),
+	dds(DDS_PHASE_MODULUS)
 {
 	m_inFile = fopen(input_file.c_str(), "rb");
 	if (!m_inFile)
@@ -60,6 +62,7 @@ void Demodulator::process()
 		i = 1;
 
 		// АРУ для точной оценки ошибки тактовой синхры
+		// уровень сигнала нормируется относительно уровня сигнального созвездия
 		if (!m_agc.process(sample, sample))
 			continue;
 
@@ -76,13 +79,13 @@ void Demodulator::process()
 		xip_real_shift(sts_err, -8);
 
 		pif_sts.process(sts_err, sts_err);	// сглаживание сигнала ошибки в ПИФ
-		//dbg_out << sts_err << endl;
 
 		// уменьшаем динамический диапазон до диапазона интерполятора --> [-2^10, 2^10]
 		xip_real_shift(sts_err, -6);
+		// коррекция смещения интерполятора
 		dmd_interp.shift(-(int32_t)sts_err);
 
-		//dbg_out << sts_err << endl;
+		dbg_out << sts_err << endl;
 		//dbg_out << dmd_interp.getPos() << endl;
 		tC::write_real<int16_t>(m_outDmdFile, sample.re);
 		tC::write_real<int16_t>(m_outDmdFile, sample.im);

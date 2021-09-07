@@ -80,6 +80,48 @@ void signal_time_shift(const string& in, const string& out, int32_t time_shift)
 	fclose(out_file);
 }
 
+void signal_time_shift_dyn(const string& in, const string& out, int shift_step)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	//ofstream dbg_out("dbg_out.txt");
+
+	LagrangeInterp itrp;
+	int16_t re;
+	int16_t im;
+	int dir = 1;
+	int counter = 0;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_complex res{ 0,0 };
+		itrp.process(sample);
+		if (!itrp.next(res))
+			continue;
+
+		tC::write_real<int16_t>(out_file, res.re);
+		tC::write_real<int16_t>(out_file, res.im);
+
+		if (counter > shift_step*1000 || counter < 0) {
+			dir *= -1;
+		}
+		if (counter % shift_step == 0)
+			itrp.shift(dir);
+
+		counter += dir;
+		//dbg_out << shift << "\t" << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}
+
 void generate_sin_signal(const string& out, double freq, double sample_freq, size_t count, int bits)
 {
 	FILE* out_file = fopen(out.c_str(), "wb");

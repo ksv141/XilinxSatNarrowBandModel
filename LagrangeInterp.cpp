@@ -47,6 +47,14 @@ void LagrangeInterp::shift(int32_t value)
 	x_ptr += x >> FixPointPosition;
 }
 
+void LagrangeInterp::set_shift(double value)
+{
+	value <= -1.0 ? -1.0 : (value >= 1.0 ? 1.0 : value);	// ограничение value диапазоном [-1.0, 1.0]
+	int32_t x = static_cast<int32_t>(dx * value);
+	fx = x & (FixPointPosMaxVal - 1);
+	x_ptr += x >> FixPointPosition;
+}
+
 void LagrangeInterp::process(const xip_complex& in)
 {
 	// в буфер отсчетов добавляется очередной отсчет (FIFO)
