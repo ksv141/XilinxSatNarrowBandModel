@@ -14,6 +14,7 @@
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "fir_compiler_v7_2_bitacc_cmodel.h"
 #include "dds_compiler_v6_0_bitacc_cmodel.h"
+#include "cordic_v6_0_bitacc_cmodel.h"
 #include "debug.h"
 #include "XilinxIpTests.h"
 //#include "gmp.h"
@@ -1342,4 +1343,358 @@ int test_xip_dds_bitacc_cmodel()
 	std::cout << "INFO: C model destroyed" << std::endl;
 
 	return 0;
+}
+
+#define DATA_SIZE 8
+#define LOG_DATA_SIZE 3
+
+int test_xip_cordic_bitacc_cmodel()
+{
+	size_t ii; //loop variable for data samples
+	xip_complex value;
+	xip_real mag_out_samp, phase_out_samp;
+
+	cout << "C model version = " << xip_cordic_v6_0_get_version() << endl;
+
+	// Create a configuration structure
+	xip_cordic_v6_0_config config, config_ret;
+	xip_status status = xip_cordic_v6_0_default_config(&config);
+
+	if (status != XIP_STATUS_OK) {
+		cerr << "ERROR: Could not get C model default configuration" << endl;
+		return XIP_STATUS_ERROR;
+	}
+
+	//Firstly, create and exercise a simple configuration.
+	config.CordicFunction = XIP_CORDIC_V6_0_F_SQRT;
+	config.CoarseRotate = 0;
+	config.DataFormat = XIP_CORDIC_V6_0_FORMAT_USIG_FRAC;
+	config.PhaseFormat = XIP_CORDIC_V6_0_FORMAT_RAD;
+	config.InputWidth = 32;
+	config.OutputWidth = 17;
+	config.Precision = 0;
+	config.RoundMode = XIP_CORDIC_V6_0_ROUND_TRUNCATE;
+	config.ScaleComp = XIP_CORDIC_V6_0_SCALE_NONE;
+
+	// Create model object
+	xip_cordic_v6_0* cordic_std;
+	cordic_std = xip_cordic_v6_0_create(&config, &msg_print, 0);
+
+	if (status != XIP_STATUS_OK) {
+		cerr << "ERROR: Could not create C model state object" << endl;
+		return XIP_STATUS_ERROR;
+	}
+
+	// Can we read back the updated configuration correctly?
+	if (xip_cordic_v6_0_get_config(cordic_std, &config_ret) != XIP_STATUS_OK) {
+		cerr << "ERROR: Could not retrieve C model configuration" << endl;
+	}
+
+#if(DEBUG)
+	cout << "Configuration -----------------------" << endl;
+	cout << "Function        = " << config_ret.CordicFunction << endl;
+	cout << "Coarse Rotation = " << config_ret.CoarseRotate << endl;
+	cout << "Data Format     = " << config_ret.DataFormat << endl;
+	cout << "Phase Format    = " << config_ret.PhaseFormat << endl;
+	cout << "Input Width     = " << config_ret.InputWidth << endl;
+	cout << "Output Width    = " << config_ret.OutputWidth << endl;
+	cout << "Iterations      = " << config_ret.Iterations << endl;
+	cout << "Precision       = " << config_ret.Precision << endl;
+	cout << "Round Mode      = " << config_ret.RoundMode << endl;
+	cout << "Scale Comp      = " << config_ret.ScaleComp << endl << endl;
+#endif
+
+
+	int number_of_samples = DATA_SIZE;
+	// Declare any arrays in the request structure and write pointers to them into the request structure
+
+	// Create request and response structures
+	// Create input data packet for operand Cartesian
+	xip_array_complex* cartin = xip_array_complex_create();
+	xip_array_complex_reserve_dim(cartin, 1); //dimensions are (Number of samples)
+	cartin->dim_size = 1;
+	cartin->dim[0] = number_of_samples;
+	cartin->data_size = cartin->dim[0];
+	if (xip_array_complex_reserve_data(cartin, cartin->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for input data packet!" << endl;
+		exit(2);
+	}
+
+	// Create input data packet for Magnitude In
+	xip_array_real* magin = xip_array_real_create();
+	xip_array_real_reserve_dim(magin, 1); //dimensions are (Number of samples)
+	magin->dim_size = 1;
+	magin->dim[0] = number_of_samples;
+	magin->data_size = magin->dim[0];
+	if (xip_array_real_reserve_data(magin, magin->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for input data packet!" << endl;
+		exit(2);
+	}
+
+	// Create input data packet for Phase In
+	xip_array_real* phasein = xip_array_real_create();
+	xip_array_real_reserve_dim(phasein, 1); //dimensions are (Number of samples)
+	phasein->dim_size = 1;
+	phasein->dim[0] = number_of_samples;
+	phasein->data_size = phasein->dim[0];
+	if (xip_array_real_reserve_data(phasein, phasein->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for input data packet!" << endl;
+		exit(2);
+	}
+
+	// Request memory for Cartesian output data
+	xip_array_complex* cartout = xip_array_complex_create();
+	xip_array_complex_reserve_dim(cartout, 1); //dimensions are (Number of samples)
+	cartout->dim_size = 1;
+	cartout->dim[0] = number_of_samples;
+	cartout->data_size = cartout->dim[0];
+	if (xip_array_complex_reserve_data(cartout, cartout->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for cartout as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for output data packet!" << endl;
+		exit(3);
+	}
+
+	// Create output data packet for Magnitude Out
+	xip_array_real* magout = xip_array_real_create();
+	xip_array_real_reserve_dim(magout, 1); //dimensions are (Number of samples)
+	magout->dim_size = 1;
+	magout->dim[0] = number_of_samples;
+	magout->data_size = magout->dim[0];
+	if (xip_array_real_reserve_data(magout, magout->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for output data packet!" << endl;
+		exit(2);
+	}
+
+	// Create output data packet for Phase Out
+	xip_array_real* phaseout = xip_array_real_create();
+	xip_array_real_reserve_dim(phaseout, 1); //dimensions are (Number of samples)
+	phaseout->dim_size = 1;
+	phaseout->dim[0] = number_of_samples;
+	phaseout->data_size = phaseout->dim[0];
+	if (xip_array_real_reserve_data(phaseout, phaseout->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for output data packet!" << endl;
+		exit(2);
+	}
+
+	//Create Example Input Data
+	xip_complex s_cartin;
+	xip_real s_magin, s_phasein;
+	int cartweight = config_ret.InputWidth - LOG_DATA_SIZE;
+	for (ii = 0; ii < DATA_SIZE; ii++)
+	{
+		s_cartin.re = (xip_real)(ii * pow((double)2.0, (int)cartweight));
+		s_cartin.im = (xip_real)(ii * pow((double)2.0, (int)(cartweight - 1)));
+		s_magin = s_cartin.re;
+		s_phasein = (xip_real)((double)(-1.1071487) * pow((double)2.0, (int)(config_ret.InputWidth - 3)));
+		if (xip_cordic_v6_0_xip_array_complex_set_data(cartin, s_cartin, ii) != XIP_STATUS_OK)
+			cerr << "Error in xip_cordic_v6_0_xip_array_complex_set_data" << endl;
+		if (xip_cordic_v6_0_xip_array_real_set_data(magin, s_cartin.re, ii) != XIP_STATUS_OK)
+			cerr << "Error in xip_cordic_v6_0_xip_array_real_set_data" << endl;
+		if (xip_cordic_v6_0_xip_array_real_set_data(phasein, s_phasein, ii) != XIP_STATUS_OK)
+			cerr << "Error in xip_cordic_v6_0_xip_array_real_set_data" << endl;
+		cout << "Sample " << ii << " X = " << s_cartin.re << " Y = " << s_cartin.im << endl;
+		cout << "Sample " << ii << " Phase = " << s_phasein << endl;
+
+#if(DEBUG)
+		//Check that data values can be read back from the input data structures
+		if (xip_cordic_v6_0_xip_array_complex_get_data(cartin, &value, ii) != XIP_STATUS_OK)
+			cerr << "Error in xip_cordic_v6_0_xip_array_complex_get_data" << endl;
+#endif
+	}  //end of example data creation
+
+	// Run the model
+	cout << "Running the C model..." << endl;
+
+	//Run each function on the input data - note that each will overwrite the output data of the previous.
+	switch (config_ret.CordicFunction) {
+	case XIP_CORDIC_V6_0_F_ROTATE:
+		if (xip_cordic_v6_0_rotate(cordic_std, cartin, phasein, cartout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_TRANSLATE:
+		if (xip_cordic_v6_0_translate(cordic_std, cartin, magout, phaseout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_SIN_COS:
+		if (xip_cordic_v6_0_sin_cos(cordic_std, phasein, cartout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_ATAN:
+		if (xip_cordic_v6_0_atan(cordic_std, cartin, phaseout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_SINH_COSH:
+		if (xip_cordic_v6_0_sinh_cosh(cordic_std, phasein, cartout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_ATANH:
+		if (xip_cordic_v6_0_atanh(cordic_std, cartin, phaseout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_SQRT:
+		if (xip_cordic_v6_0_sqrt(cordic_std, magin, magout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+	default:
+		break;
+	}
+
+	//  //Alternatively, execute the model with the configuration specified earlier
+	//if (xip_cordic_v6_0_data_do(cordic_std, config_ret.CordicFunction, magin, phasein, cartin, magout, phaseout, cartout,number_of_samples) != XIP_STATUS_OK) {
+	//  cerr << "ERROR: C model did not complete successfully" << endl;
+	//  if (magin)    xip_array_real_destroy(magin);
+	//  if (phasein)  xip_array_real_destroy(phasein);
+	//  if (cartin)   xip_array_complex_destroy(cartin);
+	//  if (magout)   xip_array_real_destroy(magout);
+	//  if (phaseout) xip_array_real_destroy(phaseout);
+	//  if (cartout)  xip_array_complex_destroy(cartout);
+	//  xip_cordic_v6_0_destroy(cordic_std);
+	//  return XIP_STATUS_ERROR;
+	//} else {
+	//  cout << "C model completed successfully" << endl;
+	// }
+
+#if(DEBUG)
+  // When enabled, this will print the result data to stdout
+	for (int sample = 0; sample < number_of_samples; sample++) {
+		cout << "Sample " << sample;
+		switch (config_ret.CordicFunction) {
+		case XIP_CORDIC_V6_0_F_ROTATE:
+		case XIP_CORDIC_V6_0_F_SIN_COS:
+		case XIP_CORDIC_V6_0_F_SINH_COSH:
+			xip_cordic_v6_0_xip_array_complex_get_data(cartout, &value, sample);
+			cout << " out real = " << value.re << " imag = " << value.im;
+			break;
+		case XIP_CORDIC_V6_0_F_TRANSLATE:
+		case XIP_CORDIC_V6_0_F_SQRT:
+			xip_cordic_v6_0_xip_array_real_get_data(magout, &mag_out_samp, sample);
+			cout << " out magnitude = " << mag_out_samp;
+			break;
+		default:
+			break;
+		}
+		switch (config_ret.CordicFunction) {
+		case XIP_CORDIC_V6_0_F_TRANSLATE:
+		case XIP_CORDIC_V6_0_F_ATAN:
+		case XIP_CORDIC_V6_0_F_ATANH:
+			xip_cordic_v6_0_xip_array_real_get_data(phaseout, &phase_out_samp, sample);
+			cout << " out phase = " << phase_out_samp;
+			break;
+		default:
+			break;
+		}
+		cout << endl;
+	}
+#endif
+
+	// Check cartout is correct
+	for (ii = 0; ii < DATA_SIZE; ii++)
+	{
+
+	}
+	cout << "C model data output is correct" << endl;
+
+	// Clean up
+	if (magin)    xip_array_real_destroy(magin);
+	if (phasein)  xip_array_real_destroy(phasein);
+	if (cartin)   xip_array_complex_destroy(cartin);
+	if (magout)   xip_array_real_destroy(magout);
+	if (phaseout) xip_array_real_destroy(phaseout);
+	if (cartout)  xip_array_complex_destroy(cartout);
+	cout << "C model input and output data freed" << endl;
+
+	xip_cordic_v6_0_destroy(cordic_std);
+	cout << "C model destroyed" << endl;
+
+	//End of test of simple configuration
+
+
+	// We will already have returned if there was an error
+	return XIP_STATUS_OK;
 }

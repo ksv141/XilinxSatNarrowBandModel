@@ -25,6 +25,10 @@ const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной со
 
 int main()
 {
+	init_xip_cordic_sqrt();
+	destroy_xip_cordic_sqrt();
+	return 0;
+
 	//Pif pif(0.1);
 	//ofstream dbg_out("dbg_out.txt");
 	//for (int i = 0; i < 100; i++) {

@@ -4,17 +4,52 @@
 #include <ostream>
 #include <cmath>
 #include "cmpy_v6_0_bitacc_cmodel.h"
+#include "cordic_v6_0_bitacc_cmodel.h"
 #include "debug.h"
 
 using namespace std;
 
+/**
+ * @brief инициализация умножителя. один умножитель используется для всей модели
+ * @return 
+*/
 extern int init_xip_multiplier();
 
+/**
+ * @brief деинициализация умножителя
+ * @return 
+*/
 extern int destroy_xip_multiplier();
 
+/**
+ * @brief умножение двух комплексных чисел
+ * @param a 
+ * @param b 
+ * @param out 
+ * @return 
+*/
 extern int xip_multiply_complex(const xip_complex& a, const xip_complex& b, xip_complex& out);
 
+/**
+ * @brief умножение двух вещественных чисел
+ * @param a 
+ * @param b 
+ * @param out 
+ * @return 
+*/
 extern int xip_multiply_real(const xip_real& a, const xip_real& b, xip_real& out);
+
+/**
+ * @brief инициализация вычислителя корня. один умножитель используется для всей модели
+ * @return 
+*/
+extern int init_xip_cordic_sqrt();
+
+/**
+ * @brief деинициализация вычислителя корня
+ * @return 
+*/
+extern int destroy_xip_cordic_sqrt();
 
 /**
  * @brief масштабирование числа в 2^n

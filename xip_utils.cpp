@@ -1,11 +1,17 @@
 #include "xip_utils.h"
 
-xip_cmpy_v6_0_config xip_multiplier_cnfg;
+xip_cordic_v6_0_config xip_sqrt_cnfg;		// конфиг корня
+xip_cordic_v6_0* xip_sqrt;					// вычислитель корня
+xip_array_real* xip_sqrt_arg;				// аргумент корня
+xip_array_real* xip_sqrt_result;			// результат корня
+
+xip_cmpy_v6_0_config xip_multiplier_cnfg;	// конфиг умножителя
 xip_cmpy_v6_0* xip_multiplier;				// умножитель
-xip_array_complex* xip_multiplier_reqa;		// первый аргумент
-xip_array_complex* xip_multiplier_reqb;		// второй аргумент
-xip_array_uint* xip_multiplier_reqctrl;		// бит округления
-xip_array_complex* xip_multiplier_response;	// результат
+xip_array_complex* xip_multiplier_reqa;		// первый аргумент умножителя
+xip_array_complex* xip_multiplier_reqb;		// второй аргумент умножителя
+xip_array_uint* xip_multiplier_reqctrl;		// бит округления умножителя
+xip_array_complex* xip_multiplier_response;	// результат умножителя
+
 int a_max;
 int b_max;
 
@@ -77,6 +83,55 @@ int init_xip_multiplier()
 	return 0;
 }
 
+int init_xip_cordic_sqrt()
+{
+	if (xip_cordic_v6_0_default_config(&xip_sqrt_cnfg) != XIP_STATUS_OK) {
+		printf("ERROR: Could not get C model default configuration\n");
+		return -1;
+	}
+
+	//Firstly, create and exercise a simple configuration.
+	xip_sqrt_cnfg.CordicFunction = XIP_CORDIC_V6_0_F_SQRT;
+	xip_sqrt_cnfg.CoarseRotate = 0;
+	xip_sqrt_cnfg.DataFormat = XIP_CORDIC_V6_0_FORMAT_USIG_INT;
+	xip_sqrt_cnfg.InputWidth = 32;
+	xip_sqrt_cnfg.OutputWidth = 17;
+	xip_sqrt_cnfg.Precision = 0;
+	xip_sqrt_cnfg.RoundMode = XIP_CORDIC_V6_0_ROUND_TRUNCATE;
+	xip_sqrt_cnfg.ScaleComp = XIP_CORDIC_V6_0_SCALE_NONE;
+
+	xip_sqrt = xip_cordic_v6_0_create(&xip_sqrt_cnfg, &msg_print, 0);
+
+	if (!xip_sqrt) {
+		printf("ERROR: Could not create C model state object\n");
+		return -1;
+	}
+
+	// Create input data packet for operand
+	xip_sqrt_arg = xip_array_real_create();
+	xip_array_real_reserve_dim(xip_sqrt_arg, 1);
+	xip_sqrt_arg->dim_size = 1;
+	xip_sqrt_arg->dim[0] = 1;
+	xip_sqrt_arg->data_size = xip_sqrt_arg->dim[0];
+	if (xip_array_real_reserve_data(xip_sqrt_arg, xip_sqrt_arg->data_size) != XIP_STATUS_OK) {
+		printf("ERROR: Unable to reserve memory for input data packet!\n");
+		return -1;
+	}
+
+	// Create output data packet for output data
+	xip_sqrt_result = xip_array_real_create();
+	xip_array_real_reserve_dim(xip_sqrt_result, 1);
+	xip_sqrt_result->dim_size = 1;
+	xip_sqrt_result->dim[0] = 1;
+	xip_sqrt_result->data_size = xip_sqrt_result->dim[0];
+	if (xip_array_real_reserve_data(xip_sqrt_result, xip_sqrt_result->data_size) != XIP_STATUS_OK) {
+		printf("ERROR: Unable to reserve memory for output data packet!\n");
+		return -1;
+	}
+
+	return 0;
+}
+
 int destroy_xip_multiplier()
 {
 	if (xip_array_complex_destroy(xip_multiplier_reqa) != XIP_STATUS_OK) {
@@ -96,6 +151,22 @@ int destroy_xip_multiplier()
 	}
 
 	printf("Deleted instance of xip multiplier and free memory\n");
+	return 0;
+}
+
+int destroy_xip_cordic_sqrt()
+{
+	if (xip_array_real_destroy(xip_sqrt_arg) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_array_real_destroy(xip_sqrt_result) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_cordic_v6_0_destroy(xip_sqrt) != XIP_STATUS_OK) {
+		return -1;
+	}
+
+	printf("Deleted instance of xip cordic sqrt and free memory\n");
 	return 0;
 }
 
