@@ -1,7 +1,7 @@
 #include "Demodulator.h"
 
 Demodulator::Demodulator(const string& input_file, const string& output_dmd_file, const string& output_bin_file, size_t data_length):
-	m_agc(AGC_WND_SIZE, pwr_constell_psk4),
+	m_agc(AGC_WND_SIZE_LOG2, pwr_constell_psk4),
 	pif_sts(PIF_STS_Kp, PIF_STS_Ki),
 	pif_pll(PIF_PLL_Kp, PIF_PLL_Ki),
 	dds(DDS_PHASE_MODULUS)

@@ -20,7 +20,7 @@
 using namespace std;
 using namespace xilinx_m;
 
-extern const int AGC_WND_SIZE;
+extern const int AGC_WND_SIZE_LOG2;
 extern const double PIF_STS_Kp;		// коэффициент пропорциональной составляющей ПИФ СТС
 extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТС
 extern const double PIF_PLL_Kp;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ
