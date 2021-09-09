@@ -26,6 +26,9 @@ const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной со
 int main()
 {
 	init_xip_cordic_sqrt();
+	xip_real a = 4224;
+	xip_real b = 0;
+	xip_sqrt_real(a, b);
 	destroy_xip_cordic_sqrt();
 	return 0;
 

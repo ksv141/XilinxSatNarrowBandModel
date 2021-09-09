@@ -227,6 +227,25 @@ int xip_multiply_real(const xip_real& a, const xip_real& b, xip_real& out)
 	return 0;
 }
 
+int xip_sqrt_real(const xip_real& arg, xip_real& out)
+{
+	if (xip_cordic_v6_0_xip_array_real_set_data(xip_sqrt_arg, arg, 0) != XIP_STATUS_OK) {
+		printf("Error in xip_cordic_v6_0_xip_array_real_set_data\n");
+		return -1;
+	}
+
+	if (xip_cordic_v6_0_sqrt(xip_sqrt, xip_sqrt_arg, xip_sqrt_result, 1) != XIP_STATUS_OK) {
+		printf("ERROR: C model did not complete successfully");
+		return -1;
+	}
+
+	if (xip_cordic_v6_0_xip_array_real_get_data(xip_sqrt_result, &out, 0) != XIP_STATUS_OK) {
+		printf("Error in xip_cordic_v6_0_xip_array_real_get_data");
+		return -1;
+	}
+	return 0;
+}
+
 void xip_real_shift(xip_real& in_out, int pos)
 {
 	uint64_t coeff = 1 << abs(pos);

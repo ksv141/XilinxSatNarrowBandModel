@@ -52,6 +52,14 @@ extern int init_xip_cordic_sqrt();
 extern int destroy_xip_cordic_sqrt();
 
 /**
+ * @brief вычисление корня
+ * @param arg 
+ * @param out 
+ * @return 
+*/
+extern int xip_sqrt_real(const xip_real& arg, xip_real& out);
+
+/**
  * @brief масштабирование числа в 2^n
  * @param in_out вход и выход
  * @param pos число двоичных позиций сдвига, может быть + или -
