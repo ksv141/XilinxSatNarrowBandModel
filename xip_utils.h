@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <cmath>
+#include <stdint.h>
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "cordic_v6_0_bitacc_cmodel.h"
 #include "debug.h"
@@ -58,6 +59,17 @@ extern int destroy_xip_cordic_sqrt();
  * @return 
 */
 extern int xip_sqrt_real(const xip_real& arg, xip_real& out);
+
+/**
+ * @brief целочисленное деление. 
+ * вещественные аргументы переводятся в int32 максимального диапазона.
+ * деление возможно при a >= b
+ * @param a 
+ * @param b 
+ * @param res 
+ * @return 
+*/
+extern int int32_division(double a, double b, double& res);
 
 /**
  * @brief масштабирование числа в 2^n

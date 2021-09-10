@@ -25,6 +25,14 @@ const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной со
 
 int main()
 {
+	// test division
+	double a = 1000;
+	double b = 0.2441;
+	double res;
+	int32_division(a, b, res);
+	cout << res << endl;
+
+	return 0;
 	//Pif pif(0.1);
 	//ofstream dbg_out("dbg_out.txt");
 	//for (int i = 0; i < 100; i++) {

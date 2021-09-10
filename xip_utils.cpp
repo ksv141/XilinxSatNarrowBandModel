@@ -246,6 +246,61 @@ int xip_sqrt_real(const xip_real& arg, xip_real& out)
 	return 0;
 }
 
+int int32_division(double a, double b, double& res)
+{
+	if ((b < 0) || (a < INT32_MIN) || (a > INT32_MAX)) {
+		printf("int32_division error: invalid argument\n");
+		return -1;
+	}
+	if (fabs(a) < b) {
+		res = 0;
+		return 0;
+	}
+
+	// вещественные аргументы переводятся в int32 максимального диапазона
+	while (a >= INT32_MIN && a <= INT32_MAX) {
+		xip_real_shift(a, 1);
+		xip_real_shift(b, 1);
+	}
+	xip_real_shift(a, -1);
+	xip_real_shift(b, -1);
+
+	int32_t ia = (int32_t)a;
+	uint32_t ub = (uint32_t)b;
+	if (ub == 0) {
+		printf("int32_division error: invalid argument\n");
+		return -1;
+	}
+	// частные случаи
+	if (ia == ub) {
+		res = 1;
+		return 0;
+	}
+	if (ub == 1) {
+		res = ia;
+		return 0;
+	}
+
+	// деление с остатком столбиком
+	uint32_t reminder = a < 0 ? -a : a;
+	uint32_t ures = 0;
+	while (!(reminder < ub)) {
+		uint32_t tmp_dev = ub;
+		uint32_t tmp_res = 1;
+		while (tmp_dev <= reminder) {
+			tmp_dev <<= 1;
+			tmp_res <<= 1;
+		}
+		tmp_dev >>= 1;
+		tmp_res >>= 1;
+		ures += tmp_res;
+		reminder -= tmp_dev;
+	}
+
+	res = (a < 0 ? -(double)ures : ures);
+	return 0;
+}
+
 void xip_real_shift(xip_real& in_out, int pos)
 {
 	uint64_t coeff = 1 << abs(pos);

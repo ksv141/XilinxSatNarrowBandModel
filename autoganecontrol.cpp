@@ -48,6 +48,10 @@ bool AutoGaneControl::process(const xip_complex& in, xip_complex& out)
 	xip_multiply_real(in.re, in.re, re_sqr);
 	xip_real im_sqr = 0;
 	xip_multiply_real(in.im, in.im, im_sqr);
+
+	xip_real sum = 0;
+	xip_fir_process(re_sqr, im_sqr, sum);
+	xip_real_shift(sum, -m_windowSizeLog2);		// усреднение за окно
 	return true;
 }
 
