@@ -25,14 +25,6 @@ const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной со
 
 int main()
 {
-	// test division
-	double a = 1000;
-	double b = 0.2441;
-	double res;
-	int32_division(a, b, res);
-	cout << res << endl;
-
-	return 0;
 	//Pif pif(0.1);
 	//ofstream dbg_out("dbg_out.txt");
 	//for (int i = 0; i < 100; i++) {
@@ -59,10 +51,6 @@ int main()
 	init_xip_cordic_sqrt();
 	init_channel_matched_fir();
 
-	AutoGaneControl agc(AGC_WND_SIZE_LOG2, pwr_constell_psk4);
-	for (int i = 0; i < 1000; i++) {
-
-	}
 	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
 	//Modulator mdl("1.zip", "out_mod.pcm", FRAME_DATA_SIZE);
 	//mdl.process();
@@ -70,8 +58,8 @@ int main()
 	//signal_freq_shift("out_mod.pcm", "out_mod_fr_shift.pcm", 3);
 	//signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
 	//signal_time_shift_dyn("out_mod.pcm", "out_mod_shift.pcm", 10);
-	//Demodulator dmd("out_mod_tm_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
-	//dmd.process();
+	Demodulator dmd("out_mod_tm_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	dmd.process();
 
 	destroy_xip_multiplier();
 	destroy_xip_cordic_sqrt();

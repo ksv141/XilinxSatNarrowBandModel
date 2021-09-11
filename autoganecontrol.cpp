@@ -9,6 +9,7 @@ AutoGaneControl::AutoGaneControl(int window_size_log2, double norm_power):
 	m_windowSize = 1 << m_windowSizeLog2;
 	m_pwrReg.resize(m_windowSize, 0);
 
+	m_normPowerSqrt = sqrt(norm_power);
 	init_xip_fir(window_size_log2);
 }
 
@@ -49,9 +50,25 @@ bool AutoGaneControl::process(const xip_complex& in, xip_complex& out)
 	xip_real im_sqr = 0;
 	xip_multiply_real(in.im, in.im, im_sqr);
 
-	xip_real sum = 0;
-	xip_fir_process(re_sqr, im_sqr, sum);
-	xip_real_shift(sum, -m_windowSizeLog2);		// усреднение за окно
+	xip_real sum_pwr = 0;
+	xip_fir_process(re_sqr, im_sqr, sum_pwr);
+
+	// регулировка выполн€етс€ после заполнени€ буфера ј–”
+	if (m_counter < m_windowSize) {
+		m_counter++;
+		return false;
+	}
+
+	xip_real_shift(sum_pwr, -m_windowSizeLog2);		// усреднение за окно
+
+	xip_sqrt_real(sum_pwr, sum_pwr);
+
+	xip_real in_mul;
+	xip_multiply_real(in.re, m_normPowerSqrt, in_mul);
+	int32_division(in_mul, sum_pwr, out.re);
+	xip_multiply_real(in.im, m_normPowerSqrt, in_mul);
+	int32_division(in_mul, sum_pwr, out.im);
+
 	return true;
 }
 
@@ -62,13 +79,13 @@ void AutoGaneControl::reset()
 
 int AutoGaneControl::init_xip_fir(int window_size)
 {
-	int num_coeff = 1 >> (window_size + 1);		// дл€ каждого отсчета требуетс€ 2 значени€ (re^2 + im^2)
+	int num_coeff = 1 << (window_size + 1);		// дл€ каждого отсчета требуетс€ 2 значени€ (re^2 + im^2)
 	double* g = new double[num_coeff];
 	for (int i = 0; i < num_coeff; i++)
 		g[i] = 1.0;
 
 	xip_fir_v7_2_default_config(&xip_fir_cnfg);
-	xip_fir_cnfg.name = "pif_fir";
+	xip_fir_cnfg.name = "agc_fir";
 	xip_fir_cnfg.filter_type = XIP_FIR_SINGLE_RATE;
 	xip_fir_cnfg.coeff = g;
 	xip_fir_cnfg.num_coeffs = num_coeff;

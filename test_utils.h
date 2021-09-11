@@ -27,7 +27,7 @@ extern const int DDS_PHASE_MODULUS;
  * @brief частотное смещение сигнала
  * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param out выходной файл (PCM стерео I/Q 16-бит) 
- * @param dph набег фазы в диапазоне [0, 16383] --> [0, 2pi]
+ * @param dph набег фазы за такт в диапазоне [0, 16383] --> [0, 2pi]
 */
 extern void signal_freq_shift(const string& in, const string& out, double dph);
 

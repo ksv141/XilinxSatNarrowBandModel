@@ -49,6 +49,8 @@ private:
 
     int xip_fir_process(const xip_real& in_re, const xip_real& in_im, xip_real& out);
 
+    xip_real m_normPowerSqrt;
+
     xip_fir_v7_2* xip_fir;				// КИХ-фильтр сумматора
     xip_fir_v7_2_config xip_fir_cnfg;	// конфиг фильтра
     xip_array_real* xip_fir_in;			// 3-D массив, содержащий текущий отсчет для обработки
