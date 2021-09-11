@@ -49,6 +49,15 @@ extern void signal_time_shift(const string& in, const string& out, int32_t time_
 extern void signal_time_shift_dyn(const string& in, const string& out, int shift_step);
 
 /**
+ * @brief изменение частоты дискретизации
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param from_sampling_freq исходна€ Fs
+ * @param to_sampling_freq требуема€ Fs
+*/
+extern void signal_resample(const string& in, const string& out, double from_sampling_freq, double to_sampling_freq);
+
+/**
  * @brief генератор гармонического квадратурного сигнала
  * @param out выходной файл (PCM стерео I/Q 16-бит)
  * @param freq частота сигнала (√ц)

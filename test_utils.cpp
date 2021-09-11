@@ -116,6 +116,38 @@ void signal_time_shift_dyn(const string& in, const string& out, int shift_step)
 	fclose(out_file);
 }
 
+void signal_resample(const string& in, const string& out, double from_sampling_freq, double to_sampling_freq)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	//ofstream dbg_out("dbg_out.txt");
+
+	LagrangeInterp itrp(from_sampling_freq, to_sampling_freq);
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_complex res{ 0,0 };
+		itrp.process(sample);
+		while (itrp.next(res)) {
+			tC::write_real<int16_t>(out_file, res.re);
+			tC::write_real<int16_t>(out_file, res.im);
+		}
+
+		//dbg_out << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}
+
 void generate_sin_signal(const string& out, double freq, double sample_freq, size_t count, int bits)
 {
 	FILE* out_file = fopen(out.c_str(), "wb");
