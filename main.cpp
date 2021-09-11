@@ -38,6 +38,8 @@ const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной
 const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
 const double PIF_PLL_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
 const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
+const int BAUD_RATE = 9143;							// бодовая скорость в канале
+const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации на выходе канального фильтра
 
 int main()
 {
@@ -67,15 +69,17 @@ int main()
 	init_xip_cordic_sqrt();
 	init_channel_matched_fir();
 
-	Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
+	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
 	//Modulator mdl("1.zip", "out_mod.pcm", FRAME_DATA_SIZE);
-	mdl.process();
+	//mdl.process();
 
-	signal_freq_shift("out_mod.pcm", "out_mod_fr_shift.pcm", 3);
-	signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
+	//signal_freq_shift("out_mod.pcm", "out_mod_fr_shift.pcm", 3);
+	//signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
 	//signal_time_shift_dyn("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 10);
-	Demodulator dmd("out_mod_tm_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
-	dmd.process();
+	double resample_coeff = 4.0;// 1.01
+	signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, 25000);
+	//Demodulator dmd("out_mod_rsmpl.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	//dmd.process();
 
 	destroy_xip_multiplier();
 	destroy_xip_cordic_sqrt();
