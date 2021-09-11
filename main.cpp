@@ -2,6 +2,7 @@
 #include <fstream>
 #include <cmath>
 #include <cstdio>
+#include <thread>
 
 #include "all_headers.h"
 
@@ -58,8 +59,8 @@ int main()
 	//signal_freq_shift("out_mod.pcm", "out_mod_fr_shift.pcm", 3);
 	//signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
 	//signal_time_shift_dyn("out_mod.pcm", "out_mod_shift.pcm", 10);
-	Demodulator dmd("out_mod_tm_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
-	dmd.process();
+	//Demodulator dmd("out_mod_tm_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	//dmd.process();
 
 	destroy_xip_multiplier();
 	destroy_xip_cordic_sqrt();

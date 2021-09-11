@@ -234,7 +234,9 @@ int xip_sqrt_real(const xip_real& arg, xip_real& out)
 		return -1;
 	}
 
-	if (xip_cordic_v6_0_sqrt(xip_sqrt, xip_sqrt_arg, xip_sqrt_result, 1) != XIP_STATUS_OK) {
+	// !!! при многократном выполнении функции xip_cordic_v6_0_sqrt возникает утечка памяти
+	// за 1 вызов утекает ~128 байт
+	if (xip_cordic_v6_0_sqrt(xip_sqrt, xip_sqrt_arg, xip_sqrt_result, xip_sqrt_arg->data_size) != XIP_STATUS_OK) {
 		printf("ERROR: C model did not complete successfully");
 		return -1;
 	}
