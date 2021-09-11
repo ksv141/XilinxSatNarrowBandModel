@@ -2,40 +2,96 @@
 #include <fstream>
 #include <cmath>
 #include <cstdio>
-#include "cmpy_v6_0_bitacc_cmodel.h"
-#include "SignalSource.h"
-#include "xip_utils.h"
-#include "debug.h"
-#include "ChannelMatchedFir.h"
-#include "LagrangeInterp.h"
-#include "FirMultiplier.h"
-#include "FirSummator.h"
-#include "Pif.h"
-#include "autoganecontrol.h"
-#include "constellation.h"
-#include "StsEstimate.h"
-#include "Modulator.h"
-#include "fx_point.h"
+#include <thread>
+
+#include "all_headers.h"
 
 // Для тестов библиотек XIP
 //#include "XilinxIpTests.h"
 
 using namespace std;
 
+static const double PI = 3.141592653589793238463;
+static const double _2_PI = PI * 2;
+
+// глобальные параметры
+const int DDS_PHASE_MODULUS = 16384;				// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
+const int DDS_RAD_CONST = (int)(DDS_PHASE_MODULUS * 8 / _2_PI);	// радиан на одну позицию фазы << 3 == 20860 (16 бит)
+const int FRAME_DATA_SIZE = 1115;					// размер данных в кадре (байт)
+const int AGC_WND_SIZE_LOG2 = 7;					// log2 окна усреднения АРУ
+const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)
+const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
+const double PIF_PLL_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
+const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
+
 int main()
 {
-	// инициализация xip fir
+	//Pif pif(0.1);
+	//ofstream dbg_out("dbg_out.txt");
+	//for (int i = 0; i < 100; i++) {
+	//	xip_real x = 32;
+	//	pif.process_1(x, x);
+	//	dbg_out << x << endl;
+	//}
+	//dbg_out.close();
+	//return 0;
+	//ofstream dbg_out("dbg_out.txt");
+	//LagrangeInterp itrp;
+	//for (int i = -5000; i <= 5000; i++)
+	//	dbg_out << i << "\t" << itrp.countPos(i) << endl;
+	//dbg_out.close();
+	//return 0;
+	// 
+//	generate_sin_signal("sin.pcm", 1, 20, 40, 13);
+//	signal_time_shift("sin.pcm", "sin_shift.pcm", 256);
+//	signal_time_shift("sin_shift.pcm", "sin_unshift.pcm", -256);
+//	return 0;
+
+	set_current_constell(Current_constell::PSK4);
+	init_xip_multiplier();
+	init_xip_cordic_sqrt();
 	init_channel_matched_fir();
 
-	// вид сигнала
-	set_current_constell(Current_constell::PSK4);
+	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
+	//Modulator mdl("1.zip", "out_mod.pcm", FRAME_DATA_SIZE);
+	//mdl.process();
 
-	// настройка и запуск модулятора
-	Modulator mdl("data.bin", "out_mod.pcm", 1115);
-	mdl.process();
+	//signal_freq_shift("out_mod.pcm", "out_mod_fr_shift.pcm", 3);
+	//signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
+	//signal_time_shift_dyn("out_mod.pcm", "out_mod_shift.pcm", 10);
+	//Demodulator dmd("out_mod_tm_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	//dmd.process();
 
+	destroy_xip_multiplier();
+	destroy_xip_cordic_sqrt();
 	destroy_channel_matched_fir();
+
 	return 0;
+
+	//ofstream dbg_out("dbg_out.txt");
+	//DDS dds(DDS_PHASE_MODULUS);
+	//double dds_phase, dds_sin, dds_cos;
+	//for (int i = 0; i < 17000; i++) {
+	//	double dph = 1.0;
+	//	dds.process(dph, dds_phase, dds_sin, dds_cos);
+	//	dbg_out << "ph = " << dds_phase << "\tsin = " << dds_sin << "\tcos = " << dds_cos << endl;
+	//}
+
+	//dbg_out.close();
+	//return 0;
+
+	//// инициализация xip fir
+	//init_channel_matched_fir();
+
+	//// вид сигнала
+	//set_current_constell(Current_constell::PSK4);
+
+	//// настройка и запуск модулятора
+	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
+	//mdl.process();
+
+	//destroy_channel_matched_fir();
+	//return 0;
 	
 
 	//ofstream dbg_out("dbg_out.txt");

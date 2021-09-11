@@ -6,7 +6,7 @@ Modulator::Modulator(const string& input_file, const string& output_file, size_t
 {
 	m_outFile = fopen(output_file.c_str(), "wb");
 	if (!m_outFile)
-		throw runtime_error("input file is not opened");
+		throw runtime_error("output file is not opened");
 }
 
 Modulator::~Modulator()
@@ -34,12 +34,13 @@ void Modulator::process()
 		// канальный фильтр фильтр на 2B
 		process_sample_channel_matched_receive(&sample, &sample);
 
-		// повышаем точность на 2 бита
-		sample.re *= 4;
-		sample.im *= 4;
+		// если диапазон сигнала +/-4096, то с выхода фильра 13-битный отсчет
+
+		// повышаем точность на 2 бита (до 15 бит)
+		xip_complex_shift(sample, 2);
 
 		fx_cmpl_point fx_sample;
-		fx_sample.set_val((int16_t)sample.re, (int16_t)sample.im);
+		fx_sample.set_val((int16_t)sample.re + 1, (int16_t)sample.im + 1);
 
 		tC::write_real<int16_t>(m_outFile, fx_sample.real.i_val);
 		tC::write_real<int16_t>(m_outFile, fx_sample.imag.i_val);

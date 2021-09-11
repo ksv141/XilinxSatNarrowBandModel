@@ -99,7 +99,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;libIp_dds_compiler_v6_0_bitacc_cmodel.lib;libIp_cordic_v6_0_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -113,7 +113,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;libIp_dds_compiler_v6_0_bitacc_cmodel.lib;libIp_cordic_v6_0_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -131,7 +131,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;libIp_dds_compiler_v6_0_bitacc_cmodel.lib;libIp_cordic_v6_0_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -149,17 +149,20 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libgmp.lib;libIp_cmpy_v6_0_bitacc_cmodel.lib;libIp_fir_compiler_v7_2_bitacc_cmodel.lib;libIp_dds_compiler_v6_0_bitacc_cmodel.lib;libIp_cordic_v6_0_bitacc_cmodel.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="all_headers.h" />
     <ClInclude Include="autoganecontrol.h" />
     <ClInclude Include="ChannelMatchedFir.h" />
     <ClInclude Include="constellation.h" />
+    <ClInclude Include="DDS.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="Demodulator.h" />
     <ClInclude Include="FirMultiplier.h" />
     <ClInclude Include="FirSummator.h" />
     <ClInclude Include="LagrangeInterp.h" />
@@ -168,6 +171,7 @@
     <ClInclude Include="Pif.h" />
     <ClInclude Include="SignalSource.h" />
     <ClInclude Include="StsEstimate.h" />
+    <ClInclude Include="test_utils.h" />
     <ClInclude Include="xip_utils.h" />
     <ClInclude Include="XilinxIpTests.h" />
   </ItemGroup>
@@ -175,7 +179,9 @@
     <ClCompile Include="autoganecontrol.cpp" />
     <ClCompile Include="ChannelMatchedFir.cpp" />
     <ClCompile Include="constellation.cpp" />
+    <ClCompile Include="DDS.cpp" />
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="Demodulator.cpp" />
     <ClCompile Include="FirMultiplier.cpp" />
     <ClCompile Include="FirSummator.cpp" />
     <ClCompile Include="fx_cmpl_point.cpp" />
@@ -187,6 +193,7 @@
     <ClCompile Include="Pif.cpp" />
     <ClCompile Include="SignalSource.cpp" />
     <ClCompile Include="StsEstimate.cpp" />
+    <ClCompile Include="test_utils.cpp" />
     <ClCompile Include="XilinxIpTests.cpp" />
     <ClCompile Include="xip_utils.cpp" />
   </ItemGroup>

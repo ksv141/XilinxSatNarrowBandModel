@@ -13,7 +13,10 @@
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "fir_compiler_v7_2_bitacc_cmodel.h"
+#include "dds_compiler_v6_0_bitacc_cmodel.h"
+#include "cordic_v6_0_bitacc_cmodel.h"
 #include "debug.h"
+#include "XilinxIpTests.h"
 //#include "gmp.h"
 
 #ifndef M_PI
@@ -932,4 +935,766 @@ int test_xip_fir_bitacc_cmodel()
 	printf("...End\n");
 
 	return 0;
+}
+
+int test_xip_dds_bitacc_cmodel()
+{
+	const int number_of_samples = 50;
+	int channel;
+
+	// Report the version of the model we are calling
+	std::cout << "INFO: C model version = " << xip_dds_v6_0_get_version() << std::endl;
+
+	// Create a configuration structure and set to core defaults.
+	// Setting the defaults first means only those parameters for
+	// which the desired configuration differs from the default need
+	// be set up in the following lines.
+	xip_dds_v6_0_config config, config_ret;
+	xip_status status = xip_dds_v6_0_default_config(&config);
+
+	// Did we get the default configuration correctly?
+	if (status != XIP_STATUS_OK) {
+		std::cerr << "ERROR: Could not get C model default configuration" << std::endl;
+		return 1;
+	}
+
+	//Now modify the configuration as desired for your particular configuration
+	config.name							= "dds_compiler_v6_0";
+	config.PartsPresent					= XIP_DDS_PHASE_GEN_AND_SIN_COS_LUT;
+	config.DDS_Clock_Rate				= 100.0;
+	config.Channels						= 1;
+	config.Mode_of_Operation			= XIP_DDS_MOO_RASTERIZED;
+	config.Modulus						= 3000;
+	config.ParameterEntry				= XIP_DDS_HARDWARE_PARAMS;
+	config.Spurious_Free_Dynamic_Range	= 45.0;
+	config.Frequency_Resolution			= 0.4;
+	config.Noise_Shaping				= XIP_DDS_NS_NONE;
+	config.Phase_Increment				= XIP_DDS_PINCPOFF_FIXED;
+	config.Resync						= XIP_DDS_ABSENT;
+	config.Phase_Offset					= XIP_DDS_PINCPOFF_NONE;
+	config.Output_Selection				= XIP_DDS_OUT_SIN_AND_COS;
+	config.Negative_Sine				= XIP_DDS_ABSENT;
+	config.Negative_Cosine				= XIP_DDS_ABSENT;
+	config.Amplitude_Mode				= XIP_DDS_FULL_RANGE;
+	config.Memory_Type					= XIP_DDS_MEM_AUTO;
+	config.Optimization_Goal			= XIP_DDS_OPTGOAL_AUTO;
+	config.DSP48_Use					= XIP_DDS_DSP_MIN;
+	config.Has_TREADY					= XIP_DDS_ABSENT;
+	config.S_CONFIG_Sync_Mode			= XIP_DDS_CONFIG_SYNC_VECTOR;
+	config.Output_Form					= XIP_DDS_OUTPUT_TWOS;
+	config.Latency_Configuration		= XIP_DDS_LATENCY_AUTO;
+	config.Has_ARESETn					= XIP_DDS_ABSENT;
+	config.PINC[0]						= 1; // 1101000110110111
+	// config.PINC[1]					= 0;
+	// ...
+	config.POFF[0]						= 0;
+	// config.POFF[1]					= 0;
+	// ...
+	config.Latency						= 4;
+	config.Output_Width					= 8;
+	config.Phase_Width					= 12;
+
+	// Set up some objects to hold state and the configuration data
+	// for programmable phase increment and phase offset
+	xip_dds_v6_0* pstate = nullptr;
+	xip_dds_v6_0_config_pkt* pinc_poff_config = nullptr;
+
+	// Create model object with your particular configuration
+	pstate = xip_dds_v6_0_create(&config, &msg_print, 0);
+
+	// Can we read back the updated configuration correctly?
+	if (xip_dds_v6_0_get_config(pstate, &config_ret) != XIP_STATUS_OK) {
+		std::cerr << "ERROR: Could not retrieve C model configuration" << std::endl;
+	}
+
+	// Set up some arrays to hold values for programmable phase increment and phase offset
+	xip_dds_v6_0_data pinc[XIP_DDS_CHANNELS_MAX];
+	xip_dds_v6_0_data poff[XIP_DDS_CHANNELS_MAX];
+
+	//------------------------------------------------------------------------------------
+	// Set up fields and reserve memory for data and config packets, for this configuration
+	//------------------------------------------------------------------------------------
+
+	//Calculate the number of input fields
+	xip_uint no_of_input_fields = 0;
+	if (config_ret.PartsPresent == XIP_DDS_SIN_COS_LUT_ONLY) {
+		no_of_input_fields++; //Phase_In
+	}
+	else {
+		if (config_ret.Phase_Increment == XIP_DDS_PINCPOFF_STREAM) {
+			no_of_input_fields++; //PINC
+			if (config_ret.Resync == XIP_DDS_PRESENT) {
+				no_of_input_fields++; //RESYNC
+			}
+		}
+		if (config_ret.Phase_Offset == XIP_DDS_PINCPOFF_STREAM) {
+			no_of_input_fields++; //POFF
+		}
+	}
+
+	//Calculate the number of output fields
+	xip_uint no_of_output_fields = 0; //phase output is not optional in the c model.
+	if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY) {
+		no_of_output_fields = 1; //PHASE_OUT
+	}
+	if (config_ret.PartsPresent != XIP_DDS_PHASE_GEN_ONLY) {
+		if (config_ret.Output_Selection == XIP_DDS_OUT_SIN_ONLY) no_of_output_fields++; //SIN
+		if (config_ret.Output_Selection == XIP_DDS_OUT_COS_ONLY) no_of_output_fields++; //COS
+		if (config_ret.Output_Selection == XIP_DDS_OUT_SIN_AND_COS) no_of_output_fields += 2; //SIN and COS
+	}
+
+	// Create and allocate memory for I/O structures
+	// Create request and response structures
+
+	// Create config packet - pass pointer by reference
+	if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY && (config_ret.Phase_Increment == XIP_DDS_PINCPOFF_PROG || config_ret.Phase_Offset == XIP_DDS_PINCPOFF_PROG)) {
+		if (xip_dds_v6_0_alloc_config_pkt(&pinc_poff_config, config_ret.Channels, config_ret.Channels) == XIP_STATUS_OK) {
+			std::cout << "INFO: Reserved memory for config packet" << std::endl;
+		}
+		else {
+			std::cerr << "ERROR: Unable to reserve memory for config packet" << std::endl;
+			exit(1);
+		}
+	}
+
+	// Create input data packet
+	xip_array_real* din = xip_array_real_create();
+	xip_array_real_reserve_dim(din, 3); //dimensions are (Number of samples, channels, PINC/POFF/Phase)
+	din->dim_size = 3;
+	din->dim[0] = number_of_samples;
+	din->dim[1] = config_ret.Channels;
+	din->dim[2] = no_of_input_fields;
+	din->data_size = din->dim[0] * din->dim[1] * din->dim[2];
+	if (xip_array_real_reserve_data(din, din->data_size) == XIP_STATUS_OK) {
+		std::cout << "INFO: Reserved memory for request as [" << number_of_samples << "," << config_ret.Channels << "," << no_of_input_fields << "] array " << std::endl;
+	}
+	else {
+		std::cout << "ERROR: Unable to reserve memory for input data packet!" << std::endl;
+		exit(2);
+	}
+
+	// Request memory for output data
+	xip_array_real* dout = xip_array_real_create();
+	xip_array_real_reserve_dim(dout, 3); //dimensions are (Number of samples, channels, PINC/POFF/Phase)
+	dout->dim_size = 3;
+	dout->dim[0] = number_of_samples;
+	dout->dim[1] = config_ret.Channels;
+	dout->dim[2] = no_of_output_fields;
+	dout->data_size = dout->dim[0] * dout->dim[1] * dout->dim[2];
+	if (xip_array_real_reserve_data(dout, dout->data_size) == XIP_STATUS_OK) {
+		std::cout << "INFO: Reserved memory for response as [" << number_of_samples << "," << config_ret.Channels << "," << no_of_output_fields << "] array " << std::endl;
+	}
+	else {
+		std::cout << "ERROR: Unable to reserve memory for output data packet!" << std::endl;
+		exit(3);
+	}
+
+
+	//---------------------------------------------------
+	// Populate the input structure with example data
+	//---------------------------------------------------
+	size_t sample = 0;
+	size_t field = 0;
+	xip_dds_v6_0_data value = 0.0;
+
+	// Set up pinc and poff, and call config routine, if either phase increment or phase offset is programmable
+	if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY) {
+		if (config_ret.Phase_Increment == XIP_DDS_PINCPOFF_PROG || config_ret.Phase_Offset == XIP_DDS_PINCPOFF_PROG) {
+
+			for (channel = 0; channel < config_ret.Channels; channel++) {
+				if (config_ret.Phase_Increment == XIP_DDS_PINCPOFF_PROG) {
+					//field is PINC
+					if (config_ret.Mode_of_Operation == XIP_DDS_MOO_RASTERIZED) {
+						pinc[channel] = rand() % (config_ret.Modulus); // Allow zero too
+					}
+					else {
+						pinc[channel] = rand() % (1ULL << (config_ret.resPhase_Width)); // Allow zero too
+					}
+				}
+				if (config_ret.Phase_Offset == XIP_DDS_PINCPOFF_PROG) {
+					//field is POFF
+					if (config_ret.Mode_of_Operation == XIP_DDS_MOO_RASTERIZED) {
+						poff[channel] = (channel + 1) % (config_ret.Modulus);
+					}
+					else {
+						poff[channel] = (channel + 1) % (1ULL << (config_ret.resPhase_Width)); // Allow zero too
+					}
+				}
+			}
+
+			// Copy our local pinc/poff data into the memory we allocated in the config structure
+			// If not present, leave the initial values
+			if (config_ret.Phase_Increment == XIP_DDS_PINCPOFF_PROG) {
+				memcpy(pinc_poff_config->din_pinc, pinc, config_ret.Channels * sizeof(xip_dds_v6_0_data));
+			}
+			if (config_ret.Phase_Offset == XIP_DDS_PINCPOFF_PROG) {
+				memcpy(pinc_poff_config->din_poff, poff, config_ret.Channels * sizeof(xip_dds_v6_0_data));
+			}
+
+			// Run the config routine
+			if (xip_dds_v6_0_config_do(pstate, pinc_poff_config) == XIP_STATUS_OK) {
+				std::cout << "INFO: config_do was successful" << std::endl;
+			}
+			else {
+				std::cerr << "ERROR: config_packet failed" << std::endl;
+				exit(4);
+			}
+
+		}
+	}
+
+	int resync_sample = rand() % (number_of_samples - 2) + 1; // Do a resync randomly in the frame between 2nd and 2nd-last sample
+	for (sample = 0; sample < number_of_samples; sample++) {
+		for (channel = 0; channel < config_ret.Channels; channel++) {
+
+			field = 0;
+
+			// Phase_In input, for Sin/Cos LUT configuration only
+			if (config_ret.PartsPresent == XIP_DDS_SIN_COS_LUT_ONLY) {
+				//field is PHASE_IN
+				if (config_ret.Mode_of_Operation == XIP_DDS_MOO_RASTERIZED) {
+					value = rand() % (config_ret.Modulus); // Allow zero too
+				}
+				else {
+					value = rand() % (1ULL << (config_ret.resPhase_Width)); // Allow zero too
+				}
+				xip_dds_v6_0_xip_array_real_set_data(din, value, sample, channel, field);
+				field++;
+			}
+
+			// Streaming phase increment
+			if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY) {
+				if (config_ret.Phase_Increment == XIP_DDS_PINCPOFF_STREAM) {
+					//field is PINC
+					if (config_ret.Mode_of_Operation == XIP_DDS_MOO_RASTERIZED) {
+						value = rand() % (config_ret.Modulus); // Allow zero too
+					}
+					else {
+						value = rand() % (1ULL << (config_ret.resPhase_Width)); // Allow zero too
+					}
+					xip_dds_v6_0_xip_array_real_set_data(din, value, sample, channel, field);
+					field++;
+				}
+			}
+
+			// Streaming phase offset
+			if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY) {
+				if (config_ret.Phase_Offset == XIP_DDS_PINCPOFF_STREAM) {
+					//field is POFF
+					if (config_ret.Mode_of_Operation == XIP_DDS_MOO_RASTERIZED) {
+						value = (channel + 1 + sample) % (config_ret.Modulus);
+					}
+					else {
+						value = (channel + 1 + sample) % (1ULL << (config_ret.resPhase_Width));
+					}
+					xip_dds_v6_0_xip_array_real_set_data(din, value, sample, channel, field);
+					field++;
+				}
+			}
+
+			// Finally do resync, if required
+			if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY) {
+				if ((config_ret.Phase_Increment == XIP_DDS_PINCPOFF_STREAM) && (config_ret.Resync == XIP_DDS_PRESENT)) {
+					//field is Resync
+					if (sample == resync_sample) {
+						value = 1;
+					}
+					else {
+						value = 0;
+					}
+					xip_dds_v6_0_xip_array_real_set_data(din, value, sample, channel, field);
+					field++;
+				}
+			}
+
+		}
+	}
+
+	//------------------
+	// Simulate the core
+	//------------------
+	std::cout << "INFO: Running the C model..." << std::endl;
+
+	if (xip_dds_v6_0_data_do(pstate,   //pointer to c model instance
+		din, //pointer to input data structure
+		dout, //pointer to output structure
+		number_of_samples, //first dimension of either data structure
+		config_ret.Channels, //2nd dimension of either data structure
+		no_of_input_fields, //3rd dimension of input
+		no_of_output_fields //3rd dimension of output
+	) != XIP_STATUS_OK) {
+		std::cerr << "ERROR: C model did not complete successfully" << std::endl;
+		xip_array_real_destroy(din);
+		xip_array_real_destroy(dout);
+		xip_dds_v6_0_destroy(pstate);
+		if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY && (config_ret.Phase_Increment == XIP_DDS_PINCPOFF_PROG || config_ret.Phase_Offset == XIP_DDS_PINCPOFF_PROG)) {
+			xip_dds_v6_0_free_config_pkt(&pinc_poff_config);
+		}
+		exit(5);
+	}
+	else {
+		std::cout << "INFO: C model transaction completed successfully" << std::endl;
+	}
+
+#if(DEBUG)
+	// When enabled, this will print the result data to stdout
+	for (int sample = 0; sample < number_of_samples; sample++) {
+		std::cout << std::endl << "Sample " << sample;
+		for (int chan = 0; chan < config_ret.Channels; chan++) {
+			std::cout << std::endl << "Channel " << sample;
+			field = 0;
+			xip_dds_v6_0_xip_array_real_get_data(dout, &value, sample, chan, field);
+			std::cout << ":  out phase = " << value;
+			field++;
+			if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY) {
+				if (config_ret.Output_Selection != XIP_DDS_OUT_COS_ONLY) {
+					xip_dds_v6_0_xip_array_real_get_data(dout, &value, sample, chan, field);
+					std::cout << " out sin = " << value;
+					field++;
+				}
+				if (config_ret.Output_Selection != XIP_DDS_OUT_SIN_ONLY) {
+					xip_dds_v6_0_xip_array_real_get_data(dout, &value, sample, chan, field);
+					std::cout << " out cos = " << value;
+				}
+			}
+			std::cout << std::endl;
+		}
+	}
+#endif
+
+	//-----------------
+	// Reset the core
+	// This will clear the phase accumulator state, and any resync input,
+	// but leave any programmed phase increment/phase offset values
+	// unchanged.
+	//-----------------
+	if (xip_dds_v6_0_reset(pstate) == XIP_STATUS_OK) {
+		std::cout << "INFO: C model reset successfully" << std::endl;
+	}
+	else {
+		std::cout << "ERROR: C model reset did not complete successfully" << std::endl;
+		exit(6);
+	}
+
+	//------------------------
+	// Simulate the core again
+	//------------------------
+	std::cout << "INFO: Running the C model again after reset..." << std::endl;
+
+	if (xip_dds_v6_0_data_do(pstate,   //pointer to c model instance
+		din, //pointer to input data structure
+		dout, //pointer to output structure
+		number_of_samples, //first dimension of either data structure
+		config_ret.Channels, //2nd dimension of either data structure
+		no_of_input_fields, //3rd dimension of input
+		no_of_output_fields //3rd dimension of output
+	) != XIP_STATUS_OK) {
+		std::cerr << "ERROR: C model did not complete successfully" << std::endl;
+		xip_array_real_destroy(din);
+		xip_array_real_destroy(dout);
+		xip_dds_v6_0_destroy(pstate);
+		if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY && (config_ret.Phase_Increment == XIP_DDS_PINCPOFF_PROG || config_ret.Phase_Offset == XIP_DDS_PINCPOFF_PROG)) {
+			xip_dds_v6_0_free_config_pkt(&pinc_poff_config);
+		}
+		exit(7);
+	}
+	else {
+		std::cout << "INFO: C model transaction completed successfully" << std::endl;
+	}
+
+#if(DEBUG)
+	// When enabled, this will print the result data to stdout
+	const int SCALE_FACTOR = sizeof(int) * CHAR_BIT - config_ret.Output_Width;
+	for (int sample = 0; sample < number_of_samples; sample++) {
+		std::cout << std::endl << "Sample " << sample;
+		for (int chan = 0; chan < config_ret.Channels; chan++) {
+			std::cout << std::endl << "Channel " << sample;
+			field = 0;
+			xip_dds_v6_0_xip_array_real_get_data(dout, &value, sample, chan, field);
+			std::cout << ":  out phase = " << value;
+			field++;
+			if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY) {
+				if (config_ret.Output_Selection != XIP_DDS_OUT_COS_ONLY) {
+					xip_dds_v6_0_xip_array_real_get_data(dout, &value, sample, chan, field);
+					std::cout << " out sin = " << (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
+					field++;
+				}
+				if (config_ret.Output_Selection != XIP_DDS_OUT_SIN_ONLY) {
+					xip_dds_v6_0_xip_array_real_get_data(dout, &value, sample, chan, field);
+					std::cout << " out cos = " << (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
+				}
+			}
+			std::cout << std::endl;
+		}
+	}
+#endif
+
+	//------------------------------
+	// Call destructors, free memory
+	//------------------------------
+	xip_array_real_destroy(din);
+	xip_array_real_destroy(dout);
+	std::cout << "INFO: C model input and output data freed" << std::endl;
+	if (config_ret.PartsPresent != XIP_DDS_SIN_COS_LUT_ONLY && (config_ret.Phase_Increment == XIP_DDS_PINCPOFF_PROG || config_ret.Phase_Offset == XIP_DDS_PINCPOFF_PROG)) {
+		xip_dds_v6_0_free_config_pkt(&pinc_poff_config);
+		std::cout << "INFO: C model config packet data freed" << std::endl;
+	}
+	xip_dds_v6_0_destroy(pstate);
+	std::cout << "INFO: C model destroyed" << std::endl;
+
+	return 0;
+}
+
+#define DATA_SIZE 8
+#define LOG_DATA_SIZE 3
+
+int test_xip_cordic_bitacc_cmodel()
+{
+	size_t ii; //loop variable for data samples
+	xip_complex value;
+	xip_real mag_out_samp, phase_out_samp;
+
+	cout << "C model version = " << xip_cordic_v6_0_get_version() << endl;
+
+	// Create a configuration structure
+	xip_cordic_v6_0_config config, config_ret;
+	xip_status status = xip_cordic_v6_0_default_config(&config);
+
+	if (status != XIP_STATUS_OK) {
+		cerr << "ERROR: Could not get C model default configuration" << endl;
+		return XIP_STATUS_ERROR;
+	}
+
+	//Firstly, create and exercise a simple configuration.
+	config.CordicFunction = XIP_CORDIC_V6_0_F_SQRT;
+	config.CoarseRotate = 0;
+	config.DataFormat = XIP_CORDIC_V6_0_FORMAT_USIG_FRAC;
+	config.PhaseFormat = XIP_CORDIC_V6_0_FORMAT_RAD;
+	config.InputWidth = 32;
+	config.OutputWidth = 17;
+	config.Precision = 0;
+	config.RoundMode = XIP_CORDIC_V6_0_ROUND_TRUNCATE;
+	config.ScaleComp = XIP_CORDIC_V6_0_SCALE_NONE;
+
+	// Create model object
+	xip_cordic_v6_0* cordic_std;
+	cordic_std = xip_cordic_v6_0_create(&config, &msg_print, 0);
+
+	if (status != XIP_STATUS_OK) {
+		cerr << "ERROR: Could not create C model state object" << endl;
+		return XIP_STATUS_ERROR;
+	}
+
+	// Can we read back the updated configuration correctly?
+	if (xip_cordic_v6_0_get_config(cordic_std, &config_ret) != XIP_STATUS_OK) {
+		cerr << "ERROR: Could not retrieve C model configuration" << endl;
+	}
+
+#if(DEBUG)
+	cout << "Configuration -----------------------" << endl;
+	cout << "Function        = " << config_ret.CordicFunction << endl;
+	cout << "Coarse Rotation = " << config_ret.CoarseRotate << endl;
+	cout << "Data Format     = " << config_ret.DataFormat << endl;
+	cout << "Phase Format    = " << config_ret.PhaseFormat << endl;
+	cout << "Input Width     = " << config_ret.InputWidth << endl;
+	cout << "Output Width    = " << config_ret.OutputWidth << endl;
+	cout << "Iterations      = " << config_ret.Iterations << endl;
+	cout << "Precision       = " << config_ret.Precision << endl;
+	cout << "Round Mode      = " << config_ret.RoundMode << endl;
+	cout << "Scale Comp      = " << config_ret.ScaleComp << endl << endl;
+#endif
+
+
+	int number_of_samples = DATA_SIZE;
+	// Declare any arrays in the request structure and write pointers to them into the request structure
+
+	// Create request and response structures
+	// Create input data packet for operand Cartesian
+	xip_array_complex* cartin = xip_array_complex_create();
+	xip_array_complex_reserve_dim(cartin, 1); //dimensions are (Number of samples)
+	cartin->dim_size = 1;
+	cartin->dim[0] = number_of_samples;
+	cartin->data_size = cartin->dim[0];
+	if (xip_array_complex_reserve_data(cartin, cartin->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for input data packet!" << endl;
+		exit(2);
+	}
+
+	// Create input data packet for Magnitude In
+	xip_array_real* magin = xip_array_real_create();
+	xip_array_real_reserve_dim(magin, 1); //dimensions are (Number of samples)
+	magin->dim_size = 1;
+	magin->dim[0] = number_of_samples;
+	magin->data_size = magin->dim[0];
+	if (xip_array_real_reserve_data(magin, magin->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for input data packet!" << endl;
+		exit(2);
+	}
+
+	// Create input data packet for Phase In
+	xip_array_real* phasein = xip_array_real_create();
+	xip_array_real_reserve_dim(phasein, 1); //dimensions are (Number of samples)
+	phasein->dim_size = 1;
+	phasein->dim[0] = number_of_samples;
+	phasein->data_size = phasein->dim[0];
+	if (xip_array_real_reserve_data(phasein, phasein->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for input data packet!" << endl;
+		exit(2);
+	}
+
+	// Request memory for Cartesian output data
+	xip_array_complex* cartout = xip_array_complex_create();
+	xip_array_complex_reserve_dim(cartout, 1); //dimensions are (Number of samples)
+	cartout->dim_size = 1;
+	cartout->dim[0] = number_of_samples;
+	cartout->data_size = cartout->dim[0];
+	if (xip_array_complex_reserve_data(cartout, cartout->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for cartout as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for output data packet!" << endl;
+		exit(3);
+	}
+
+	// Create output data packet for Magnitude Out
+	xip_array_real* magout = xip_array_real_create();
+	xip_array_real_reserve_dim(magout, 1); //dimensions are (Number of samples)
+	magout->dim_size = 1;
+	magout->dim[0] = number_of_samples;
+	magout->data_size = magout->dim[0];
+	if (xip_array_real_reserve_data(magout, magout->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for output data packet!" << endl;
+		exit(2);
+	}
+
+	// Create output data packet for Phase Out
+	xip_array_real* phaseout = xip_array_real_create();
+	xip_array_real_reserve_dim(phaseout, 1); //dimensions are (Number of samples)
+	phaseout->dim_size = 1;
+	phaseout->dim[0] = number_of_samples;
+	phaseout->data_size = phaseout->dim[0];
+	if (xip_array_real_reserve_data(phaseout, phaseout->data_size) == XIP_STATUS_OK) {
+		cout << "INFO: Reserved memory for request as [" << number_of_samples << "] array " << endl;
+	}
+	else {
+		cout << "ERROR: Unable to reserve memory for output data packet!" << endl;
+		exit(2);
+	}
+
+	//Create Example Input Data
+	xip_complex s_cartin;
+	xip_real s_magin, s_phasein;
+	int cartweight = config_ret.InputWidth - LOG_DATA_SIZE;
+	for (ii = 0; ii < DATA_SIZE; ii++)
+	{
+		s_cartin.re = (xip_real)(ii * pow((double)2.0, (int)cartweight));
+		s_cartin.im = (xip_real)(ii * pow((double)2.0, (int)(cartweight - 1)));
+		s_magin = s_cartin.re;
+		s_phasein = (xip_real)((double)(-1.1071487) * pow((double)2.0, (int)(config_ret.InputWidth - 3)));
+		if (xip_cordic_v6_0_xip_array_complex_set_data(cartin, s_cartin, ii) != XIP_STATUS_OK)
+			cerr << "Error in xip_cordic_v6_0_xip_array_complex_set_data" << endl;
+		if (xip_cordic_v6_0_xip_array_real_set_data(magin, s_cartin.re, ii) != XIP_STATUS_OK)
+			cerr << "Error in xip_cordic_v6_0_xip_array_real_set_data" << endl;
+		if (xip_cordic_v6_0_xip_array_real_set_data(phasein, s_phasein, ii) != XIP_STATUS_OK)
+			cerr << "Error in xip_cordic_v6_0_xip_array_real_set_data" << endl;
+		cout << "Sample " << ii << " X = " << s_cartin.re << " Y = " << s_cartin.im << endl;
+		cout << "Sample " << ii << " Phase = " << s_phasein << endl;
+
+#if(DEBUG)
+		//Check that data values can be read back from the input data structures
+		if (xip_cordic_v6_0_xip_array_complex_get_data(cartin, &value, ii) != XIP_STATUS_OK)
+			cerr << "Error in xip_cordic_v6_0_xip_array_complex_get_data" << endl;
+#endif
+	}  //end of example data creation
+
+	// Run the model
+	cout << "Running the C model..." << endl;
+
+	//Run each function on the input data - note that each will overwrite the output data of the previous.
+	switch (config_ret.CordicFunction) {
+	case XIP_CORDIC_V6_0_F_ROTATE:
+		if (xip_cordic_v6_0_rotate(cordic_std, cartin, phasein, cartout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_TRANSLATE:
+		if (xip_cordic_v6_0_translate(cordic_std, cartin, magout, phaseout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_SIN_COS:
+		if (xip_cordic_v6_0_sin_cos(cordic_std, phasein, cartout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_ATAN:
+		if (xip_cordic_v6_0_atan(cordic_std, cartin, phaseout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_SINH_COSH:
+		if (xip_cordic_v6_0_sinh_cosh(cordic_std, phasein, cartout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_ATANH:
+		if (xip_cordic_v6_0_atanh(cordic_std, cartin, phaseout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+
+	case XIP_CORDIC_V6_0_F_SQRT:
+		if (xip_cordic_v6_0_sqrt(cordic_std, magin, magout, number_of_samples) != XIP_STATUS_OK) {
+			cerr << "ERROR: C model did not complete successfully" << endl;
+			if (magin)    xip_array_real_destroy(magin);
+			if (phasein)  xip_array_real_destroy(phasein);
+			if (cartin)   xip_array_complex_destroy(cartin);
+			if (magout)   xip_array_real_destroy(magout);
+			if (phaseout) xip_array_real_destroy(phaseout);
+			if (cartout)  xip_array_complex_destroy(cartout);
+			xip_cordic_v6_0_destroy(cordic_std);
+			return XIP_STATUS_ERROR;
+		}
+		break;
+	default:
+		break;
+	}
+
+	//  //Alternatively, execute the model with the configuration specified earlier
+	//if (xip_cordic_v6_0_data_do(cordic_std, config_ret.CordicFunction, magin, phasein, cartin, magout, phaseout, cartout,number_of_samples) != XIP_STATUS_OK) {
+	//  cerr << "ERROR: C model did not complete successfully" << endl;
+	//  if (magin)    xip_array_real_destroy(magin);
+	//  if (phasein)  xip_array_real_destroy(phasein);
+	//  if (cartin)   xip_array_complex_destroy(cartin);
+	//  if (magout)   xip_array_real_destroy(magout);
+	//  if (phaseout) xip_array_real_destroy(phaseout);
+	//  if (cartout)  xip_array_complex_destroy(cartout);
+	//  xip_cordic_v6_0_destroy(cordic_std);
+	//  return XIP_STATUS_ERROR;
+	//} else {
+	//  cout << "C model completed successfully" << endl;
+	// }
+
+#if(DEBUG)
+  // When enabled, this will print the result data to stdout
+	for (int sample = 0; sample < number_of_samples; sample++) {
+		cout << "Sample " << sample;
+		switch (config_ret.CordicFunction) {
+		case XIP_CORDIC_V6_0_F_ROTATE:
+		case XIP_CORDIC_V6_0_F_SIN_COS:
+		case XIP_CORDIC_V6_0_F_SINH_COSH:
+			xip_cordic_v6_0_xip_array_complex_get_data(cartout, &value, sample);
+			cout << " out real = " << value.re << " imag = " << value.im;
+			break;
+		case XIP_CORDIC_V6_0_F_TRANSLATE:
+		case XIP_CORDIC_V6_0_F_SQRT:
+			xip_cordic_v6_0_xip_array_real_get_data(magout, &mag_out_samp, sample);
+			cout << " out magnitude = " << mag_out_samp;
+			break;
+		default:
+			break;
+		}
+		switch (config_ret.CordicFunction) {
+		case XIP_CORDIC_V6_0_F_TRANSLATE:
+		case XIP_CORDIC_V6_0_F_ATAN:
+		case XIP_CORDIC_V6_0_F_ATANH:
+			xip_cordic_v6_0_xip_array_real_get_data(phaseout, &phase_out_samp, sample);
+			cout << " out phase = " << phase_out_samp;
+			break;
+		default:
+			break;
+		}
+		cout << endl;
+	}
+#endif
+
+	// Check cartout is correct
+	for (ii = 0; ii < DATA_SIZE; ii++)
+	{
+
+	}
+	cout << "C model data output is correct" << endl;
+
+	// Clean up
+	if (magin)    xip_array_real_destroy(magin);
+	if (phasein)  xip_array_real_destroy(phasein);
+	if (cartin)   xip_array_complex_destroy(cartin);
+	if (magout)   xip_array_real_destroy(magout);
+	if (phaseout) xip_array_real_destroy(phaseout);
+	if (cartout)  xip_array_complex_destroy(cartout);
+	cout << "C model input and output data freed" << endl;
+
+	xip_cordic_v6_0_destroy(cordic_std);
+	cout << "C model destroyed" << endl;
+
+	//End of test of simple configuration
+
+
+	// We will already have returned if there was an error
+	return XIP_STATUS_OK;
 }

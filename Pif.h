@@ -8,9 +8,8 @@
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "fir_compiler_v7_2_bitacc_cmodel.h"
 #include "debug.h"
-#include "FirSummator.h"
 
-// ѕиф (Nezami - Loop Filter topology III)
+// ѕиф (Nezami - Loop Filter topology II)
 // –еализован как совокупность  »’-фильтра 2-го пор€дка и интегратора
 class Pif
 {
@@ -23,6 +22,8 @@ public:
 
 	int process(const xip_real& in, xip_real& out);
 
+	int process_1(const xip_real& in, xip_real& out);
+
 private:
 	void calculate_g1_g2(double slb);
 
@@ -30,8 +31,8 @@ private:
 
 	int destroy_xip_fir();
 
-	double g[2];	// g[0] - пропорциональна€ составл€юща€, g[1] - интегральна€ составл€юща€
-	xip_real reg;		// регистр дл€ интегратора
+	double g[2];		// g[0] - пропорциональна€ составл€юща€, g[1] - интегральна€ составл€юща€
+	xip_real reg;		// регистр интегратора
 
 	xip_fir_v7_2* xip_fir;				//  »’-фильтр
 	xip_fir_v7_2_config xip_fir_cnfg;	// конфиг фильтра

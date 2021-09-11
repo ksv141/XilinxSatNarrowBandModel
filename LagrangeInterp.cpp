@@ -1,12 +1,23 @@
 #include "LagrangeInterp.h"
 
+const unsigned int LAGRANGE_INTERVALS = 1024;			// количество интервалов разбиения одного интервала интерполяции (одного такта)
+const unsigned int LAGRANGE_INTERVALS_LOG2 = 10;		// log2(1024)
+const unsigned int LAGRANGE_ORDER = 8;					// порядок интерполятора
+const unsigned int LAGRANGE_FIXED_POINT_POSITION = 10;	// точность значения сдвига --> [-1.0, 1.0] (в битах)
 
 LagrangeInterp::LagrangeInterp(xip_real frac):
-	m_fraction(frac),
-	m_dk(1),
-	m_decim(0),
-	m_prevShift(0)
+	samples(samples_count(frac), xip_complex{ 0, 0 })
 {
+	int dx_value = to_dx_value(1.0 / frac);
+	init(dx_value);
+	init_lagrange_interp();
+}
+
+LagrangeInterp::LagrangeInterp(xip_real from_sampling_freq, xip_real to_sampling_freq):
+	samples(samples_count(from_sampling_freq / to_sampling_freq), xip_complex{ 0, 0 })
+{
+	int dx_value = to_dx_value(from_sampling_freq / to_sampling_freq);
+	init(dx_value);
 	init_lagrange_interp();
 }
 
@@ -15,59 +26,62 @@ LagrangeInterp::~LagrangeInterp()
 	destroy_lagrange_interp();
 }
 
-void LagrangeInterp::setShift(xip_real shift)
+void LagrangeInterp::shift(double value)
 {
-	m_shift = shift;
-	m_shift <= -1.0 ? -1.0 : (m_shift >= 1.0 ? 1.0 : m_shift);
+	value <= -1.0 ? -1.0 : (value >= 1.0 ? 1.0 : value);	// ограничение value диапазоном [-1.0, 1.0]
+	int32_t x = fx + static_cast<int32_t>(dx * value);
+	fx = x & (FixPointPosMaxVal - 1);
+	x_ptr += x >> FixPointPosition;
+}
+
+void LagrangeInterp::shift(int32_t value)
+{
+	// ограничение value диапазоном [-2^FixPointPosition, 2^FixPointPosition]
+	if (value < -(int32_t)FixPointPosMaxVal)
+		value = -(int32_t)FixPointPosMaxVal;
+	else if (value > (int32_t)FixPointPosMaxVal)
+		value = (int32_t)FixPointPosMaxVal;
+
+	int32_t x = fx + value;
+	fx = x & (FixPointPosMaxVal - 1);
+	x_ptr += x >> FixPointPosition;
+}
+
+void LagrangeInterp::set_shift(double value)
+{
+	value <= -1.0 ? -1.0 : (value >= 1.0 ? 1.0 : value);	// ограничение value диапазоном [-1.0, 1.0]
+	int32_t x = static_cast<int32_t>(dx * value);
+	fx = x & (FixPointPosMaxVal - 1);
+	x_ptr += x >> FixPointPosition;
 }
 
 void LagrangeInterp::process(const xip_complex& in)
 {
-	m_currentSample = in;
+	// в буфер отсчетов добавляется очередной отсчет (FIFO)
+	if (pos_ptr == end_ptr)
+	{
+		xip_complex* s = &samples[0];
+		memcpy(s, s + block_offset, block_size * sizeof(xip_complex));
+		pos_ptr -= block_offset;
+		x_ptr -= block_offset;
+	}
+
+	*pos_ptr = in;
+	++pos_ptr;
 }
 
 bool LagrangeInterp::next(xip_complex& out)
 {
-	m_dk = 1 - m_shift;
-	if (m_dk > 1)
-		m_dk = 2 - m_dk;
-	process(m_currentSample, out, m_dk);
+	if (x_ptr > pos_ptr)
+		return false;
+
+	const uint32_t coeffs_shift = FixPointPosition - LAGRANGE_INTERVALS_LOG2;
+	interpolate(x_ptr - LAGRANGE_ORDER, out, static_cast<unsigned>(fx >> coeffs_shift));
+	int32_t x = fx + dx;
+	fx = x & (FixPointPosMaxVal - 1);
+	x_ptr += x >> FixPointPosition;
+
 	return true;
-}
-
-void LagrangeInterp::process(xip_real shift)
-{
-	while (true) {
-		if (m_dk <= 0) {
-			m_decim = static_cast<int>(fabs(ceil(m_dk)));
-			if (m_decim > 0) {
-				cout << "m_decim = " << m_decim;
-				--m_decim;
-				cout << " reset to " << m_decim << endl;
-				//m_inputSamples.pop_back();
-				//m_inputSamples.push_front(in);
-			}
-			cout << "m_dk = " << m_dk;
-			m_dk += 1;
-			cout << " reset to " << m_dk << endl;
-			break;
-		}
-		//cplx_fl s = process(in, m_dk);
-		//out.push_back(s);
-		cout << "process m_dk = " << m_dk << endl;
-		m_dk = m_dk - m_prevShift + shift - m_fraction;
-		m_prevShift = shift;
-
-		cout << "m_dk = " << m_dk << "\tm_decim = " << m_decim << endl;
-	}
-}
-
-void LagrangeInterp::process(const xip_complex& in, xip_complex& out, double shift)
-{
-	uint32_t pos = shift * lagrange_n_intervals;
-	if (pos >= lagrange_n_intervals)
-		pos -= lagrange_n_intervals;
-	process_sample_lagrange_interp(in, out, pos);
 }
 
 // инициализация фильтра-интерполятора Лагранжа
@@ -111,7 +125,7 @@ int LagrangeInterp::init_lagrange_interp()
 	lagrange_interp_in->dim_size = 3; // 3D array
 	lagrange_interp_in->dim[0] = lagrange_interp_fir_cnfg.num_paths;
 	lagrange_interp_in->dim[1] = lagrange_interp_fir_cnfg.num_channels;
-	lagrange_interp_in->dim[2] = 1; // vectors in a single packet
+	lagrange_interp_in->dim[2] = LAGRANGE_ORDER; // vectors in a single packet
 	lagrange_interp_in->data_size = lagrange_interp_in->dim[0] * lagrange_interp_in->dim[1] * lagrange_interp_in->dim[2];
 	if (xip_array_real_reserve_data(lagrange_interp_in, lagrange_interp_in->data_size) != XIP_STATUS_OK) {
 		printf("Unable to reserve data!\n");
@@ -148,8 +162,11 @@ int LagrangeInterp::init_lagrange_interp()
 
 // обработка одного отсчета
 // pos - смещение интерполятора [0, 1023]
-int LagrangeInterp::process_sample_lagrange_interp(const xip_complex& in, xip_complex& out, uint32_t pos)
+int LagrangeInterp::interpolate(xip_complex* values, xip_complex& out, uint32_t pos)
 {
+	if (pos >= LAGRANGE_INTERVALS)
+		throw std::range_error("pos must be less then LAGRANGE_INTERVALS");
+
 	// Установка набора коэффициентов фильтра, соответствующего смещению pos
 	lagrange_interp_fir_cnfg_packet.fsel->data[0] = pos;
 	// Send config data
@@ -159,8 +176,10 @@ int LagrangeInterp::process_sample_lagrange_interp(const xip_complex& in, xip_co
 	}
 
 	// инициализация входных данных
-	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in.re, 0, 0, 0, P_BASIC);	// re
-	xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, in.im, 0, 1, 0, P_BASIC);	// im
+	for (int i = 0; i < LAGRANGE_ORDER; i++) {
+		xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, values[i].re, 0, 0, i, P_BASIC);	// re
+		xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, values[i].im, 0, 1, i, P_BASIC);	// im
+	}
 
 	// Send input data and filter
 	if (xip_fir_v7_2_data_send(lagrange_interp_fir, lagrange_interp_in) != XIP_STATUS_OK) {
@@ -174,8 +193,12 @@ int LagrangeInterp::process_sample_lagrange_interp(const xip_complex& in, xip_co
 		return -1;
 	}
 
-	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out.re, 0, 0, 0, P_BASIC);	// re
-	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out.im, 0, 1, 0, P_BASIC);	// im
+	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out.re, 0, 0, LAGRANGE_ORDER-1, P_BASIC);	// re
+	xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out.im, 0, 1, LAGRANGE_ORDER-1, P_BASIC);	// im
+
+	// нормализация сдвигом
+	//xip_complex_shift(out, -(int)(lagrange_interp_fir_cnfg.data_width - lagrange_interp_fir_cnfg.data_fract_width - 1));
+	xip_complex_shift(out, -15);
 
 	return 0;
 }
@@ -229,4 +252,28 @@ int LagrangeInterp::destroy_lagrange_interp()
 	printf("Deleted instance of Lagrange interp and free memory\n");
 
 	return 0;
+}
+
+size_t LagrangeInterp::samples_count(double inv_factor)
+{
+	return LAGRANGE_ORDER * 32 + 2 * static_cast<int>(ceil(inv_factor));
+}
+
+int LagrangeInterp::to_dx_value(double inv_factor)
+{
+	if (inv_factor <= 0.0 || inv_factor < 2e-6 || 1000.0 < inv_factor)
+		throw invalid_argument("invalid 'interpolation_factor' value");
+
+	return static_cast<int>(inv_factor * FixPointPosMaxVal);
+}
+
+void LagrangeInterp::init(double dx_value)
+{
+	dx = dx_value;
+	fx = 0;
+	block_size = LAGRANGE_ORDER + (dx >> FixPointPosition) + 1;
+	block_offset = static_cast<uint32_t>(samples.size() - block_size);
+	x_ptr = &samples[0] + block_size;
+	end_ptr = &samples[0] + samples.size();
+	pos_ptr = x_ptr - LAGRANGE_ORDER / 2 - 1;
 }

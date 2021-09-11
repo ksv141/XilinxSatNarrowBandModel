@@ -5,6 +5,7 @@
 #include "constellation.h"
 #include "FirMultiplier.h"
 #include "FirSummator.h"
+#include "xip_utils.h"
 
 // Оценка тактового смещения (для СТС)
 class StsEstimate
@@ -14,6 +15,7 @@ public:
 	~StsEstimate();
 
 	// Оценка ошибки тактовой синхронизации по Мюллеру-Меллеру (на 1B)
+	// для сигнального созвездия размером 4096 ошибка будет в диапазоне [-2^26, 2^26]
 	xip_real getErr(const xip_complex& out_symb, const xip_complex& est);
 
 	// Оценка ошибки тактовой синхронизации по Гарднеру (на 2B)
