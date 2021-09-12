@@ -69,8 +69,8 @@ void Demodulator::process()
 			xip_real dds_phase, dds_sin, dds_cos;
 			dds.process(err_pll, dds_phase, dds_sin, dds_cos);	// сигнал ГУН
 			xip_complex pll_corr{ dds_cos, dds_sin };
-			xip_multiply_complex(sample, pll_corr, sample);		// компенсация
-			xip_complex_shift(sample, -(int)(dds.getOutputWidth() - 1));
+			//xip_multiply_complex(sample, pll_corr, sample);		// компенсация
+			//xip_complex_shift(sample, -(int)(dds.getOutputWidth() - 1));
 			//*********************************************************************
 
 			xip_complex est = nearest_point_psk4(sample);		// жесткое решение
@@ -80,12 +80,11 @@ void Demodulator::process()
 			xip_multiply_complex(err_pll_sample, est, err_pll_sample);
 			err_pll = err_pll_sample.im;	// частотный сдвиг
 
-			dbg_out << err_pll << endl;
 			// примем максимальный диапазон отклонения фазы [-0.5, 0.5] рад
 			// для сигнального созвездия +/-4096 сдвиг будет в диапазоне [-0.5*2^25, 0.5*2^25] --> рад << 25
 			// приведем к диапазону [-2^15, 2^15] для работы ПИФ
 			xip_real_shift(err_pll, -10);
-			pif_sts.process(err_pll, err_pll);	// сглаживание и интеграция сигнала ошибки в ПИФ
+			pif_pll.process(err_pll, err_pll);	// сглаживание и интеграция сигнала ошибки в ПИФ
 
 			// переведем в диапазон работы DDS --> [0, 16384] --> [0, 2pi]
 			xip_multiply_real(err_pll, DDS_RAD_CONST, err_pll);
@@ -106,6 +105,8 @@ void Demodulator::process()
 			xip_real_shift(sts_err, -9);
 
 			pif_sts.process(sts_err, sts_err);	// сглаживание и интеграция сигнала ошибки в ПИФ
+
+			dbg_out << sts_err << endl;
 
 			// уменьшаем динамический диапазон до диапазона интерполятора --> [-2^10, 2^10]
 			xip_real_shift(sts_err, -5);

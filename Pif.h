@@ -9,7 +9,7 @@
 #include "fir_compiler_v7_2_bitacc_cmodel.h"
 #include "debug.h"
 
-// Пиф (Nezami - Loop Filter topology II)
+// Пиф (Nezami - Loop Filter topology III)
 // Реализован как совокупность КИХ-фильтра 2-го порядка и интегратора
 class Pif
 {
