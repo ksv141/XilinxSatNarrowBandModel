@@ -34,10 +34,12 @@ const int DDS_PHASE_MODULUS = 16384;				// диапазон изменения фазы [0, 16383] --
 const int DDS_RAD_CONST = (int)(DDS_PHASE_MODULUS * 8 / _2_PI);	// радиан на одну позицию фазы << 3 == 20860 (16 бит)
 const int FRAME_DATA_SIZE = 1115;					// размер данных в кадре (байт)
 const int AGC_WND_SIZE_LOG2 = 7;					// log2 окна усреднения АРУ
+
 const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)
 const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
 const double PIF_PLL_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
 const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
+
 const int BAUD_RATE = 9143;							// бодовая скорость в канале
 const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации на выходе канального фильтра
 
@@ -73,12 +75,12 @@ int main()
 	//Modulator mdl("1.zip", "out_mod.pcm", FRAME_DATA_SIZE);
 	//mdl.process();
 
-	//signal_freq_shift("out_mod.pcm", "out_mod_fr_shift.pcm", 3);
 	//signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
 	//signal_time_shift_dyn("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 10);
 	double resample_coeff = 1.01;
 	signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, resample_coeff*INIT_SAMPLE_RATE/*25000*/);
-	Demodulator dmd("out_mod_rsmpl.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	signal_freq_shift("out_mod_rsmpl.pcm", "out_mod_fr_shift.pcm", 5);
+	Demodulator dmd("out_mod_fr_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

@@ -69,8 +69,8 @@ void Demodulator::process()
 			xip_real dds_phase, dds_sin, dds_cos;
 			dds.process(err_pll, dds_phase, dds_sin, dds_cos);	// сигнал ГУН
 			xip_complex pll_corr{ dds_cos, dds_sin };
-			//xip_multiply_complex(sample, pll_corr, sample);		// компенсация
-			//xip_complex_shift(sample, -(int)(dds.getOutputWidth() - 1));
+			xip_multiply_complex(sample, pll_corr, sample);		// компенсация
+			xip_complex_shift(sample, -(int)(dds.getOutputWidth() - 1));
 			//*********************************************************************
 
 			xip_complex est = nearest_point_psk4(sample);		// жесткое решение

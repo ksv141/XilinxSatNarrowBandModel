@@ -24,7 +24,8 @@ Pif::~Pif()
 
 int Pif::process(const xip_real& in, xip_real& out)
 {
-	xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in, 0, 0, 0, P_BASIC);
+	xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, reg, 0, 0, 0, P_BASIC);
+	xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in, 0, 0, 1, P_BASIC);
 
 	// Send input data and filter
 	if (xip_fir_v7_2_data_send(xip_fir, xip_fir_in) != XIP_STATUS_OK) {
@@ -39,20 +40,11 @@ int Pif::process(const xip_real& in, xip_real& out)
 	}
 
 	xip_real out_fir;
-	xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out_fir, 0, 0, 0, P_BASIC);
+	xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out_fir, 0, 0, 1, P_BASIC);
 
-	reg += out_fir;	// интегратор
+	reg += in;	// интегратор
 	out = out_fir;
 
-	return 0;
-}
-
-int Pif::process_1(const xip_real& in, xip_real& out)
-{
-	double x = in * g[1] + reg;
-	double res = in * g[0] + x;
-	reg = x;
-	out = res;
 	return 0;
 }
 
@@ -105,7 +97,7 @@ int Pif::init_xip_fir()
 	xip_fir_in->dim_size = 3; // 3D array
 	xip_fir_in->dim[0] = xip_fir_cnfg.num_paths;
 	xip_fir_in->dim[1] = xip_fir_cnfg.num_channels;
-	xip_fir_in->dim[2] = 1; // vectors in a single packet
+	xip_fir_in->dim[2] = 2; // vectors in a single packet
 	xip_fir_in->data_size = xip_fir_in->dim[0] * xip_fir_in->dim[1] * xip_fir_in->dim[2];
 	if (xip_array_real_reserve_data(xip_fir_in, xip_fir_in->data_size) != XIP_STATUS_OK) {
 		printf("Unable to reserve data!\n");
