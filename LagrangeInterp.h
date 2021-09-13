@@ -88,8 +88,10 @@ private:
 	*/
 	int interpolate(xip_complex* values, xip_complex& out, uint32_t pos);
 
+	int interpolate_1(xip_complex* values, xip_complex& out, uint32_t pos);
+
 	/**
-	 * @brief инициализация библиотеки xip fir и освобождение памяти
+	 * @brief деинициализация библиотеки xip fir и освобождение памяти
 	 * @return 
 	*/
 	int destroy_lagrange_interp();
@@ -97,6 +99,7 @@ private:
 	size_t samples_count(double inv_factor);
 	int to_dx_value(double inv_factor);
 	void init(double dx_value);
+	double get_coefficient(unsigned set_no, unsigned index);
 
 	const uint32_t lagrange_n_intervals = LAGRANGE_INTERVALS;		// количество интервалов
 	const uint32_t lagrange_n_coeff = LAGRANGE_ORDER;				// количество коэффициентов (порядок фильтра)

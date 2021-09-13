@@ -3,7 +3,7 @@
 const unsigned int LAGRANGE_INTERVALS = 1024;			// количество интервалов разбиения одного интервала интерполяции (одного такта)
 const unsigned int LAGRANGE_INTERVALS_LOG2 = 10;		// log2(1024)
 const unsigned int LAGRANGE_ORDER = 8;					// порядок интерполятора
-const unsigned int LAGRANGE_FIXED_POINT_POSITION = 10;	// точность значения сдвига --> [-1.0, 1.0] (в битах)
+const unsigned int LAGRANGE_FIXED_POINT_POSITION = 20;	// точность значения сдвига --> [-1.0, 1.0] (в битах)
 
 LagrangeInterp::LagrangeInterp(xip_real frac):
 	samples(samples_count(frac), xip_complex{ 0, 0 })
@@ -77,6 +77,12 @@ bool LagrangeInterp::next(xip_complex& out)
 
 	const uint32_t coeffs_shift = FixPointPosition - LAGRANGE_INTERVALS_LOG2;
 	interpolate(x_ptr - LAGRANGE_ORDER, out, static_cast<unsigned>(fx >> coeffs_shift));
+
+	xip_complex out_1;
+	interpolate_1(x_ptr - LAGRANGE_ORDER, out_1, static_cast<unsigned>(fx >> coeffs_shift));
+	out_1.re /= (1 << 15);
+	out_1.im /= (1 << 15);
+
 	int32_t x = fx + dx;
 	fx = x & (FixPointPosMaxVal - 1);
 	x_ptr += x >> FixPointPosition;
@@ -177,8 +183,8 @@ int LagrangeInterp::interpolate(xip_complex* values, xip_complex& out, uint32_t 
 
 	// инициализация входных данных
 	for (int i = 0; i < LAGRANGE_ORDER; i++) {
-		xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, values[i].re, 0, 0, i, P_BASIC);	// re
-		xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, values[i].im, 0, 1, i, P_BASIC);	// im
+		xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, values[LAGRANGE_ORDER-i-1].re, 0, 0, i, P_BASIC);	// re
+		xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, values[LAGRANGE_ORDER-i-1].im, 0, 1, i, P_BASIC);	// im
 	}
 
 	// Send input data and filter
@@ -200,6 +206,17 @@ int LagrangeInterp::interpolate(xip_complex* values, xip_complex& out, uint32_t 
 	//xip_complex_shift(out, -(int)(lagrange_interp_fir_cnfg.data_width - lagrange_interp_fir_cnfg.data_fract_width - 1));
 	xip_complex_shift(out, -15);
 
+	return 0;
+}
+
+int LagrangeInterp::interpolate_1(xip_complex* values, xip_complex& out, uint32_t pos)
+{
+	xip_complex res{ 0, 0 };
+	for (int i = 0; i < LAGRANGE_ORDER; i++) {
+		res.re += values[i].re * get_coefficient(pos, i);
+		res.im += values[i].im * get_coefficient(pos, i);
+	}
+	out = res;
 	return 0;
 }
 
@@ -276,4 +293,9 @@ void LagrangeInterp::init(double dx_value)
 	x_ptr = &samples[0] + block_size;
 	end_ptr = &samples[0] + samples.size();
 	pos_ptr = x_ptr - LAGRANGE_ORDER / 2 - 1;
+}
+
+double LagrangeInterp::get_coefficient(unsigned set_no, unsigned index)
+{
+	return lagrange_coeff[set_no * lagrange_n_coeff + index];
 }

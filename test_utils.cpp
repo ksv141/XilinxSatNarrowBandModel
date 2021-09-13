@@ -125,11 +125,12 @@ void signal_resample(const string& in, const string& out, double from_sampling_f
 	if (!out_file)
 		return;
 
-	//ofstream dbg_out("dbg_out.txt");
+	ofstream dbg_out("dbg_out.txt");
 
 	LagrangeInterp itrp(from_sampling_freq, to_sampling_freq);
 	int16_t re;
 	int16_t im;
+	int counter = 0;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
@@ -138,12 +139,13 @@ void signal_resample(const string& in, const string& out, double from_sampling_f
 		while (itrp.next(res)) {
 			tC::write_real<int16_t>(out_file, res.re);
 			tC::write_real<int16_t>(out_file, res.im);
-		}
 
-		//dbg_out << res << endl;
+			dbg_out << res << endl;
+		}
+		counter++;
 	}
 
-	//dbg_out.close();
+	dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
 }
