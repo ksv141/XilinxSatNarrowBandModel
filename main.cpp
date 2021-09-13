@@ -14,15 +14,34 @@ using namespace std;
 static const double PI = 3.141592653589793238463;
 static const double _2_PI = PI * 2;
 
+/**
+* Скорости в канале (бод/с):
+* 9143
+* 16000
+* 24000
+* 18286
+* 48000
+* 36570
+* 96000
+* 85710
+* 171430
+* 342860
+* 685710
+*/
+
 // глобальные параметры
 const int DDS_PHASE_MODULUS = 16384;				// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
 const int DDS_RAD_CONST = (int)(DDS_PHASE_MODULUS * 8 / _2_PI);	// радиан на одну позицию фазы << 3 == 20860 (16 бит)
 const int FRAME_DATA_SIZE = 1115;					// размер данных в кадре (байт)
 const int AGC_WND_SIZE_LOG2 = 7;					// log2 окна усреднения АРУ
+
 const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)
 const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
 const double PIF_PLL_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
 const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
+
+const int BAUD_RATE = 9143;							// бодовая скорость в канале
+const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации на выходе канального фильтра
 
 int main()
 {
@@ -52,14 +71,16 @@ int main()
 	init_xip_cordic_sqrt();
 	init_channel_matched_fir();
 
-	Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
+	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
 	//Modulator mdl("1.zip", "out_mod.pcm", FRAME_DATA_SIZE);
-	mdl.process();
+	//mdl.process();
 
-	signal_freq_shift("out_mod.pcm", "out_mod_fr_shift.pcm", 3);
-	signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
+	//signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
 	//signal_time_shift_dyn("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 10);
-	Demodulator dmd("out_mod_tm_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	double resample_coeff = 1.01;
+	signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, resample_coeff*INIT_SAMPLE_RATE/*25000*/);
+	signal_freq_shift("out_mod_rsmpl.pcm", "out_mod_fr_shift.pcm", 5);
+	Demodulator dmd("out_mod_fr_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

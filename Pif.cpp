@@ -24,8 +24,6 @@ Pif::~Pif()
 
 int Pif::process(const xip_real& in, xip_real& out)
 {
-	reg += in; // интегратор
-
 	xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, reg, 0, 0, 0, P_BASIC);
 	xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in, 0, 0, 1, P_BASIC);
 
@@ -44,18 +42,9 @@ int Pif::process(const xip_real& in, xip_real& out)
 	xip_real out_fir;
 	xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out_fir, 0, 0, 1, P_BASIC);
 
-	reg = out_fir;
+	reg += in;	// интегратор
 	out = out_fir;
 
-	return 0;
-}
-
-int Pif::process_1(const xip_real& in, xip_real& out)
-{
-	double x = in * g[1] + reg;
-	double res = in * g[0] + x;
-	reg = x;
-	out = res;
 	return 0;
 }
 
@@ -89,7 +78,7 @@ int Pif::init_xip_fir()
 	xip_fir_cnfg.quantization = XIP_FIR_QUANTIZED_ONLY;
 	xip_fir_cnfg.output_rounding_mode = XIP_FIR_FULL_PRECISION;
 	xip_fir_cnfg.data_width = 26;
-	xip_fir_cnfg.data_fract_width = 10;
+	xip_fir_cnfg.data_fract_width = 2;
 
 	// Create filter instance
 	xip_fir = xip_fir_v7_2_create(&xip_fir_cnfg, &msg_print, 0);
