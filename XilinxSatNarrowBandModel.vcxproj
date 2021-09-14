@@ -169,6 +169,7 @@
     <ClInclude Include="mls.h" />
     <ClInclude Include="Modulator.h" />
     <ClInclude Include="Pif.h" />
+    <ClInclude Include="PolyphaseDecimator.h" />
     <ClInclude Include="SignalSource.h" />
     <ClInclude Include="StsEstimate.h" />
     <ClInclude Include="test_utils.h" />
@@ -191,6 +192,7 @@
     <ClCompile Include="mls.cpp" />
     <ClCompile Include="Modulator.cpp" />
     <ClCompile Include="Pif.cpp" />
+    <ClCompile Include="PolyphaseDecimator.cpp" />
     <ClCompile Include="SignalSource.cpp" />
     <ClCompile Include="StsEstimate.cpp" />
     <ClCompile Include="test_utils.cpp" />

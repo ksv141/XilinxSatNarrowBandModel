@@ -4,7 +4,8 @@ Demodulator::Demodulator(const string& input_file, const string& output_dmd_file
 	m_agc(AGC_WND_SIZE_LOG2, pwr_constell_psk4),
 	pif_sts(PIF_STS_Kp, PIF_STS_Ki),
 	pif_pll(PIF_PLL_Kp, PIF_PLL_Ki),
-	dds(DDS_PHASE_MODULUS)
+	dds(DDS_PHASE_MODULUS),
+	dmd_interp(400000, 18286)
 {
 	m_inFile = fopen(input_file.c_str(), "rb");
 	if (!m_inFile)
@@ -64,6 +65,7 @@ void Demodulator::process()
 			// уровень сигнала нормируется относительно уровня сигнального созвездия
 			if (!m_agc.process(sample, sample))
 				continue;
+			// для сигнального созвездия +/-4096 сигнал с выхода АРУ будет в диапазоне [-2^14, 2^14]
 
 			//******** петля ФАПЧ, компенсация частотного смещения ****************
 			xip_real dds_phase, dds_sin, dds_cos;
@@ -95,24 +97,25 @@ void Demodulator::process()
 
 			//************ оценка ошибки тактовой синхры **************************
 			xip_real sts_err = m_stsEst.getErr(sample, est);
-			// для сигнального созвездия +/-4096 ошибка будет в диапазоне [-2^24, 2^24]
-			
+			// для сигнального созвездия +/-4096 ошибка будет в диапазоне [-2^26, 2^26]
+
 			// уменьшаем динамический диапазон до диапазона ПИФ --> [-2^15, 2^15] 
 			// величину сдвига нужно подобирать исходя из ресурсов. 
 			// для максимальной точности можно без сдвига
 			// для минимальной точности и экономии ресурса можно сдвинуть сразу до [-2^10, 2^10]
 			// меньше [-2^10, 2^10] ученьшать нецелесообразно, т.к. это диапазон интерполятора
-			xip_real_shift(sts_err, -9);
+			xip_real_shift(sts_err, -11);
+			//xip_real_shift(sts_err, -6);
 
 			pif_sts.process(sts_err, sts_err);	// сглаживание и интеграция сигнала ошибки в ПИФ
 
+			// уменьшаем динамический диапазон до диапазона интерполятора --> [-2^10, 2^10]
+			//xip_real_shift(sts_err, 4);
+			//xip_real_shift(sts_err, -5);
 			dbg_out << sts_err << endl;
 
-			// уменьшаем динамический диапазон до диапазона интерполятора --> [-2^10, 2^10]
-			xip_real_shift(sts_err, -5);
-
 			// коррекция смещения интерполятора
-			dmd_interp.shift(-(int32_t)sts_err);
+			dmd_interp.shift((int32_t)sts_err);
 			//*********************************************************************
 
 			// пишем в файл

@@ -60,12 +60,6 @@ public:
 	*/
 	void shift(int32_t value);
 
-	/**
-	 * @brief установить смещение тактов относительно выходных отсчетов. вещественная версия
-	 * @param value -> [-1.0, 1.0] относительно выходных отсчетов, производится приведение value в пределы [-1.0, 1.0]
-	*/
-	void set_shift(double value);
-
 private:
 	/**
 	 * @brief инициализация библиотеки xip fir и загрузка наборов коэффициентов
@@ -89,7 +83,7 @@ private:
 	int interpolate(xip_complex* values, xip_complex& out, uint32_t pos);
 
 	/**
-	 * @brief инициализация библиотеки xip fir и освобождение памяти
+	 * @brief деинициализация библиотеки xip fir и освобождение памяти
 	 * @return 
 	*/
 	int destroy_lagrange_interp();
@@ -97,6 +91,7 @@ private:
 	size_t samples_count(double inv_factor);
 	int to_dx_value(double inv_factor);
 	void init(double dx_value);
+	double get_coefficient(unsigned set_no, unsigned index);
 
 	const uint32_t lagrange_n_intervals = LAGRANGE_INTERVALS;		// количество интервалов
 	const uint32_t lagrange_n_coeff = LAGRANGE_ORDER;				// количество коэффициентов (порядок фильтра)
@@ -116,7 +111,7 @@ private:
 	xip_complex* end_ptr;
 
 	// паременные для работы с xip fir
-	xip_fir_v7_2* lagrange_interp_fir;		// фильтр на передаче
+	xip_fir_v7_2* lagrange_interp_fir;		// интерполирующий фильтр
 	xip_fir_v7_2_config lagrange_interp_fir_cnfg;
 
 	xip_array_uint* lagrange_interp_fir_fsel;

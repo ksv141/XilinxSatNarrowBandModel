@@ -45,27 +45,6 @@ const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации
 
 int main()
 {
-	//Pif pif(0.1);
-	//ofstream dbg_out("dbg_out.txt");
-	//for (int i = 0; i < 100; i++) {
-	//	xip_real x = 32;
-	//	pif.process_1(x, x);
-	//	dbg_out << x << endl;
-	//}
-	//dbg_out.close();
-	//return 0;
-	//ofstream dbg_out("dbg_out.txt");
-	//LagrangeInterp itrp;
-	//for (int i = -5000; i <= 5000; i++)
-	//	dbg_out << i << "\t" << itrp.countPos(i) << endl;
-	//dbg_out.close();
-	//return 0;
-	// 
-//	generate_sin_signal("sin.pcm", 1, 20, 40, 13);
-//	signal_time_shift("sin.pcm", "sin_shift.pcm", 256);
-//	signal_time_shift("sin_shift.pcm", "sin_unshift.pcm", -256);
-//	return 0;
-
 	set_current_constell(Current_constell::PSK4);
 	init_xip_multiplier();
 	init_xip_cordic_sqrt();
@@ -78,9 +57,11 @@ int main()
 	//signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
 	//signal_time_shift_dyn("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 10);
 	double resample_coeff = 1.01;
-	signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, resample_coeff*INIT_SAMPLE_RATE/*25000*/);
-	signal_freq_shift("out_mod_rsmpl.pcm", "out_mod_fr_shift.pcm", 5);
-	Demodulator dmd("out_mod_fr_shift.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	//signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, 1600000);
+	//signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, INIT_SAMPLE_RATE* resample_coeff);
+	//signal_freq_shift("out_mod_1600_shift_600.pcm", "out_mod_1600_downshift_600.pcm", -6144);
+	//signal_decimate("out_mod_1600_downshift_600.pcm", "out_mod_400kHz.pcm", 4);
+	Demodulator dmd("out_mod_400kHz.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

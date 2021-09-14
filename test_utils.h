@@ -14,6 +14,7 @@
 #include "DDS.h"
 #include "xip_utils.h"
 #include "LagrangeInterp.h"
+#include "PolyphaseDecimator.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -66,5 +67,16 @@ extern void signal_resample(const string& in, const string& out, double from_sam
  * @bits точность отсчетов (бит)
 */
 extern void generate_sin_signal(const string& out, double freq, double sample_freq, size_t count, int bits);
+
+/**
+ * @brief децимация полифазным КИХ-фильтром в целое число раз
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @decim_factor коэффициент децимации
+*/
+extern void signal_decimate(const string& in, const string& out, unsigned decim_factor);
+
+
+extern int test_fir_order();
 
 #endif // TESTUTILS_H
