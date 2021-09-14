@@ -275,6 +275,7 @@ void signal_correlation(const string& in)
 								1, 32, 1, DPDI_BURST_ML_SATGE_1);
 	int16_t re;
 	int16_t im;
+	int counter = 0;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
@@ -283,6 +284,7 @@ void signal_correlation(const string& in)
 		corr_stage_1.process(sample, dph, corr_est);
 
 		dbg_out << corr_est << endl;
+		counter++;
 	}
 
 	dbg_out.close();

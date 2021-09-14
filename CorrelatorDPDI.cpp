@@ -32,8 +32,9 @@ bool CorrelatorDPDI::process(xip_complex in, xip_real& dph, xip_real& cur_est)
             rx_1 = xip_complex{ 0, 0 };
             for (int j = 0; j < m_correlatorM; j++) {   // Вычисление значения xk для единичного коррелятора
                 xip_complex res;
-                if (xip_multiply_complex(*preamb_it, *reg_it, res) == -1) // rm*cm для четных элементов регистра
-                    return false;
+                xip_multiply_complex(*preamb_it, *reg_it, res); // rm*cm для четных элементов регистра
+                // единичный отклик [-2^24, +2^24]
+                xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
                 rx_1.re += res.re;
                 rx_1.im += res.im;
 
@@ -42,8 +43,9 @@ bool CorrelatorDPDI::process(xip_complex in, xip_real& dph, xip_real& cur_est)
             }
             xip_complex res;
             xip_complex reg_1_conj{ reg_1.re, -reg_1.im };
-            if (xip_multiply_complex(rx_1, reg_1_conj, res) == -1)  // Вычисление z для четных
-                return false;
+            xip_multiply_complex(rx_1, reg_1_conj, res);  // Вычисление z для четных
+            // сумма откликов [-2^24, +2^24]
+            xip_complex_shift(res, -16);                // сдвигаем до [-2^12, +2^12]
             SumL_1.re += res.re;
             SumL_1.im += res.im;
 

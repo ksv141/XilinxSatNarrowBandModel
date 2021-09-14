@@ -68,8 +68,9 @@ int main()
 	//signal_lowpass("out_mod_1600_downshift_600.pcm", "out_mod_1600_downshift_600_lowpass.pcm", "lowpass_200kHz.fcf", 84);
 	//signal_decimate("out_mod_1600_downshift_600_lowpass.pcm", "out_mod_400kHz.pcm", 4);
 
-	signal_agc("out_mod.pcm", "out_mod_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
-	signal_correlation("out_mod.pcm");
+	//signal_agc("out_mod.pcm", "out_mod_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
+	//signal_lowpass("out_mod_agc.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
+	signal_correlation("out_mod_mf.pcm");
 
 	//Demodulator dmd("out_mod_400kHz.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	//dmd.process();
