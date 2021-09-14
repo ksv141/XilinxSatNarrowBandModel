@@ -67,4 +67,6 @@ extern void signal_resample(const string& in, const string& out, double from_sam
 */
 extern void generate_sin_signal(const string& out, double freq, double sample_freq, size_t count, int bits);
 
+extern int test_fir_order();
+
 #endif // TESTUTILS_H

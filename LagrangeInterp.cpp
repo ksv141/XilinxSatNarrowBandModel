@@ -3,7 +3,7 @@
 const unsigned int LAGRANGE_INTERVALS = 1024;			// количество интервалов разбиения одного интервала интерполяции (одного такта)
 const unsigned int LAGRANGE_INTERVALS_LOG2 = 10;		// log2(1024)
 const unsigned int LAGRANGE_ORDER = 8;					// порядок интерполятора
-const unsigned int LAGRANGE_FIXED_POINT_POSITION = 20;	// точность значения сдвига --> [-1.0, 1.0] (в битах)
+const unsigned int LAGRANGE_FIXED_POINT_POSITION = 10;	// точность значения сдвига --> [-1.0, 1.0] (в битах)
 
 LagrangeInterp::LagrangeInterp(xip_real frac):
 	samples(samples_count(frac), xip_complex{ 0, 0 })
@@ -182,6 +182,7 @@ int LagrangeInterp::interpolate(xip_complex* values, xip_complex& out, uint32_t 
 	}
 
 	// инициализация входных данных
+	// интерполируемые данные загружаем в фильтр в обратном порядке
 	for (int i = 0; i < LAGRANGE_ORDER; i++) {
 		xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, values[LAGRANGE_ORDER-i-1].re, 0, 0, i, P_BASIC);	// re
 		xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, values[LAGRANGE_ORDER-i-1].im, 0, 1, i, P_BASIC);	// im
