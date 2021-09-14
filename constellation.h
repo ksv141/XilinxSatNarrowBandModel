@@ -45,4 +45,6 @@ extern xip_complex get_cur_constell_sample(unsigned int symbol);
 // получить отсчет сигнала преамбулы из используемого созвездия
 extern xip_complex get_cur_constell_preamble_sample(unsigned int symbol);
 
+// получить нормированную мощность используемого созвездия
+extern xip_real get_cur_constell_pwr();
 #endif // CONSTELLATION_H

@@ -234,3 +234,57 @@ void signal_lowpass(const string& in, const string& out, const string& coeff_fil
 	fclose(out_file);
 }
 
+void signal_agc(const string& in, const string& out, unsigned window_size_log2, double norm_power)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	//ofstream dbg_out("dbg_out.txt");
+	AutoGaneControl agc(window_size_log2, norm_power);
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_complex res{ 0,0 };
+		agc.process(sample, res);
+		tC::write_real<int16_t>(out_file, res.re);
+		tC::write_real<int16_t>(out_file, res.im);
+
+		//dbg_out << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}
+
+void signal_correlation(const string& in)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+
+	ofstream dbg_out("dbg_out.txt");
+
+	CorrelatorDPDI corr_stage_1(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, SignalSource::preambleLength,
+								1, 32, 1, DPDI_BURST_ML_SATGE_1);
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_real dph = 0;
+		xip_real corr_est = 0;
+		corr_stage_1.process(sample, dph, corr_est);
+
+		dbg_out << corr_est << endl;
+	}
+
+	dbg_out.close();
+	fclose(in_file);
+}

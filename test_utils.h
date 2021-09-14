@@ -16,6 +16,9 @@
 #include "LagrangeInterp.h"
 #include "PolyphaseDecimator.h"
 #include "LowpassFir.h"
+#include "CorrelatorDPDI.h"
+#include "SignalSource.h"
+#include "autoganecontrol.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -24,6 +27,9 @@ using namespace xilinx_m;
 extern const double PI;
 extern const double _2_PI;
 extern const int DDS_PHASE_MODULUS;
+extern const uint16_t FRAME_DATA_SIZE;
+extern uint32_t DPDI_BURST_ML_SATGE_1;
+extern uint32_t DPDI_BURST_ML_SATGE_2;
 
 /**
  * @brief частотное смещение сигнала
@@ -85,6 +91,21 @@ extern void signal_decimate(const string& in, const string& out, unsigned decim_
  * @param num_coeff количество коэффициентов фильтра
 */
 extern void signal_lowpass(const string& in, const string& out, const string& coeff_file, unsigned num_coeff);
+
+/**
+ * @brief фильтрация заданным КИХ-фильтром
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param window_size_log2 - log2 окна усреднения АРУ
+ * @param norm_power требуемая мощность сигнала
+*/
+extern void signal_agc(const string& in, const string& out, unsigned window_size_log2, double norm_power);
+
+/**
+ * @brief вычисление корреляционного отклика сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+*/
+extern void signal_correlation(const string& in);
 
 
 #endif // TESTUTILS_H

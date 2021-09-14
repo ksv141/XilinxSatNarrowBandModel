@@ -18,14 +18,12 @@ public:
      * @param window_size_log2 - log2 окна усреднения АРУ
      * @param norm_power требуемая мощность сигнала
     */
-    AutoGaneControl(int window_size_log2 = 0, double norm_power = 1.0);
+    AutoGaneControl(unsigned window_size_log2 = 0, double norm_power = 1.0);
 
     ~AutoGaneControl();
 
     // обработка одного отсчета. результат - готов ли результат.
     // результат не готов, когда регистр еще не заполнен
-    bool process_1(const xip_complex& in, xip_complex& out);
-
     bool process(const xip_complex& in, xip_complex& out);
 
     // сброс регистра в 0
@@ -38,8 +36,8 @@ private:
 
 	double m_currentPower;
 
-    int m_windowSizeLog2;               // log2 окна усреднения АРУ
-    int m_windowSize;                   // окно усреднения АРУ
+    unsigned m_windowSizeLog2;               // log2 окна усреднения АРУ
+    unsigned m_windowSize;                   // окно усреднения АРУ
 
     size_t m_counter;
 

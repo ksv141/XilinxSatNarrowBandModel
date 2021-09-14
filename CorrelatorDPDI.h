@@ -33,14 +33,25 @@ public:
 	CorrelatorDPDI(uint16_t data_length, int8_t* preamble_data, uint16_t preamble_length,
 					uint16_t M, uint16_t L, uint16_t F, xip_real burst_est);
 
+	/**
+	 * @brief оценка частоты
+	 * @param in входной отсчет
+	 * @param dph оценка частоты (набег фазы за символ), 
+	 * оценка правдоподобна€ только при превышении порога
+	 * @param cur_est текущий коррел€ционный отклик (используетс€ дл€ отладки),
+	 * @return есть (true) или нет (false) срабатывание порога
+	*/
+	bool process(xip_complex in, xip_real& dph, xip_real& cur_est);
+
 private:
 	/**
 	 * @brief инициализаци€ регистров коррел€тора
 	*/
 	void init(int8_t* preamble_data, uint16_t preamble_length);
 
-	deque<xip_complex> m_correlationReg;     // регистр дл€ вычислени€ коррел€ции
+	deque<xip_complex> m_correlationReg;     // FIFO-регистр дл€ вычислени€ коррел€ции
 	vector<xip_complex> m_preamble;          // –егистр с преамбулой (в виде комплексно-сопр€женных чисел)
+	xip_complex m_prev_sum_1{ 0, 0 };		 // сумма коррел€ции на предыдущем такте
 
     uint16_t m_dataLength;               // –азмер данных в кадре, не включа€ преамбулу
 	uint16_t m_preambleLength;           // –азмер преамбулы
