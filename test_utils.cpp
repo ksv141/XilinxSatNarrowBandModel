@@ -175,6 +175,11 @@ void generate_sin_signal(const string& out, double freq, double sample_freq, siz
 	fclose(out_file);
 }
 
+void signal_decimate(const string& in, const string& out, unsigned decim_factor)
+{
+
+}
+
 int test_fir_order()
 {
 	xip_fir_v7_2* fir_real_summator;					// фильтр

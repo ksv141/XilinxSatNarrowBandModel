@@ -45,26 +45,19 @@ const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации
 
 int main()
 {
-	//Pif pif(0.1);
-	//ofstream dbg_out("dbg_out.txt");
-	//for (int i = 0; i < 100; i++) {
-	//	xip_real x = 32;
-	//	pif.process_1(x, x);
-	//	dbg_out << x << endl;
-	//}
-	//dbg_out.close();
-	//return 0;
-	//ofstream dbg_out("dbg_out.txt");
-	//LagrangeInterp itrp;
-	//for (int i = -5000; i <= 5000; i++)
-	//	dbg_out << i << "\t" << itrp.countPos(i) << endl;
-	//dbg_out.close();
-	//return 0;
-	// 
-//	generate_sin_signal("sin.pcm", 1, 20, 40, 13);
-//	signal_time_shift("sin.pcm", "sin_shift.pcm", 256);
-//	signal_time_shift("sin_shift.pcm", "sin_unshift.pcm", -256);
-//	return 0;
+	// test polyphase decimator
+	ofstream dbg_out("dbg_out.txt");
+	PolyphaseDecimator decim(4, "pph_decimator_x4.fcf", 96);
+	for (int i = 0; i < 1000; i++) {
+		xip_complex in{ i, 0 };
+		xip_complex out;
+		if (decim.process(in))
+			continue;
+		decim.next(out);
+		dbg_out << out.re << endl;
+	}
+	dbg_out.close();
+	return 0;
 
 	set_current_constell(Current_constell::PSK4);
 	init_xip_multiplier();

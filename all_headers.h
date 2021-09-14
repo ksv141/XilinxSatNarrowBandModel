@@ -17,6 +17,7 @@
 #include "fx_point.h"
 #include "DDS.h"
 #include "Demodulator.h"
+#include "PolyphaseDecimator.h"
 #include "test_utils.h"
 
 #endif // ALLHEADERS_H

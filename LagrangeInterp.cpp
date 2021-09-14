@@ -47,14 +47,6 @@ void LagrangeInterp::shift(int32_t value)
 	x_ptr += x >> FixPointPosition;
 }
 
-void LagrangeInterp::set_shift(double value)
-{
-	value <= -1.0 ? -1.0 : (value >= 1.0 ? 1.0 : value);	// ограничение value диапазоном [-1.0, 1.0]
-	int32_t x = static_cast<int32_t>(dx * value);
-	fx = x & (FixPointPosMaxVal - 1);
-	x_ptr += x >> FixPointPosition;
-}
-
 void LagrangeInterp::process(const xip_complex& in)
 {
 	// в буфер отсчетов добавляется очередной отсчет (FIFO)
@@ -77,11 +69,6 @@ bool LagrangeInterp::next(xip_complex& out)
 
 	const uint32_t coeffs_shift = FixPointPosition - LAGRANGE_INTERVALS_LOG2;
 	interpolate(x_ptr - LAGRANGE_ORDER, out, static_cast<unsigned>(fx >> coeffs_shift));
-
-	xip_complex out_1;
-	interpolate_1(x_ptr - LAGRANGE_ORDER, out_1, static_cast<unsigned>(fx >> coeffs_shift));
-	out_1.re /= (1 << 15);
-	out_1.im /= (1 << 15);
 
 	int32_t x = fx + dx;
 	fx = x & (FixPointPosMaxVal - 1);
@@ -207,17 +194,6 @@ int LagrangeInterp::interpolate(xip_complex* values, xip_complex& out, uint32_t 
 	//xip_complex_shift(out, -(int)(lagrange_interp_fir_cnfg.data_width - lagrange_interp_fir_cnfg.data_fract_width - 1));
 	xip_complex_shift(out, -15);
 
-	return 0;
-}
-
-int LagrangeInterp::interpolate_1(xip_complex* values, xip_complex& out, uint32_t pos)
-{
-	xip_complex res{ 0, 0 };
-	for (int i = 0; i < LAGRANGE_ORDER; i++) {
-		res.re += values[i].re * get_coefficient(pos, i);
-		res.im += values[i].im * get_coefficient(pos, i);
-	}
-	out = res;
 	return 0;
 }
 
