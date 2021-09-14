@@ -32,7 +32,7 @@ static const double _2_PI = PI * 2;
 // глобальные параметры
 const int DDS_PHASE_MODULUS = 16384;				// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
 const int DDS_RAD_CONST = (int)(DDS_PHASE_MODULUS * 8 / _2_PI);	// радиан на одну позицию фазы << 3 == 20860 (16 бит)
-const int FRAME_DATA_SIZE = 1115;					// размер данных в кадре (байт)
+const uint16_t FRAME_DATA_SIZE = 1115;					// размер данных в кадре (байт)
 const int AGC_WND_SIZE_LOG2 = 7;					// log2 окна усреднения АРУ
 
 const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)
@@ -43,9 +43,20 @@ const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной со
 const int BAUD_RATE = 9143;							// бодовая скорость в канале
 const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации на выходе канального фильтра
 
+// параметры корреляторов
+uint32_t DPDI_BURST_ML_SATGE_1 = 125;				// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
+uint32_t DPDI_BURST_ML_SATGE_2 = 32;				// порог обнаружения сигнала коррелятора второй стадии (точная оценка частоты)
+
 int main()
 {
 	set_current_constell(Current_constell::PSK4);
+
+
+	// test DPDI
+	CorrelatorDPDI corr_stage_1(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, SignalSource::preambleLength, 
+								1, 32, 1, DPDI_BURST_ML_SATGE_1);
+	return 0;
+
 	init_xip_multiplier();
 	init_xip_cordic_sqrt();
 	init_channel_matched_fir();
