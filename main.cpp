@@ -45,6 +45,19 @@ const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации
 
 int main()
 {
+	ofstream dbg_out("dbg_out.txt");
+	LowpassFir lowpass200kHz("lowpass_200kHz.fcf", 84);
+	for (int i = 0; i < 100; i++) {
+		xip_complex in{ 0,0 };
+		if (i == 0)
+			in = xip_complex{ 1, 1 };
+		xip_complex out;
+		lowpass200kHz.process(in, out);
+		dbg_out << out << endl;
+	}
+	dbg_out.close();
+	return 0;
+
 	set_current_constell(Current_constell::PSK4);
 	init_xip_multiplier();
 	init_xip_cordic_sqrt();
