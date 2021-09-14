@@ -15,6 +15,7 @@
 #include "xip_utils.h"
 #include "LagrangeInterp.h"
 #include "PolyphaseDecimator.h"
+#include "LowpassFir.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -76,7 +77,14 @@ extern void generate_sin_signal(const string& out, double freq, double sample_fr
 */
 extern void signal_decimate(const string& in, const string& out, unsigned decim_factor);
 
+/**
+ * @brief фильтрация заданным КИХ-фильтром
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param coeff_file файл с коэффициентами фильтра
+ * @param num_coeff количество коэффициентов фильтра
+*/
+extern void signal_lowpass(const string& in, const string& out, const string& coeff_file, unsigned num_coeff);
 
-extern int test_fir_order();
 
 #endif // TESTUTILS_H
