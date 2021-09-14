@@ -45,20 +45,6 @@ const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации
 
 int main()
 {
-	// test polyphase decimator
-	ofstream dbg_out("dbg_out.txt");
-	PolyphaseDecimator decim(4, "pph_decimator_x4.fcf", 96);
-	for (int i = 0; i < 1000; i++) {
-		xip_complex in{ i, 0 };
-		xip_complex out;
-		if (decim.process(in))
-			continue;
-		decim.next(out);
-		dbg_out << out.re << endl;
-	}
-	dbg_out.close();
-	return 0;
-
 	set_current_constell(Current_constell::PSK4);
 	init_xip_multiplier();
 	init_xip_cordic_sqrt();
@@ -73,8 +59,9 @@ int main()
 	double resample_coeff = 1.01;
 	//signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, 1600000);
 	//signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, INIT_SAMPLE_RATE* resample_coeff);
-	//signal_freq_shift("out_mod_rsmpl.pcm", "out_mod_fr_shift.pcm", 10);
-	Demodulator dmd("out_mod_1600kHz.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	//signal_freq_shift("out_mod_1600_shift_600.pcm", "out_mod_1600_downshift_600.pcm", -6144);
+	//signal_decimate("out_mod_1600_downshift_600.pcm", "out_mod_400kHz.pcm", 4);
+	Demodulator dmd("out_mod_400kHz.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

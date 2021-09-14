@@ -10,17 +10,18 @@ void signal_freq_shift(const string& in, const string& out, double dph)
 		return;
 
 	//ofstream dbg_out("dbg_out.txt");
+	double norm_dph = dph;
+	if (norm_dph < 0)
+		norm_dph += DDS_PHASE_MODULUS;
 
 	DDS dds(DDS_PHASE_MODULUS);
 	int16_t re;
 	int16_t im;
 	double dds_phase, dds_sin, dds_cos;
-	int counter = 0;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 			tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
-		if (counter % 10 == 0)
-			dds.process(dph, dds_phase, dds_sin, dds_cos);
+		dds.process(norm_dph, dds_phase, dds_sin, dds_cos);
 		xip_complex mod_sample{ dds_cos, dds_sin };
 		xip_complex res;
 		xip_multiply_complex(sample, mod_sample, res);
@@ -28,8 +29,6 @@ void signal_freq_shift(const string& in, const string& out, double dph)
 		
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
-
-		counter++;
 
 		//dbg_out << res << endl;
 	}
@@ -125,12 +124,11 @@ void signal_resample(const string& in, const string& out, double from_sampling_f
 	if (!out_file)
 		return;
 
-	ofstream dbg_out("dbg_out.txt");
+	//ofstream dbg_out("dbg_out.txt");
 
 	LagrangeInterp itrp(from_sampling_freq, to_sampling_freq);
 	int16_t re;
 	int16_t im;
-	int counter = 0;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
@@ -140,12 +138,11 @@ void signal_resample(const string& in, const string& out, double from_sampling_f
 			tC::write_real<int16_t>(out_file, res.re);
 			tC::write_real<int16_t>(out_file, res.im);
 
-			dbg_out << res << endl;
+			//dbg_out << res << endl;
 		}
-		counter++;
 	}
 
-	dbg_out.close();
+	//dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
 }
@@ -177,7 +174,34 @@ void generate_sin_signal(const string& out, double freq, double sample_freq, siz
 
 void signal_decimate(const string& in, const string& out, unsigned decim_factor)
 {
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
 
+	//ofstream dbg_out("dbg_out.txt");
+
+	PolyphaseDecimator decim(decim_factor, "pph_decimator_x4.fcf", 96);
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_complex res{ 0,0 };
+		if (decim.process(sample))
+			continue;
+		decim.next(res);
+		tC::write_real<int16_t>(out_file, res.re);
+		tC::write_real<int16_t>(out_file, res.im);
+
+		//dbg_out << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
 }
 
 int test_fir_order()

@@ -14,6 +14,7 @@
 #include "DDS.h"
 #include "xip_utils.h"
 #include "LagrangeInterp.h"
+#include "PolyphaseDecimator.h"
 
 using namespace std;
 using namespace xilinx_m;
