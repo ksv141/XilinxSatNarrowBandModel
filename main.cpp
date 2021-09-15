@@ -61,18 +61,24 @@ int main()
 
 	//signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
 	//signal_time_shift_dyn("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 10);
-	double resample_coeff = 1.01;
-	//signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, 1600000);
+	double resample_coeff = 1.0;
 	//signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, INIT_SAMPLE_RATE* resample_coeff);
-	//signal_freq_shift("out_mod_1600_shift_600.pcm", "out_mod_1600_downshift_600.pcm", -6144);
-	//signal_lowpass("out_mod_1600_downshift_600.pcm", "out_mod_1600_downshift_600_lowpass.pcm", "lowpass_200kHz.fcf", 84);
-	//signal_decimate("out_mod_1600_downshift_600_lowpass.pcm", "out_mod_400kHz.pcm", 4);
 
-	//signal_agc("out_mod.pcm", "out_mod_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
-	//signal_lowpass("out_mod_agc.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
-	//signal_correlation("out_mod_mf.pcm");
+	//signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
+	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x64.pcm", 64);
+	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_shift_780.pcm", 780000, 1600000);
+	//signal_freq_shift("out_mod_interp_x64_shift_780.pcm", "out_mod_interp_x64_downshift_780.pcm", -780000, 1600000);
+	//signal_lowpass("out_mod_interp_x64_downshift_780.pcm", "out_mod_interp_x64_downshift_780_lowpass.pcm", "lowpass_200kHz.fcf", 51);
+	//signal_decimate("out_mod_interp_x64_downshift_780_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
+	//signal_decimate("out_mod_decim_x16.pcm", "out_mod_decim_x4.pcm", 4);
+	//signal_decimate("out_mod_decim_x4.pcm", "out_mod_decim_x1.pcm", 4);
 
-	//Demodulator dmd("out_mod_400kHz.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	signal_resample("out_mod_decim_x1.pcm", "out_mod_res25.pcm", 25000, INIT_SAMPLE_RATE);
+	signal_agc("out_mod_res25.pcm", "out_mod_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
+	signal_lowpass("out_mod_agc.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
+	signal_correlation("out_mod_mf.pcm");
+
+	//Demodulator dmd("out_mod_decim_x1.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	//dmd.process();
 
 	destroy_xip_multiplier();

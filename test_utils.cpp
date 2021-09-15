@@ -1,7 +1,10 @@
 #include "test_utils.h"
 
-void signal_freq_shift(const string& in, const string& out, double dph)
+void signal_freq_shift(const string& in, const string& out, double freq_shift, double fs)
 {
+	if (freq_shift > fs)
+		throw out_of_range("frequency shift is greater than sampling frequency");
+
 	FILE* in_file = fopen(in.c_str(), "rb");
 	if (!in_file)
 		return;
@@ -9,10 +12,11 @@ void signal_freq_shift(const string& in, const string& out, double dph)
 	if (!out_file)
 		return;
 
+	double dph = (freq_shift/fs)* DDS_PHASE_MODULUS;	// набег фазы за такт в диапазоне[0, 16383] -- > [0, 2pi]
+
 	//ofstream dbg_out("dbg_out.txt");
-	double norm_dph = dph;
-	if (norm_dph < 0)
-		norm_dph += DDS_PHASE_MODULUS;
+	if (dph < 0)
+		dph += DDS_PHASE_MODULUS;
 
 	DDS dds(DDS_PHASE_MODULUS);
 	int16_t re;
@@ -21,7 +25,7 @@ void signal_freq_shift(const string& in, const string& out, double dph)
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 			tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
-		dds.process(norm_dph, dds_phase, dds_sin, dds_cos);
+		dds.process(dph, dds_phase, dds_sin, dds_cos);
 		xip_complex mod_sample{ dds_cos, dds_sin };
 		xip_complex res;
 		xip_multiply_complex(sample, mod_sample, res);
@@ -196,6 +200,37 @@ void signal_decimate(const string& in, const string& out, unsigned decim_factor)
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
 
+		//dbg_out << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}
+
+void signal_interpolate(const string& in, const string& out, unsigned interp_factor)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	//ofstream dbg_out("dbg_out.txt");
+
+	PolyphaseInterpolator interp(interp_factor, "pph_interpolator_x64.fcf", 1536);
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_complex res{ 0,0 };
+		interp.process(sample);
+		while (interp.next(res)) {
+			tC::write_real<int16_t>(out_file, res.re);
+			tC::write_real<int16_t>(out_file, res.im);
+		}
 		//dbg_out << res << endl;
 	}
 

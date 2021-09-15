@@ -15,6 +15,7 @@
 #include "xip_utils.h"
 #include "LagrangeInterp.h"
 #include "PolyphaseDecimator.h"
+#include "PolyphaseInterpolator.h"
 #include "LowpassFir.h"
 #include "CorrelatorDPDI.h"
 #include "SignalSource.h"
@@ -35,9 +36,10 @@ extern uint32_t DPDI_BURST_ML_SATGE_2;
  * @brief частотное смещение сигнала
  * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param out выходной файл (PCM стерео I/Q 16-бит) 
- * @param dph набег фазы за такт в диапазоне [0, 16383] --> [0, 2pi]
+ * @param freq_shift смещение частоты в √ц [-fs, fs]
+ * @param fs частота дискретизации в √ц
 */
-extern void signal_freq_shift(const string& in, const string& out, double dph);
+extern void signal_freq_shift(const string& in, const string& out, double freq_shift, double fs);
 
 /**
  * @brief тактовое смещение сигнала.
@@ -82,6 +84,14 @@ extern void generate_sin_signal(const string& out, double freq, double sample_fr
  * @decim_factor коэффициент децимации
 */
 extern void signal_decimate(const string& in, const string& out, unsigned decim_factor);
+
+/**
+ * @brief интерпол€ци€ полифазным  »’-фильтром в целое число раз
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @interp_factor коэффициент интерпол€ции
+*/
+extern void signal_interpolate(const string& in, const string& out, unsigned interp_factor);
 
 /**
  * @brief фильтраци€ заданным  »’-фильтром
