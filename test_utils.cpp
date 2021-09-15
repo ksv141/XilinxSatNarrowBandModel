@@ -251,7 +251,8 @@ void signal_agc(const string& in, const string& out, unsigned window_size_log2, 
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
 		xip_complex res{ 0,0 };
-		agc.process(sample, res);
+		if (!agc.process(sample, res))
+			continue;
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
 

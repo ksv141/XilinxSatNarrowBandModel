@@ -33,7 +33,7 @@ static const double _2_PI = PI * 2;
 const int DDS_PHASE_MODULUS = 16384;				// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
 const int DDS_RAD_CONST = (int)(DDS_PHASE_MODULUS * 8 / _2_PI);	// радиан на одну позицию фазы << 3 == 20860 (16 бит)
 const uint16_t FRAME_DATA_SIZE = 1115;					// размер данных в кадре (байт)
-const int AGC_WND_SIZE_LOG2 = 7;					// log2 окна усреднения АРУ
+const int AGC_WND_SIZE_LOG2 = 5;					// log2 окна усреднения АРУ
 
 const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)
 const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
@@ -70,7 +70,7 @@ int main()
 
 	//signal_agc("out_mod.pcm", "out_mod_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
 	//signal_lowpass("out_mod_agc.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
-	signal_correlation("out_mod_mf.pcm");
+	//signal_correlation("out_mod_mf.pcm");
 
 	//Demodulator dmd("out_mod_400kHz.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	//dmd.process();
