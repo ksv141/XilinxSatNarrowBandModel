@@ -266,8 +266,8 @@ int init_xip_cordic_rect_to_polar()
 	xip_rect_to_polar_cnfg.CoarseRotate = XIP_CORDIC_V6_0_TRUE;
 	xip_rect_to_polar_cnfg.DataFormat = XIP_CORDIC_V6_0_FORMAT_SIG_FRAC;
 	xip_rect_to_polar_cnfg.PhaseFormat = XIP_CORDIC_V6_0_FORMAT_SCA;
-	xip_rect_to_polar_cnfg.InputWidth = 26;
-	xip_rect_to_polar_cnfg.OutputWidth = 26;
+	xip_rect_to_polar_cnfg.InputWidth = 20;
+	xip_rect_to_polar_cnfg.OutputWidth = 16;
 	xip_rect_to_polar_cnfg.Precision = 0;
 	xip_rect_to_polar_cnfg.RoundMode = XIP_CORDIC_V6_0_ROUND_TRUNCATE;
 	xip_rect_to_polar_cnfg.ScaleComp = XIP_CORDIC_V6_0_SCALE_NONE;
@@ -329,7 +329,7 @@ int destroy_xip_cordic_rect_to_polar()
 		return -1;
 	}
 
-	printf("Deleted instance of xip cordic sqrt and free memory\n");
+	printf("Deleted instance of xip cordic rect to polar and free memory\n");
 	return 0;
 }
 

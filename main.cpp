@@ -53,7 +53,15 @@ int main()
 
 	init_xip_multiplier();
 	init_xip_cordic_sqrt();
+	init_xip_cordic_rect_to_polar();
 	init_channel_matched_fir();
+
+	xip_complex x{ 4096, 4096 };
+	xip_real mag = 0;
+	xip_real arg = 0;
+	xip_cordic_rect_to_polar(x, mag, arg);
+	int arg_int = (int)arg;
+	cout << mag << endl << arg_int << endl;
 
 	//Modulator mdl("data1.bin", "out_mod.pcm", FRAME_DATA_SIZE);
 	//Modulator mdl("1.zip", "out_mod.pcm", FRAME_DATA_SIZE);
@@ -76,13 +84,14 @@ int main()
 	//signal_resample("out_mod_decim_x1.pcm", "out_mod_res25.pcm", 25000, INIT_SAMPLE_RATE);
 	//signal_agc("out_mod_res25.pcm", "out_mod_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
 	//signal_lowpass("out_mod_agc.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
-	signal_correlation("out_mod_mf.pcm");
+	//signal_correlation("out_mod_mf.pcm");
 
 	//Demodulator dmd("out_mod_decim_x1.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	//dmd.process();
 
 	destroy_xip_multiplier();
 	destroy_xip_cordic_sqrt();
+	destroy_xip_cordic_rect_to_polar();
 	destroy_channel_matched_fir();
 
 	return 0;
