@@ -61,6 +61,27 @@ extern int destroy_xip_cordic_sqrt();
 extern int xip_sqrt_real(const xip_real& arg, xip_real& out);
 
 /**
+ * @brief инициализаци€ комплексного конвертора
+ * @return 
+*/
+extern int init_xip_cordic_rect_to_polar();
+
+/**
+ * @brief деинициализаци€ комплексного конвертора
+ * @return 
+*/
+extern int destroy_xip_cordic_rect_to_polar();
+
+/**
+ * @brief конвертаци€ комплексного числа в пол€рные координаты
+ * @param in вход
+ * @param mag модуль
+ * @param arg аргумент
+ * @return
+*/
+extern int xip_cordic_rect_to_polar(const xip_complex& in, xip_real& mag, xip_real& arg);
+
+/**
  * @brief целочисленное деление. 
  * вещественные аргументы перевод€тс€ в int32 максимального диапазона.
  * деление возможно при a >= b
