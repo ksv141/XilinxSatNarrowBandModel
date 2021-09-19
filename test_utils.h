@@ -42,6 +42,14 @@ extern uint32_t DPDI_BURST_ML_SATGE_2;
 extern void signal_freq_shift(const string& in, const string& out, double freq_shift, double fs);
 
 /**
+ * @brief частотное смещение сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param freq_shift_mod смещение частоты в единицах работы DDS [-8192, 8192]
+*/
+extern void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_mod);
+
+/**
  * @brief тактовое смещение сигнала.
  * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param out выходной файл (PCM стерео I/Q 16-бит) 
@@ -115,7 +123,7 @@ extern void signal_agc(const string& in, const string& out, unsigned window_size
  * @brief вычисление коррел€ционного отклика сигнала
  * @param in входной файл (PCM стерео I/Q 16-бит)
 */
-extern void signal_correlation(const string& in);
+extern bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F, uint32_t burst_est, int16_t& freq_est);
 
 
 #endif // TESTUTILS_H

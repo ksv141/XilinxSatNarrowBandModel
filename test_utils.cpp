@@ -5,6 +5,17 @@ void signal_freq_shift(const string& in, const string& out, double freq_shift, d
 	if (freq_shift > fs)
 		throw out_of_range("frequency shift is greater than sampling frequency");
 
+	int16_t freq_shift_mod = (int16_t)((freq_shift / fs) * DDS_PHASE_MODULUS);
+
+	signal_freq_shift(in, out, freq_shift_mod);
+
+}
+
+void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_mod)
+{
+	if ((freq_shift_mod > DDS_PHASE_MODULUS/2) || (freq_shift_mod < -DDS_PHASE_MODULUS / 2))
+		throw out_of_range("frequency shift is out of range");
+
 	FILE* in_file = fopen(in.c_str(), "rb");
 	if (!in_file)
 		return;
@@ -12,7 +23,7 @@ void signal_freq_shift(const string& in, const string& out, double freq_shift, d
 	if (!out_file)
 		return;
 
-	double dph = (freq_shift/fs)* DDS_PHASE_MODULUS;	// набег фазы за такт в диапазоне[0, 16383] -- > [0, 2pi]
+	double dph = freq_shift_mod;	// набег фазы за такт в диапазоне[0, 16383] -- > [0, 2pi]
 
 	//ofstream dbg_out("dbg_out.txt");
 	if (dph < 0)
@@ -23,14 +34,14 @@ void signal_freq_shift(const string& in, const string& out, double freq_shift, d
 	int16_t im;
 	double dds_phase, dds_sin, dds_cos;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
-			tC::read_real<int16_t, int16_t>(in_file, im)) {
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
 		dds.process(dph, dds_phase, dds_sin, dds_cos);
 		xip_complex mod_sample{ dds_cos, dds_sin };
 		xip_complex res;
 		xip_multiply_complex(sample, mod_sample, res);
-		xip_complex_shift(res, -(int)(dds.getOutputWidth()-1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
-		
+		xip_complex_shift(res, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
 
@@ -299,30 +310,33 @@ void signal_agc(const string& in, const string& out, unsigned window_size_log2, 
 	fclose(out_file);
 }
 
-void signal_correlation(const string& in)
+bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F, uint32_t burst_est, int16_t& freq_est)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");
 	if (!in_file)
-		return;
+		return false;
 
-	ofstream dbg_out("dbg_out.txt");
+	//ofstream dbg_out("dbg_out.txt");
 
-	CorrelatorDPDI corr_stage_1(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, SignalSource::preambleLength,
-								1, 32, 1, DPDI_BURST_ML_SATGE_1);
+	CorrelatorDPDI corr_stage(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, SignalSource::preambleLength,
+								M, L, F, burst_est);
 	int16_t re;
 	int16_t im;
-	int counter = 0;
+	bool res = false;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
-		xip_real dph = 0;
+		int16_t dph = 0;
 		xip_real corr_est = 0;
-		corr_stage_1.process(sample, dph, corr_est);
-
-		dbg_out << corr_est << endl;
-		counter++;
+		if (corr_stage.process(sample, dph, corr_est)) {
+			freq_est = dph;
+			res = true;
+			break;
+		}
+		//dbg_out << corr_est << endl;
 	}
 
-	dbg_out.close();
+	//dbg_out.close();
 	fclose(in_file);
+	return res;
 }

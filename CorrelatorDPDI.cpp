@@ -1,7 +1,7 @@
 #include "CorrelatorDPDI.h"
 
 CorrelatorDPDI::CorrelatorDPDI(uint16_t data_length, int8_t* preamble_data, uint16_t preamble_length, 
-								uint16_t M, uint16_t L, uint16_t F, xip_real burst_est):
+								uint16_t M, uint16_t L, uint16_t F, uint32_t burst_est):
 	m_dataLength(data_length),
 	m_preambleLength(preamble_length),
 	m_correlatorM(M),
@@ -9,10 +9,11 @@ CorrelatorDPDI::CorrelatorDPDI(uint16_t data_length, int8_t* preamble_data, uint
 	m_correlatorF(F),
 	m_burstEstML(burst_est)
 {
+    m_argShift = log2(2*M);     // хранить константы для разных M
 	init(preamble_data, preamble_length);
 }
 
-bool CorrelatorDPDI::process(xip_complex in, xip_real& dph, xip_real& cur_est)
+bool CorrelatorDPDI::process(xip_complex in, int16_t& dph, xip_real& cur_est)
 {
     // помещаем отсчет в FIFO
     m_correlationReg.pop_back();
@@ -81,7 +82,12 @@ bool CorrelatorDPDI::process(xip_complex in, xip_real& dph, xip_real& cur_est)
     cur_est = est;
 
     if (est > m_burstEstML) {       // Порог в соответствии с критерием максимального правдоподобия
-        //dph = std::arg(maxSum) / (2 * m_correlatorM);   // Оценка смещения по частоте (v = Arg{x}/2M), в рад/симв
+        // Оценка смещения по частоте (v = Arg{x}/2M), в рад/симв
+        xip_real mag;
+        xip_real arg;
+        xip_cordic_rect_to_polar(maxSum, mag, arg);
+        int arg_int = (int)arg;
+        dph = arg_int >> m_argShift;
         return true;
     }
     else {

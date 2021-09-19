@@ -267,7 +267,7 @@ int init_xip_cordic_rect_to_polar()
 	xip_rect_to_polar_cnfg.DataFormat = XIP_CORDIC_V6_0_FORMAT_SIG_FRAC;
 	xip_rect_to_polar_cnfg.PhaseFormat = XIP_CORDIC_V6_0_FORMAT_SCA;
 	xip_rect_to_polar_cnfg.InputWidth = 20;
-	xip_rect_to_polar_cnfg.OutputWidth = 16;
+	xip_rect_to_polar_cnfg.OutputWidth = 16;	// фаза будет в диапазоне [-8192, 8192]
 	xip_rect_to_polar_cnfg.Precision = 0;
 	xip_rect_to_polar_cnfg.RoundMode = XIP_CORDIC_V6_0_ROUND_TRUNCATE;
 	xip_rect_to_polar_cnfg.ScaleComp = XIP_CORDIC_V6_0_SCALE_NONE;

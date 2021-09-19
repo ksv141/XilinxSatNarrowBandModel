@@ -31,17 +31,17 @@ public:
 	 * @param burst_est Пороговое значение для корреляционного отклика (критерий максимального правдоподобия)
 	*/
 	CorrelatorDPDI(uint16_t data_length, int8_t* preamble_data, uint16_t preamble_length,
-					uint16_t M, uint16_t L, uint16_t F, xip_real burst_est);
+					uint16_t M, uint16_t L, uint16_t F, uint32_t burst_est);
 
 	/**
 	 * @brief оценка частоты
 	 * @param in входной отсчет
-	 * @param dph оценка частоты (набег фазы за символ), 
+	 * @param dph оценка частоты (набег фазы за символ) --> [-8192, 8192] 
 	 * оценка правдоподобная только при превышении порога
 	 * @param cur_est текущий корреляционный отклик (используется для отладки),
 	 * @return есть (true) или нет (false) срабатывание порога
 	*/
-	bool process(xip_complex in, xip_real& dph, xip_real& cur_est);
+	bool process(xip_complex in, int16_t& dph, xip_real& cur_est);
 
 private:
 	/**
@@ -59,6 +59,8 @@ private:
     uint16_t m_correlatorL;              // Количество единичных корреляторов
     uint16_t m_correlatorF;              // Количество корреляторов ML для накопления корреляционного отклика
     xip_real m_burstEstML;               // Пороговое значение для корреляционного отклика (критерий максимального правдоподобия)
+
+	uint16_t m_argShift;				 // величина битового сдвига для вычисления v = Arg{x}/2M
 };
 
 #endif // CORRELATORDPDI_H
