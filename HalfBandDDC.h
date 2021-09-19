@@ -3,6 +3,7 @@
 
 #include "DDS.h"
 #include "LowpassFir.h"
+#include "xip_utils.h"
 
 extern const int DDS_PHASE_MODULUS;
 
@@ -13,6 +14,14 @@ class HalfBandDDC
 {
 public:
 	HalfBandDDC();
+
+	/**
+	 * @brief обработка очередного отсчета (без децимации, децимация должна осуществляться внешним кодом)
+	 * @param in
+	 * @param out
+	 * @return
+	*/
+	int process(const xip_complex& in, xip_complex& out);
 
 private:
 	DDS m_dds;

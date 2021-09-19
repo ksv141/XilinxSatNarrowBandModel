@@ -167,6 +167,7 @@
     <ClInclude Include="FirMultiplier.h" />
     <ClInclude Include="FirSummator.h" />
     <ClInclude Include="HalfBandDDC.h" />
+    <ClInclude Include="HalfBandDDCTree.h" />
     <ClInclude Include="LagrangeInterp.h" />
     <ClInclude Include="LowpassFir.h" />
     <ClInclude Include="mls.h" />
@@ -193,6 +194,7 @@
     <ClCompile Include="fx_cmpl_point.cpp" />
     <ClCompile Include="fx_point.cpp" />
     <ClCompile Include="HalfBandDDC.cpp" />
+    <ClCompile Include="HalfBandDDCTree.cpp" />
     <ClCompile Include="LagrangeInterp.cpp" />
     <ClCompile Include="LowpassFir.cpp" />
     <ClCompile Include="main.cpp" />
