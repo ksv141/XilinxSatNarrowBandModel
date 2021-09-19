@@ -1,7 +1,9 @@
 #include "LowpassFir.h"
 
-LowpassFir::LowpassFir(const string& coeff_file, unsigned num_coeff):
-	m_numCoeff(num_coeff)
+LowpassFir::LowpassFir(const string& coeff_file, unsigned num_coeff, unsigned is_halfband, unsigned num_datapath):
+	m_numCoeff(num_coeff),
+	m_isHalfBand(is_halfband),
+	m_numDataPath(num_datapath)
 {
 	init_xip_fir(coeff_file, num_coeff);
 }
@@ -56,6 +58,8 @@ int LowpassFir::init_xip_fir(const string& coeff_file, unsigned num_coeff)
 	// 2 канала для вещественной и мнимой части. 
 	// Тут по идее можно настроить параллельную обработку двух каналов в режиме XIP_FIR_ADVANCED_CHAN_SEQ
 	xip_fir_cnfg.num_channels = 2;
+	xip_fir_cnfg.is_halfband = m_isHalfBand;
+	xip_fir_cnfg.num_paths = m_numDataPath;
 
 	// Create filter instance
 	xip_fir = xip_fir_v7_2_create(&xip_fir_cnfg, &msg_print, 0);

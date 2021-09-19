@@ -22,8 +22,11 @@ public:
 	 * @brief конструктор
 	 * @param coeff_file файл с коэффициентами фильтра
 	 * @param num_coeff количество коэффициентов фильтра
+	 * @param is_halfband фильтр полуполосный (0 - нет, 1 - да)
+	 * @param num_datapath количество параллельных потоков
+	 * @param num_coeff количество коэффициентов фильтра
 	*/
-	LowpassFir(const string& coeff_file, unsigned num_coeff);
+	LowpassFir(const string& coeff_file, unsigned num_coeff, unsigned is_halfband = 0, unsigned num_datapath = 1);
 
 	~LowpassFir();
 
@@ -59,6 +62,8 @@ private:
 	unsigned m_numCoeff;				// количество коэффициентов фильтра
 	double* m_firCoeff = nullptr;		// набор коэффициентов фильтра
 	unsigned m_decimCounter = 0;		// кольцевой счетчик входных отсчетов [0, m_decimFactor-1]
+	unsigned m_isHalfBand = 0;			// фильтр полуполосный (0 - нет, 1 - да)
+	unsigned m_numDataPath = 1;			// количество параллельных потоков
 
 	// паременные для работы с xip fir
 	xip_fir_v7_2* xip_fir;				// полифазный фильтр
