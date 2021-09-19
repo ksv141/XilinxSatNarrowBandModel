@@ -15,7 +15,11 @@
 #include "xip_utils.h"
 #include "LagrangeInterp.h"
 #include "PolyphaseDecimator.h"
+#include "PolyphaseInterpolator.h"
 #include "LowpassFir.h"
+#include "CorrelatorDPDI.h"
+#include "SignalSource.h"
+#include "autoganecontrol.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -24,14 +28,26 @@ using namespace xilinx_m;
 extern const double PI;
 extern const double _2_PI;
 extern const int DDS_PHASE_MODULUS;
+extern const uint16_t FRAME_DATA_SIZE;
+extern uint32_t DPDI_BURST_ML_SATGE_1;
+extern uint32_t DPDI_BURST_ML_SATGE_2;
 
 /**
  * @brief частотное смещение сигнала
  * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param out выходной файл (PCM стерео I/Q 16-бит) 
- * @param dph набег фазы за такт в диапазоне [0, 16383] --> [0, 2pi]
+ * @param freq_shift смещение частоты в Гц [-fs, fs]
+ * @param fs частота дискретизации в Гц
 */
-extern void signal_freq_shift(const string& in, const string& out, double dph);
+extern void signal_freq_shift(const string& in, const string& out, double freq_shift, double fs);
+
+/**
+ * @brief частотное смещение сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param freq_shift_mod смещение частоты в единицах работы DDS [-8192, 8192]
+*/
+extern void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_mod);
 
 /**
  * @brief тактовое смещение сигнала.
@@ -78,6 +94,14 @@ extern void generate_sin_signal(const string& out, double freq, double sample_fr
 extern void signal_decimate(const string& in, const string& out, unsigned decim_factor);
 
 /**
+ * @brief интерполяция полифазным КИХ-фильтром в целое число раз
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @interp_factor коэффициент интерполяции
+*/
+extern void signal_interpolate(const string& in, const string& out, unsigned interp_factor);
+
+/**
  * @brief фильтрация заданным КИХ-фильтром
  * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param out выходной файл (PCM стерео I/Q 16-бит)
@@ -85,6 +109,21 @@ extern void signal_decimate(const string& in, const string& out, unsigned decim_
  * @param num_coeff количество коэффициентов фильтра
 */
 extern void signal_lowpass(const string& in, const string& out, const string& coeff_file, unsigned num_coeff);
+
+/**
+ * @brief фильтрация заданным КИХ-фильтром
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param window_size_log2 - log2 окна усреднения АРУ
+ * @param norm_power требуемая мощность сигнала
+*/
+extern void signal_agc(const string& in, const string& out, unsigned window_size_log2, double norm_power);
+
+/**
+ * @brief вычисление корреляционного отклика сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+*/
+extern bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F, uint32_t burst_est, int16_t& freq_est);
 
 
 #endif // TESTUTILS_H

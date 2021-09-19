@@ -18,7 +18,9 @@
 #include "DDS.h"
 #include "Demodulator.h"
 #include "PolyphaseDecimator.h"
+#include "PolyphaseInterpolator.h"
 #include "LowpassFir.h"
+#include "CorrelatorDPDI.h"
 #include "test_utils.h"
 
 #endif // ALLHEADERS_H

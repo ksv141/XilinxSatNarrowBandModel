@@ -1,6 +1,6 @@
 #include "autoganecontrol.h"
 
-AutoGaneControl::AutoGaneControl(int window_size_log2, double norm_power):
+AutoGaneControl::AutoGaneControl(unsigned window_size_log2, double norm_power):
     m_normPower(norm_power), 
     m_windowSizeLog2(window_size_log2),
     m_currentPower(0),
@@ -18,31 +18,6 @@ AutoGaneControl::~AutoGaneControl()
 	destroy_xip_fir();
 }
 
-bool AutoGaneControl::process_1(const xip_complex& in, xip_complex& out)
-{
-	double pwr_x = (in.re * in.re + in.im * in.im)/ m_windowSize;
-    m_currentPower += pwr_x;
-    m_currentPower -= m_pwrReg.back();
-    m_pwrReg.pop_back();
-    m_pwrReg.push_front(pwr_x);
-
-    if (m_counter < m_windowSize) {
-        m_counter++;
-        return false;
-    }
-
-	double norm = sqrt(m_currentPower/m_normPower);
-	if (norm == 0)
-		out = in;
-	else
-	{
-		out.re = in.re / norm;
-		out.im = in.im / norm;
-	}
-
-    return true;
-}
-
 bool AutoGaneControl::process(const xip_complex& in, xip_complex& out)
 {
 	xip_real re_sqr = 0;
@@ -56,10 +31,11 @@ bool AutoGaneControl::process(const xip_complex& in, xip_complex& out)
 	// регулировка выполняется после заполнения буфера АРУ
 	if (m_counter < m_windowSize) {
 		m_counter++;
+		out = in;
 		return false;
 	}
 
-	xip_real_shift(sum_pwr, -m_windowSizeLog2);		// усреднение за окно
+	xip_real_shift(sum_pwr, -(int)m_windowSizeLog2);		// усреднение за окно
 
 	xip_sqrt_real(sum_pwr, sum_pwr);
 

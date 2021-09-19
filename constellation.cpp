@@ -32,6 +32,8 @@ xip_real pwr_constell_psk4 = 2 * constell_psk4[0].re * constell_psk4[0].re;
 xip_real pwr_constell_psk2 = constell_psk2[0].re * constell_psk2[0].re;
 xip_real pwr_constell_psk2_60 = constell_psk2_60[0].re * constell_psk2_60[0].re + constell_psk2_60[0].im * constell_psk2_60[0].im;
 
+xip_real pwr_constell_current = pwr_constell_psk2;
+
 // жесткое решение
 xip_complex nearest_point_psk4(const xip_complex& in)
 {
@@ -85,14 +87,17 @@ void set_current_constell(Current_constell cur_cnstl)
 	if (cur_cnstl == PSK2) {
 		constell_current_ref = constell_psk2;
 		constell_preamble_current_ref = constell_psk2;
+		pwr_constell_current = pwr_constell_psk2;
 	}
 	else if (cur_cnstl == PSK2_60) {
 		constell_current_ref = constell_psk2_60;
 		constell_preamble_current_ref = constell_psk2_60;
+		pwr_constell_current = pwr_constell_psk2_60;
 	}
 	else if (cur_cnstl == PSK4) {
 		constell_current_ref = constell_psk4;
 		constell_preamble_current_ref = constell_preamble_psk4;
+		pwr_constell_current = pwr_constell_psk4;
 	}
 }
 
@@ -104,4 +109,9 @@ xip_complex get_cur_constell_sample(unsigned int symbol)
 xip_complex get_cur_constell_preamble_sample(unsigned int symbol)
 {
 	return constell_preamble_current_ref[symbol];
+}
+
+xip_real get_cur_constell_pwr()
+{
+	return pwr_constell_current;
 }

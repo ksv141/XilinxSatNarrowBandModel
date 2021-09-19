@@ -5,6 +5,12 @@ xip_cordic_v6_0* xip_sqrt;					// вычислитель корня
 xip_array_real* xip_sqrt_arg;				// аргумент корня
 xip_array_real* xip_sqrt_result;			// результат корня
 
+xip_cordic_v6_0_config xip_rect_to_polar_cnfg;		// конфиг комплексного конвертора
+xip_cordic_v6_0* xip_rect_to_polar;					// комплексный конвертор
+xip_array_complex* xip_rect_to_polar_in;			// входное комплексное число
+xip_array_real* xip_rect_to_polar_mag;				// модуль
+xip_array_real* xip_rect_to_polar_arg;				// аргумент
+
 xip_cmpy_v6_0_config xip_multiplier_cnfg;	// конфиг умножителя
 xip_cmpy_v6_0* xip_multiplier;				// умножитель
 xip_array_complex* xip_multiplier_reqa;		// первый аргумент умножителя
@@ -245,6 +251,113 @@ int xip_sqrt_real(const xip_real& arg, xip_real& out)
 		printf("Error in xip_cordic_v6_0_xip_array_real_get_data");
 		return -1;
 	}
+	return 0;
+}
+
+int init_xip_cordic_rect_to_polar()
+{
+	if (xip_cordic_v6_0_default_config(&xip_rect_to_polar_cnfg) != XIP_STATUS_OK) {
+		printf("ERROR: Could not get C model default configuration\n");
+		return -1;
+	}
+
+	//Firstly, create and exercise a simple configuration.
+	xip_rect_to_polar_cnfg.CordicFunction = XIP_CORDIC_V6_0_F_TRANSLATE;
+	xip_rect_to_polar_cnfg.CoarseRotate = XIP_CORDIC_V6_0_TRUE;
+	xip_rect_to_polar_cnfg.DataFormat = XIP_CORDIC_V6_0_FORMAT_SIG_FRAC;
+	xip_rect_to_polar_cnfg.PhaseFormat = XIP_CORDIC_V6_0_FORMAT_SCA;
+	xip_rect_to_polar_cnfg.InputWidth = 20;
+	xip_rect_to_polar_cnfg.OutputWidth = 16;	// фаза будет в диапазоне [-8192, 8192]
+	xip_rect_to_polar_cnfg.Precision = 0;
+	xip_rect_to_polar_cnfg.RoundMode = XIP_CORDIC_V6_0_ROUND_TRUNCATE;
+	xip_rect_to_polar_cnfg.ScaleComp = XIP_CORDIC_V6_0_SCALE_NONE;
+
+	xip_rect_to_polar = xip_cordic_v6_0_create(&xip_rect_to_polar_cnfg, &msg_print, 0);
+
+	if (!xip_rect_to_polar) {
+		printf("ERROR: Could not create C model state object\n");
+		return -1;
+	}
+
+	// Create input data packet for operand
+	xip_rect_to_polar_in = xip_array_complex_create();
+	xip_array_complex_reserve_dim(xip_rect_to_polar_in, 1);
+	xip_rect_to_polar_in->dim_size = 1;
+	xip_rect_to_polar_in->dim[0] = 1;
+	xip_rect_to_polar_in->data_size = xip_rect_to_polar_in->dim[0];
+	if (xip_array_complex_reserve_data(xip_rect_to_polar_in, xip_rect_to_polar_in->data_size) != XIP_STATUS_OK) {
+		printf("ERROR: Unable to reserve memory for input data packet!");
+		return -1;
+	}
+
+	// Create output data packet for output data
+	xip_rect_to_polar_mag = xip_array_real_create();
+	xip_array_real_reserve_dim(xip_rect_to_polar_mag, 1);
+	xip_rect_to_polar_mag->dim_size = 1;
+	xip_rect_to_polar_mag->dim[0] = 1;
+	xip_rect_to_polar_mag->data_size = xip_rect_to_polar_mag->dim[0];
+	if (xip_array_real_reserve_data(xip_rect_to_polar_mag, xip_rect_to_polar_mag->data_size) != XIP_STATUS_OK) {
+		printf("ERROR: Unable to reserve memory for output data packet!\n");
+		return -1;
+	}
+
+	xip_rect_to_polar_arg = xip_array_real_create();
+	xip_array_real_reserve_dim(xip_rect_to_polar_arg, 1);
+	xip_rect_to_polar_arg->dim_size = 1;
+	xip_rect_to_polar_arg->dim[0] = 1;
+	xip_rect_to_polar_arg->data_size = xip_rect_to_polar_arg->dim[0];
+	if (xip_array_real_reserve_data(xip_rect_to_polar_arg, xip_rect_to_polar_arg->data_size) != XIP_STATUS_OK) {
+		printf("ERROR: Unable to reserve memory for output data packet!\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+int destroy_xip_cordic_rect_to_polar()
+{
+	if (xip_array_complex_destroy(xip_rect_to_polar_in) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_array_real_destroy(xip_rect_to_polar_mag) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_array_real_destroy(xip_rect_to_polar_arg) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_cordic_v6_0_destroy(xip_rect_to_polar) != XIP_STATUS_OK) {
+		return -1;
+	}
+
+	printf("Deleted instance of xip cordic rect to polar and free memory\n");
+	return 0;
+}
+
+int xip_cordic_rect_to_polar(const xip_complex& in, xip_real& mag, xip_real& arg)
+{
+	if (xip_cmpy_v6_0_xip_array_complex_set_data(xip_rect_to_polar_in, in, 0) != XIP_STATUS_OK) {
+		printf("Error in xip_cordic_v6_0_xip_array_real_set_data\n");
+		return -1;
+	}
+
+	if (xip_cordic_v6_0_translate(xip_rect_to_polar, 
+								xip_rect_to_polar_in, 
+								xip_rect_to_polar_mag, 
+								xip_rect_to_polar_arg, 
+								xip_rect_to_polar_in->data_size) != XIP_STATUS_OK) {
+		printf("ERROR: C model did not complete successfully");
+		return -1;
+	}
+
+	if (xip_cordic_v6_0_xip_array_real_get_data(xip_rect_to_polar_mag, &mag, 0) != XIP_STATUS_OK) {
+		printf("Error in xip_cordic_v6_0_xip_array_real_get_data");
+		return -1;
+	}
+	if (xip_cordic_v6_0_xip_array_real_get_data(xip_rect_to_polar_arg, &arg, 0) != XIP_STATUS_OK) {
+		printf("Error in xip_cordic_v6_0_xip_array_real_get_data");
+		return -1;
+	}
+
 	return 0;
 }
 

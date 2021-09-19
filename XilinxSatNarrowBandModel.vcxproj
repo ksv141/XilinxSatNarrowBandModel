@@ -160,6 +160,7 @@
     <ClInclude Include="autoganecontrol.h" />
     <ClInclude Include="ChannelMatchedFir.h" />
     <ClInclude Include="constellation.h" />
+    <ClInclude Include="CorrelatorDPDI.h" />
     <ClInclude Include="DDS.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="Demodulator.h" />
@@ -171,6 +172,7 @@
     <ClInclude Include="Modulator.h" />
     <ClInclude Include="Pif.h" />
     <ClInclude Include="PolyphaseDecimator.h" />
+    <ClInclude Include="PolyphaseInterpolator.h" />
     <ClInclude Include="SignalSource.h" />
     <ClInclude Include="StsEstimate.h" />
     <ClInclude Include="test_utils.h" />
@@ -181,6 +183,7 @@
     <ClCompile Include="autoganecontrol.cpp" />
     <ClCompile Include="ChannelMatchedFir.cpp" />
     <ClCompile Include="constellation.cpp" />
+    <ClCompile Include="CorrelatorDPDI.cpp" />
     <ClCompile Include="DDS.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="Demodulator.cpp" />
@@ -195,6 +198,7 @@
     <ClCompile Include="Modulator.cpp" />
     <ClCompile Include="Pif.cpp" />
     <ClCompile Include="PolyphaseDecimator.cpp" />
+    <ClCompile Include="PolyphaseInterpolator.cpp" />
     <ClCompile Include="SignalSource.cpp" />
     <ClCompile Include="StsEstimate.cpp" />
     <ClCompile Include="test_utils.cpp" />
