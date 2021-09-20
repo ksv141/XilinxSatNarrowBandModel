@@ -68,14 +68,18 @@ int main()
 	//signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
 	//signal_freq_shift("out_mod_25.pcm", "out_mod_shift_3.pcm", 3000, 25000);
 	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x64.pcm", 64);
-	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_shift_3.pcm", 3000, 1600000);
-	//signal_freq_shift("out_mod_interp_x64_shift_780.pcm", "out_mod_interp_x64_downshift_780.pcm", -780000, 1600000);
-	//signal_lowpass("out_mod_interp_x64_shift_3.pcm", "out_mod_interp_x64_shift_3_lowpass.pcm", "lowpass_200kHz.fcf", 51);
-	//signal_decimate("out_mod_interp_x64_shift_3_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
-	//signal_decimate("out_mod_decim_x16.pcm", "out_mod_decim_x4.pcm", 4);
+	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_390500.pcm", 390500, 1600000);
+	//signal_freq_shift("out_mod_interp_x64_390500.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
+	//signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
+	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
+	//signal_halfband_ddc("out_mod_decim_x16.pcm", "out_mod_halfband_200.pcm");
+	//signal_halfband_ddc("out_mod_halfband_200.pcm", "out_mod_halfband_100.pcm");
+	//signal_halfband_ddc("out_mod_halfband_100.pcm", "out_mod_halfband_50.pcm");
+	//signal_halfband_ddc("out_mod_halfband_50.pcm", "out_mod_halfband_25.pcm");
+	//signal_decimate("out_mod_halfband_100.pcm", "out_mod_decim_x1.pcm", 4);
 	//signal_decimate("out_mod_decim_x4.pcm", "out_mod_decim_x1.pcm", 4);
 
-	//signal_resample("out_mod_decim_x1.pcm", "out_mod_rcv.pcm", 25000, INIT_SAMPLE_RATE);
+	//signal_resample("out_mod_halfband_25.pcm", "out_mod_rcv.pcm", 25000, INIT_SAMPLE_RATE);
 	//signal_lowpass("out_mod_rcv.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
 	//signal_agc("out_mod_mf.pcm", "out_mod_rcv_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
 
@@ -90,7 +94,12 @@ int main()
 	//signal_freq_est_stage("out_mod_rcv_st_1_agc.pcm", 8, 4, 1, DPDI_BURST_ML_SATGE_2, freq_est_stage_2);
 	//signal_freq_shift("out_mod_rcv_st_1.pcm", "out_mod_rcv_st_2.pcm", -freq_est_stage_2);
 
-	Demodulator dmd("out_mod_rcv_st_2.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	//int16_t freq_est_sum = (387500./1600000.)*DDS_PHASE_MODULUS + freq_est_stage_1*(BAUD_RATE*2./1600000.) + freq_est_stage_2* (BAUD_RATE * 2. / 1600000.);
+	//signal_freq_shift("out_mod_interp_x64_390500.pcm", "out_mod_rcv_x64.pcm", -freq_est_sum);
+	//
+	//signal_decimate("out_mod_rcv_x64.pcm", "out_mod_rcv_x1.pcm", 64);
+
+	Demodulator dmd("out_mod_rcv_x1.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

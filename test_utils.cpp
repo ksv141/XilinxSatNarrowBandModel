@@ -340,3 +340,39 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F,
 	fclose(in_file);
 	return res;
 }
+
+void signal_halfband_ddc(const string& in, const string& out)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	//ofstream dbg_out("dbg_out.txt");
+	HalfBandDDC ddc;
+	int16_t re_1;
+	int16_t im_1;
+	int16_t re_2;
+	int16_t im_2;
+	while (tC::read_real<int16_t, int16_t>(in_file, re_1) &&
+		tC::read_real<int16_t, int16_t>(in_file, im_1) && 
+		tC::read_real<int16_t, int16_t>(in_file, re_2) &&
+		tC::read_real<int16_t, int16_t>(in_file, im_2)) {
+		xip_complex sample_1{ re_1, im_1 };
+		xip_complex sample_2{ re_2, im_2 };
+		xip_complex res{ 0,0 };
+		ddc.process(sample_1);
+		ddc.process(sample_2);
+		ddc.next(res);
+		tC::write_real<int16_t>(out_file, res.re);
+		tC::write_real<int16_t>(out_file, res.im);
+
+		//dbg_out << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}

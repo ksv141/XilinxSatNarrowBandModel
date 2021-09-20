@@ -20,6 +20,7 @@
 #include "CorrelatorDPDI.h"
 #include "SignalSource.h"
 #include "autoganecontrol.h"
+#include "HalfBandDDC.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -125,5 +126,11 @@ extern void signal_agc(const string& in, const string& out, unsigned window_size
 */
 extern bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F, uint32_t burst_est, int16_t& freq_est);
 
+/**
+ * @brief разделение сигнала на половину полосы
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+*/
+extern void signal_halfband_ddc(const string& in, const string& out);
 
 #endif // TESTUTILS_H
