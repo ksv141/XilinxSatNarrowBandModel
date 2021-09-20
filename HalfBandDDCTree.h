@@ -10,6 +10,13 @@ class HalfBandDDCTree
 {
 public:
 	HalfBandDDCTree();
+
+	void process(const xip_complex& in);
+
+	bool next(xip_complex& out);
+
+private:
+	HalfBandDDC m_ddc;
 };
 
 #endif // HALFBANDDDCTREE_H
