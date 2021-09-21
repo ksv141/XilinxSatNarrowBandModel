@@ -75,7 +75,7 @@ int main()
 	//signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
 	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
 
-	signal_halfband_ddc("out_mod_decim_x16.pcm", "out_mod_halfband_25_up.pcm", "out_mod_halfband_25_down.pcm");
+	//signal_halfband_ddc("out_mod_decim_x16.pcm", "out_mod_halfband_25_up.pcm", "out_mod_halfband_25_down.pcm");
 	//signal_halfband_ddc("out_mod_halfband_200_down.pcm", "out_mod_halfband_100_up.pcm", "out_mod_halfband_100_down.pcm");
 
 	//signal_decimate("out_mod_halfband_100.pcm", "out_mod_decim_x1.pcm", 4);
@@ -101,8 +101,8 @@ int main()
 	//
 	//signal_decimate("out_mod_rcv_x64.pcm", "out_mod_rcv_x1.pcm", 64);
 
-	//Demodulator dmd("out_mod_rcv_x1.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
-	//dmd.process();
+	Demodulator dmd("out_mod_halfband_25_down.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	dmd.process();
 
 	destroy_xip_multiplier();
 	destroy_xip_cordic_sqrt();
