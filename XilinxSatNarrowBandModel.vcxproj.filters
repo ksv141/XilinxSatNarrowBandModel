@@ -84,6 +84,12 @@
     <ClInclude Include="PolyphaseInterpolator.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="HalfBandDDC.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="HalfBandDDCTree.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mls.cpp">
@@ -156,6 +162,12 @@
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
     <ClCompile Include="PolyphaseInterpolator.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="HalfBandDDC.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="HalfBandDDCTree.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>

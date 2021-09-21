@@ -21,6 +21,8 @@
 #include "PolyphaseInterpolator.h"
 #include "LowpassFir.h"
 #include "CorrelatorDPDI.h"
+#include "HalfBandDDC.h"
+#include "HalfBandDDCTree.h"
 #include "test_utils.h"
 
 #endif // ALLHEADERS_H

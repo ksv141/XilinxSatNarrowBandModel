@@ -1,7 +1,9 @@
 #include "LowpassFir.h"
 
-LowpassFir::LowpassFir(const string& coeff_file, unsigned num_coeff):
-	m_numCoeff(num_coeff)
+LowpassFir::LowpassFir(const string& coeff_file, unsigned num_coeff, unsigned is_halfband, unsigned num_datapath):
+	m_numCoeff(num_coeff),
+	m_isHalfBand(is_halfband),
+	m_numDataPath(num_datapath)
 {
 	init_xip_fir(coeff_file, num_coeff);
 }
@@ -34,6 +36,33 @@ int LowpassFir::process(const xip_complex& in, xip_complex& out)
 	return 0;
 }
 
+int LowpassFir::process(const xip_complex* in, xip_complex* out)
+{
+	for (unsigned i = 0; i < m_numDataPath; i++) {
+		xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in[i].re, 0, i*2, 0, P_BASIC);		// re
+		xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in[i].im, 0, i*2+1, 0, P_BASIC);	// im
+	}
+
+	// Send input data and filter
+	if (xip_fir_v7_2_data_send(xip_fir, xip_fir_in) != XIP_STATUS_OK) {
+		printf("Error sending data\n");
+		return -1;
+	}
+
+	// Retrieve filtered data
+	if (xip_fir_v7_2_data_get(xip_fir, xip_fir_out, 0) != XIP_STATUS_OK) {
+		printf("Error getting data\n");
+		return -1;
+	}
+
+	for (unsigned i = 0; i < m_numDataPath; i++) {
+		xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out[i].re, 0, i*2, 0, P_BASIC);		// re
+		xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out[i].im, 0, i*2+1, 0, P_BASIC);	// im
+	}
+
+	return 0;
+}
+
 int LowpassFir::init_xip_fir(const string& coeff_file, unsigned num_coeff)
 {
 	if (load_coeff(coeff_file, num_coeff)) {
@@ -55,7 +84,12 @@ int LowpassFir::init_xip_fir(const string& coeff_file, unsigned num_coeff)
 
 	// 2 канала для вещественной и мнимой части. 
 	// Тут по идее можно настроить параллельную обработку двух каналов в режиме XIP_FIR_ADVANCED_CHAN_SEQ
-	xip_fir_cnfg.num_channels = 2;
+	xip_fir_cnfg.num_channels = 2 * m_numDataPath;
+	xip_fir_cnfg.is_halfband = m_isHalfBand;
+
+	// По идее параллельные потоки нужно помещать в datapath, 
+	// но num_path - может быть не более 16, поэтому потоки помещаем в каналы, а не в datapath
+	// xip_fir_cnfg.num_paths = m_numDataPath;
 
 	// Create filter instance
 	xip_fir = xip_fir_v7_2_create(&xip_fir_cnfg, &msg_print, 0);

@@ -4,8 +4,8 @@ Demodulator::Demodulator(const string& input_file, const string& output_dmd_file
 	m_agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr()),
 	pif_sts(PIF_STS_Kp, PIF_STS_Ki),
 	pif_pll(PIF_PLL_Kp, PIF_PLL_Ki),
-	dds(DDS_PHASE_MODULUS)
-	//dmd_interp(25000, 18286)
+	dds(DDS_PHASE_MODULUS),
+	dmd_interp(25000, 18286)
 {
 	m_inFile = fopen(input_file.c_str(), "rb");
 	if (!m_inFile)
@@ -68,9 +68,8 @@ void Demodulator::process()
 			// для сигнального созвездия +/-4096 сигнал с выхода АРУ будет в диапазоне [-2^14, 2^14]
 
 			//******** петля ФАПЧ, компенсация частотного смещения ****************
-			xip_real dds_phase, dds_sin, dds_cos;
-			dds.process(err_pll, dds_phase, dds_sin, dds_cos);	// сигнал ГУН
-			xip_complex pll_corr{ dds_cos, dds_sin };
+			xip_complex pll_corr{ 0, 0 };
+			dds.process(err_pll, pll_corr);	// сигнал ГУН
 			xip_multiply_complex(sample, pll_corr, sample);		// компенсация
 			xip_complex_shift(sample, -(int)(dds.getOutputWidth() - 1));
 			//*********************************************************************

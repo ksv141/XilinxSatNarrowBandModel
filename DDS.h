@@ -8,15 +8,33 @@
 
 /**
  * @brief схема прямого цифрового синтеза
+ * 2 режима: 
+ *	- одноканальный
+ *	- симметричный двухканальный (вниз и вверх с одинаковым набегом фазы) 
 */
 class DDS
 {
 public:
-	DDS(int phase_modulus);
+	/**
+	 * @brief инициализатор
+	 * @param phase_modulus диапазон изменения фазы [0, phase_modulus]
+	 * @param two_symmmetric_channels симметричный двухканальный режим (вниз и вверх с одинаковым набегом фазы)
+	*/
+	DDS(int phase_modulus, bool two_symmmetric_channels = false);
 
 	~DDS();
 
-	int process(double dph, double& out_phase, double& out_sin, double& out_cos);
+	/**
+	 * @brief одноканальная генерация
+	 * @param dph набег фазы --> [0, phase_modulus]
+	*/
+	int process(double dph, xip_complex& out);
+
+	/**
+	 * @brief двухканальная генерация (вверх и вниз)
+	 * @param dph набег фазы вверх --> [0, phase_modulus], вниз берется симметрично относительно phase_modulus
+	*/
+	int process(double dph, xip_complex& out_up, xip_complex& out_down);
 
 	/**
 	 * @brief возвращает ширину возвращаемых sin/cos в битах
@@ -25,7 +43,7 @@ public:
 	unsigned int getOutputWidth();
 
 private:
-	int init_dds_lib();
+	int init_dds_lib(unsigned channels);
 	int destroy_dds_lib();
 
 	xip_dds_v6_0_config dds_cnfg;
