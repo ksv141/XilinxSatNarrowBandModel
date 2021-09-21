@@ -2,13 +2,18 @@
 #define HALFBANDDDCTREE_H
 
 #include "HalfBandDDC.h"
+#include "LagrangeInterp.h"
+
+extern const int INIT_SAMPLE_RATE;
 
 /**
  * @brief Ѕинарное дерево полуполосных DDC (5 уровней)
 */
 class HalfBandDDCTree
 {
-	static const unsigned n_levels = 4;
+	static const unsigned n_levels = 4;					// количество уровней
+	static const unsigned n_ternimals = 1 << n_levels;	// количество терминальных элементов дерева
+	static const int terminal_fs = 25000;				// частота дискретизации в терминальном элементе
 public:
 	/**
 	 * @brief 
@@ -34,6 +39,8 @@ private:
 	HalfBandDDC m_ddc[n_levels] = { 1, 2, 3, 4 };
 
 	xip_complex* out_ddc[n_levels + 1];		// массивы на входе и выходе ddc каждого уровн€
+
+	LagrangeInterp itrp;					// многоканальный интерпол€тор
 };
 
 #endif // HALFBANDDDCTREE_H
