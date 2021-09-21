@@ -2,14 +2,27 @@
 
 HalfBandDDCTree::HalfBandDDCTree()
 {
+	for (int i = 0; i <= n_levels; i++)
+		out_ddc[i] = new xip_complex[1 << i];
 }
 
-void HalfBandDDCTree::process(const xip_complex& in)
+HalfBandDDCTree::~HalfBandDDCTree()
 {
-	//m_ddc.process(in);
+	for (int i = 0; i <= n_levels; i++)
+		delete[] out_ddc[i];
 }
 
-bool HalfBandDDCTree::next(xip_complex& out)
+bool HalfBandDDCTree::process(const xip_complex& in)
 {
-	return false;
+	out_ddc[0][0] = in;
+	for (int i = 0; i < n_levels; i++)
+		if (!m_ddc[i].process(out_ddc[i], out_ddc[i + 1]))
+			return false;
+
+	return true;
+}
+
+xip_complex* HalfBandDDCTree::getData()
+{
+	return out_ddc[n_levels];
 }

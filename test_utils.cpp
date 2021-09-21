@@ -437,28 +437,26 @@ void signal_halfband_ddc(const string& in, const string& out_up, const string& o
 		return;
 
 	//ofstream dbg_out("dbg_out.txt");
-	HalfBandDDC ddc(1);
+	HalfBandDDCTree ddc_tree;
 	int16_t re;
 	int16_t im;
-	xip_complex* sample = new xip_complex[1];
-	xip_complex* out_sample = new xip_complex[2];
+	xip_complex sample;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
-		sample[0].re = re;
-		sample[0].im = im;
+		sample.re = re;
+		sample.im = im;
 		xip_complex res{ 0,0 };
-		if (!ddc.process(sample, out_sample))
+		if (!ddc_tree.process(sample))
 			continue;
 
-		tC::write_real<int16_t>(out_file_up, out_sample[0].re);
-		tC::write_real<int16_t>(out_file_up, out_sample[0].im);
-		tC::write_real<int16_t>(out_file_down, out_sample[1].re);
-		tC::write_real<int16_t>(out_file_down, out_sample[1].im);
+		xip_complex* out_sample = ddc_tree.getData();
+		tC::write_real<int16_t>(out_file_up, out_sample[14].re);
+		tC::write_real<int16_t>(out_file_up, out_sample[14].im);
+		tC::write_real<int16_t>(out_file_down, out_sample[15].re);
+		tC::write_real<int16_t>(out_file_down, out_sample[15].im);
 
 		//dbg_out << res << endl;
 	}
-	delete[] sample;
-	delete[] out_sample;
 
 	//dbg_out.close();
 	fclose(in_file);

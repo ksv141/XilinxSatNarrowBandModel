@@ -21,6 +21,7 @@
 #include "SignalSource.h"
 #include "autoganecontrol.h"
 #include "HalfBandDDC.h"
+#include "HalfBandDDCTree.h"
 
 using namespace std;
 using namespace xilinx_m;

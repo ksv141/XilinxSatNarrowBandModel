@@ -39,8 +39,8 @@ int LowpassFir::process(const xip_complex& in, xip_complex& out)
 int LowpassFir::process(const xip_complex* in, xip_complex* out)
 {
 	for (unsigned i = 0; i < m_numDataPath; i++) {
-		xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in[i].re, i, 0, 0, P_BASIC);	// re
-		xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in[i].im, i, 1, 0, P_BASIC);	// im
+		xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in[i].re, 0, i*2, 0, P_BASIC);		// re
+		xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in[i].im, 0, i*2+1, 0, P_BASIC);	// im
 	}
 
 	// Send input data and filter
@@ -56,8 +56,8 @@ int LowpassFir::process(const xip_complex* in, xip_complex* out)
 	}
 
 	for (unsigned i = 0; i < m_numDataPath; i++) {
-		xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out[i].re, i, 0, 0, P_BASIC);	// re
-		xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out[i].im, i, 1, 0, P_BASIC);	// im
+		xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out[i].re, 0, i*2, 0, P_BASIC);		// re
+		xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out[i].im, 0, i*2+1, 0, P_BASIC);	// im
 	}
 
 	return 0;
@@ -84,9 +84,12 @@ int LowpassFir::init_xip_fir(const string& coeff_file, unsigned num_coeff)
 
 	// 2 канала для вещественной и мнимой части. 
 	// Тут по идее можно настроить параллельную обработку двух каналов в режиме XIP_FIR_ADVANCED_CHAN_SEQ
-	xip_fir_cnfg.num_channels = 2;
+	xip_fir_cnfg.num_channels = 2 * m_numDataPath;
 	xip_fir_cnfg.is_halfband = m_isHalfBand;
-	xip_fir_cnfg.num_paths = m_numDataPath;
+
+	// По идее параллельные потоки нужно помещать в datapath, 
+	// но num_path - может быть не более 16, поэтому потоки помещаем в каналы, а не в datapath
+	// xip_fir_cnfg.num_paths = m_numDataPath;
 
 	// Create filter instance
 	xip_fir = xip_fir_v7_2_create(&xip_fir_cnfg, &msg_print, 0);
