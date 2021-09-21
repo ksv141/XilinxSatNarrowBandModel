@@ -5,7 +5,7 @@ Demodulator::Demodulator(const string& input_file, const string& output_dmd_file
 	pif_sts(PIF_STS_Kp, PIF_STS_Ki),
 	pif_pll(PIF_PLL_Kp, PIF_PLL_Ki),
 	dds(DDS_PHASE_MODULUS),
-	dmd_interp(25000, 18286)
+	dmd_interp(25000, 18286, 1)
 {
 	m_inFile = fopen(input_file.c_str(), "rb");
 	if (!m_inFile)

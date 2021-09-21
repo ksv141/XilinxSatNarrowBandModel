@@ -5,16 +5,18 @@ const unsigned int LAGRANGE_INTERVALS_LOG2 = 10;		// log2(1024)
 const unsigned int LAGRANGE_ORDER = 8;					// порядок интерполятора
 const unsigned int LAGRANGE_FIXED_POINT_POSITION = 10;	// точность значения сдвига --> [-1.0, 1.0] (в битах)
 
-LagrangeInterp::LagrangeInterp(xip_real frac):
-	samples(samples_count(frac), xip_complex{ 0, 0 })
+LagrangeInterp::LagrangeInterp(xip_real frac, unsigned num_datapath):
+	samples(num_datapath, vector<xip_complex>(samples_count(frac), xip_complex{ 0, 0 })),
+	m_numDataPath(num_datapath)
 {
 	int dx_value = to_dx_value(1.0 / frac);
 	init(dx_value);
 	init_lagrange_interp();
 }
 
-LagrangeInterp::LagrangeInterp(xip_real from_sampling_freq, xip_real to_sampling_freq):
-	samples(samples_count(from_sampling_freq / to_sampling_freq), xip_complex{ 0, 0 })
+LagrangeInterp::LagrangeInterp(xip_real from_sampling_freq, xip_real to_sampling_freq, unsigned num_datapath):
+	samples(num_datapath, vector<xip_complex>(samples_count(from_sampling_freq / to_sampling_freq), xip_complex{ 0, 0 })),
+	m_numDataPath(num_datapath)
 {
 	int dx_value = to_dx_value(from_sampling_freq / to_sampling_freq);
 	init(dx_value);
@@ -52,7 +54,7 @@ void LagrangeInterp::process(const xip_complex& in)
 	// в буфер отсчетов добавляется очередной отсчет (FIFO)
 	if (pos_ptr == end_ptr)
 	{
-		xip_complex* s = &samples[0];
+		xip_complex* s = &samples[0][0];
 		memcpy(s, s + block_offset, block_size * sizeof(xip_complex));
 		pos_ptr -= block_offset;
 		x_ptr -= block_offset;
@@ -60,6 +62,10 @@ void LagrangeInterp::process(const xip_complex& in)
 
 	*pos_ptr = in;
 	++pos_ptr;
+}
+
+void LagrangeInterp::process(const xip_complex* in)
+{
 }
 
 bool LagrangeInterp::next(xip_complex& out)
@@ -99,7 +105,7 @@ int LagrangeInterp::init_lagrange_interp()
 
 	// 2 канала для вещественной и мнимой части. 
 	// Тут по идее нужно настроить параллельную обработку двух каналов в режиме XIP_FIR_ADVANCED_CHAN_SEQ
-	lagrange_interp_fir_cnfg.num_channels = 2;
+	lagrange_interp_fir_cnfg.num_channels = 2 * m_numDataPath;
 
 	// Create filter instance
 	lagrange_interp_fir = xip_fir_v7_2_create(&lagrange_interp_fir_cnfg, &msg_print, 0);
@@ -266,9 +272,9 @@ void LagrangeInterp::init(double dx_value)
 	dx = dx_value;
 	fx = 0;
 	block_size = LAGRANGE_ORDER + (dx >> FixPointPosition) + 1;
-	block_offset = static_cast<uint32_t>(samples.size() - block_size);
-	x_ptr = &samples[0] + block_size;
-	end_ptr = &samples[0] + samples.size();
+	block_offset = static_cast<uint32_t>(samples[0].size() - block_size);
+	x_ptr = &samples[0][0] + block_size;
+	end_ptr = &samples[0][0] + samples[0].size();
 	pos_ptr = x_ptr - LAGRANGE_ORDER / 2 - 1;
 }
 
