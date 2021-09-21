@@ -68,7 +68,7 @@ int main()
 	//double resample_coeff = 1.0;
 	//signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, INIT_SAMPLE_RATE* resample_coeff);
 
-	//signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
+	signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
 	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x64.pcm", 64);
 	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_387500.pcm", 387500, 1600000);
 	//signal_freq_shift("out_mod_interp_x64_387500.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
@@ -101,7 +101,7 @@ int main()
 	//
 	//signal_decimate("out_mod_rcv_x64.pcm", "out_mod_rcv_x1.pcm", 64);
 
-	Demodulator dmd("out_mod_halfband_25_down.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	Demodulator dmd("out_mod_25.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	dmd.process();
 
 	destroy_xip_multiplier();

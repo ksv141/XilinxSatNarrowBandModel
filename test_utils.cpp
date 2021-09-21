@@ -198,7 +198,7 @@ void signal_resample(const string& in, const string& out, double from_sampling_f
 
 	//ofstream dbg_out("dbg_out.txt");
 
-	LagrangeInterp itrp(from_sampling_freq, to_sampling_freq);
+	LagrangeInterp itrp(from_sampling_freq, to_sampling_freq, 1);
 	int16_t re;
 	int16_t im;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&

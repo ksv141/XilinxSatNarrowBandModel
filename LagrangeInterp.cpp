@@ -66,6 +66,27 @@ void LagrangeInterp::process(const xip_complex& in)
 
 void LagrangeInterp::process(const xip_complex* in)
 {
+	// в буфер отсчетов добавл€етс€ очередной отсчет (FIFO)
+	if (pos_ptr == end_ptr)
+	{
+		for (int i = 0; i < m_numDataPath; i++) {
+			xip_complex* s = &samples[i][0];
+			memcpy(s, s + block_offset, block_size * sizeof(xip_complex));
+		}
+
+		//xip_complex* s = &samples[0][0];
+		//memcpy(s, s + block_offset, block_size * sizeof(xip_complex));
+		pos_ptr -= block_offset;
+		x_ptr -= block_offset;
+	}
+
+	for (int i = 0; i < m_numDataPath; i++) {
+		int pos_ind = pos_ptr - &samples[0][0];
+		samples[i][pos_ind] = in[i];
+	}
+
+	//*pos_ptr = in;
+	++pos_ptr;
 }
 
 bool LagrangeInterp::next(xip_complex& out)
