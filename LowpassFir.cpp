@@ -36,6 +36,33 @@ int LowpassFir::process(const xip_complex& in, xip_complex& out)
 	return 0;
 }
 
+int LowpassFir::process(const xip_complex* in, xip_complex* out)
+{
+	for (unsigned i = 0; i < m_numDataPath; i++) {
+		xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in[i].re, i, 0, 0, P_BASIC);	// re
+		xip_fir_v7_2_xip_array_real_set_chan(xip_fir_in, in[i].im, i, 1, 0, P_BASIC);	// im
+	}
+
+	// Send input data and filter
+	if (xip_fir_v7_2_data_send(xip_fir, xip_fir_in) != XIP_STATUS_OK) {
+		printf("Error sending data\n");
+		return -1;
+	}
+
+	// Retrieve filtered data
+	if (xip_fir_v7_2_data_get(xip_fir, xip_fir_out, 0) != XIP_STATUS_OK) {
+		printf("Error getting data\n");
+		return -1;
+	}
+
+	for (unsigned i = 0; i < m_numDataPath; i++) {
+		xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out[i].re, i, 0, 0, P_BASIC);	// re
+		xip_fir_v7_2_xip_array_real_get_chan(xip_fir_out, &out[i].im, i, 1, 0, P_BASIC);	// im
+	}
+
+	return 0;
+}
+
 int LowpassFir::init_xip_fir(const string& coeff_file, unsigned num_coeff)
 {
 	if (load_coeff(coeff_file, num_coeff)) {

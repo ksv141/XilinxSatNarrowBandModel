@@ -45,10 +45,29 @@ extern void signal_freq_shift(const string& in, const string& out, double freq_s
 /**
  * @brief частотное смещение сигнала
  * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out_up выходной файл со сдвигом вверх (PCM стерео I/Q 16-бит)
+ * @param out_down выходной файл со сдвигом вниз (PCM стерео I/Q 16-бит)
+ * @param freq_shift смещение частоты в √ц [-fs, fs]
+ * @param fs частота дискретизации в √ц
+*/
+extern void signal_freq_shift_symmetric(const string& in, const string& out_up, const string& out_down, double freq_shift, double fs);
+
+/**
+ * @brief частотное смещение сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param out выходной файл (PCM стерео I/Q 16-бит)
- * @param freq_shift_mod смещение частоты в единицах работы DDS [-8192, 8192]
+ * @param freq_shift_mod смещение частоты в единицах работы DDS --> [-8192, 8192]
 */
 extern void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_mod);
+
+/**
+ * @brief двухканальное симметричное частотное смещение сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out_up выходной файл со сдвигом вверх (PCM стерео I/Q 16-бит)
+ * @param out_down выходной файл со сдвигом вниз (PCM стерео I/Q 16-бит)
+ * @param freq_shift_mod смещение частоты вверх и вниз в единицах работы DDS --> [-8192, 8192]
+*/
+extern void signal_freq_shift_symmetric(const string& in, const string& out_up, const string& out_down, int16_t freq_shift_mod);
 
 /**
  * @brief тактовое смещение сигнала.
@@ -129,8 +148,9 @@ extern bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint
 /**
  * @brief разделение сигнала на половину полосы
  * @param in входной файл (PCM стерео I/Q 16-бит)
- * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param out_up выходной файл (PCM стерео I/Q 16-бит)
+ * @param out_down выходной файл (PCM стерео I/Q 16-бит)
 */
-extern void signal_halfband_ddc(const string& in, const string& out);
+extern void signal_halfband_ddc(const string& in, const string& out_up, const string& out_down);
 
 #endif // TESTUTILS_H

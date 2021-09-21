@@ -6,9 +6,16 @@ void signal_freq_shift(const string& in, const string& out, double freq_shift, d
 		throw out_of_range("frequency shift is greater than sampling frequency");
 
 	int16_t freq_shift_mod = (int16_t)((freq_shift / fs) * DDS_PHASE_MODULUS);
-
 	signal_freq_shift(in, out, freq_shift_mod);
+}
 
+void signal_freq_shift_symmetric(const string& in, const string& out_up, const string& out_down, double freq_shift, double fs)
+{
+	if (freq_shift > fs)
+		throw out_of_range("frequency shift is greater than sampling frequency");
+
+	int16_t freq_shift_mod = (int16_t)((freq_shift / fs) * DDS_PHASE_MODULUS);
+	signal_freq_shift_symmetric(in, out_up, out_down, freq_shift_mod);
 }
 
 void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_mod)
@@ -32,12 +39,11 @@ void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_m
 	DDS dds(DDS_PHASE_MODULUS);
 	int16_t re;
 	int16_t im;
-	double dds_phase, dds_sin, dds_cos;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
-		dds.process(dph, dds_phase, dds_sin, dds_cos);
-		xip_complex mod_sample{ dds_cos, dds_sin };
+		xip_complex mod_sample{ 0, 0 };
+		dds.process(dph, mod_sample);
 		xip_complex res;
 		xip_multiply_complex(sample, mod_sample, res);
 		xip_complex_shift(res, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
@@ -51,6 +57,57 @@ void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_m
 	//dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
+}
+
+void signal_freq_shift_symmetric(const string& in, const string& out_up, const string& out_down, int16_t freq_shift_mod)
+{
+	if ((freq_shift_mod > DDS_PHASE_MODULUS / 2) || (freq_shift_mod < -DDS_PHASE_MODULUS / 2))
+		throw out_of_range("frequency shift is out of range");
+
+	FILE * in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE * out_file_up = fopen(out_up.c_str(), "wb");
+	if (!out_file_up)
+		return;
+	FILE* out_file_down = fopen(out_down.c_str(), "wb");
+	if (!out_file_down)
+		return;
+
+	double dph = freq_shift_mod;	// набег фазы за такт в диапазоне[0, 16383] -- > [0, 2pi]
+
+	//ofstream dbg_out("dbg_out.txt");
+	if (dph < 0)
+		dph += DDS_PHASE_MODULUS;
+
+	DDS dds(DDS_PHASE_MODULUS, true);
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_complex mod_sample_up{ 0, 0 };
+		xip_complex mod_sample_down{ 0, 0 };
+		dds.process(dph, mod_sample_up, mod_sample_down);
+		xip_complex res;
+		xip_multiply_complex(sample, mod_sample_up, res);
+		xip_complex_shift(res, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
+		tC::write_real<int16_t>(out_file_up, res.re);
+		tC::write_real<int16_t>(out_file_up, res.im);
+
+		xip_multiply_complex(sample, mod_sample_down, res);
+		xip_complex_shift(res, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
+		tC::write_real<int16_t>(out_file_down, res.re);
+		tC::write_real<int16_t>(out_file_down, res.im);
+		//dbg_out << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file_up);
+	fclose(out_file_down);
 }
 
 void signal_time_shift(const string& in, const string& out, int32_t time_shift)
@@ -197,8 +254,19 @@ void signal_decimate(const string& in, const string& out, unsigned decim_factor)
 		return;
 
 	//ofstream dbg_out("dbg_out.txt");
+	string coeff_file;
+	unsigned coeff_count = 0;
+	if (decim_factor == 4) {
+		coeff_file = "pph_decimator_x4.fcf";
+		coeff_count = 96;
+	}
+	else
+	{
+		cerr << "invalid decimation factor" << endl;
+		return;
+	}
 
-	PolyphaseDecimator decim(decim_factor, "pph_decimator_x4.fcf", 96);
+	PolyphaseDecimator decim(decim_factor, coeff_file, coeff_count);
 	int16_t re;
 	int16_t im;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
@@ -229,8 +297,23 @@ void signal_interpolate(const string& in, const string& out, unsigned interp_fac
 		return;
 
 	//ofstream dbg_out("dbg_out.txt");
+	string coeff_file;
+	unsigned coeff_count = 0;
+	if (interp_factor == 64) {
+		coeff_file = "pph_interpolator_x64.fcf";
+		coeff_count = 1536;
+	}
+	else if (interp_factor == 4) {
+		coeff_file = "pph_interpolator_x4.fcf";
+		coeff_count = 96;
+	}
+	else
+	{
+		cerr << "invalid interpolation factor" << endl;
+		return;
+	}
 
-	PolyphaseInterpolator interp(interp_factor, "pph_interpolator_x64.fcf", 1536);
+	PolyphaseInterpolator interp(interp_factor, coeff_file, coeff_count);
 	int16_t re;
 	int16_t im;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
@@ -341,38 +424,44 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F,
 	return res;
 }
 
-void signal_halfband_ddc(const string& in, const string& out)
+void signal_halfband_ddc(const string& in, const string& out_up, const string& out_down)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");
 	if (!in_file)
 		return;
-	FILE* out_file = fopen(out.c_str(), "wb");
-	if (!out_file)
+	FILE* out_file_up = fopen(out_up.c_str(), "wb");
+	if (!out_file_up)
+		return;
+	FILE* out_file_down = fopen(out_down.c_str(), "wb");
+	if (!out_file_down)
 		return;
 
 	//ofstream dbg_out("dbg_out.txt");
-	HalfBandDDC ddc;
-	int16_t re_1;
-	int16_t im_1;
-	int16_t re_2;
-	int16_t im_2;
-	while (tC::read_real<int16_t, int16_t>(in_file, re_1) &&
-		tC::read_real<int16_t, int16_t>(in_file, im_1) && 
-		tC::read_real<int16_t, int16_t>(in_file, re_2) &&
-		tC::read_real<int16_t, int16_t>(in_file, im_2)) {
-		xip_complex sample_1{ re_1, im_1 };
-		xip_complex sample_2{ re_2, im_2 };
+	HalfBandDDC ddc(1);
+	int16_t re;
+	int16_t im;
+	xip_complex* sample = new xip_complex[1];
+	xip_complex* out_sample = new xip_complex[2];
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		sample[0].re = re;
+		sample[0].im = im;
 		xip_complex res{ 0,0 };
-		ddc.process(sample_1);
-		ddc.process(sample_2);
-		ddc.next(res);
-		tC::write_real<int16_t>(out_file, res.re);
-		tC::write_real<int16_t>(out_file, res.im);
+		if (!ddc.process(sample, out_sample))
+			continue;
+
+		tC::write_real<int16_t>(out_file_up, out_sample[0].re);
+		tC::write_real<int16_t>(out_file_up, out_sample[0].im);
+		tC::write_real<int16_t>(out_file_down, out_sample[1].re);
+		tC::write_real<int16_t>(out_file_down, out_sample[1].im);
 
 		//dbg_out << res << endl;
 	}
+	delete[] sample;
+	delete[] out_sample;
 
 	//dbg_out.close();
 	fclose(in_file);
-	fclose(out_file);
+	fclose(out_file_up);
+	fclose(out_file_down);
 }

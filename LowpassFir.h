@@ -13,7 +13,7 @@
 using namespace std;
 
 /**
- * @brief ФНЧ КИХ
+ * @brief ФНЧ КИХ. работает в одноканальном и многоканальном режимах
 */
 class LowpassFir
 {
@@ -24,19 +24,27 @@ public:
 	 * @param num_coeff количество коэффициентов фильтра
 	 * @param is_halfband фильтр полуполосный (0 - нет, 1 - да)
 	 * @param num_datapath количество параллельных потоков
-	 * @param num_coeff количество коэффициентов фильтра
 	*/
 	LowpassFir(const string& coeff_file, unsigned num_coeff, unsigned is_halfband = 0, unsigned num_datapath = 1);
 
 	~LowpassFir();
 
 	/**
-	 * @brief обработка очередного отсчета
+	 * @brief обработка очередного отсчета (одноканальный режим)
 	 * @param in 
 	 * @param out 
 	 * @return 
 	*/
 	int process(const xip_complex& in, xip_complex& out);
+
+	/**
+	 * @brief обработка очередного отсчета (многоканальный режим)
+	 * @param in массив с многоканальным входным отсчетом
+	 * @param out массив с многоканальным выходным отсчетом (память должна быть аллоцирована)
+	 * размеры входного и выходного массивов должны быть не меньше количества потоков (m_numDataPath)
+	 * @return
+	*/
+	int process(const xip_complex* in, xip_complex* out);
 
 private:
 	/**

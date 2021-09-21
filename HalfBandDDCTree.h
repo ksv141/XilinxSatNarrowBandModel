@@ -16,7 +16,7 @@ public:
 	bool next(xip_complex& out);
 
 private:
-	HalfBandDDC m_ddc;
+	//HalfBandDDC m_ddc;
 };
 
 #endif // HALFBANDDDCTREE_H

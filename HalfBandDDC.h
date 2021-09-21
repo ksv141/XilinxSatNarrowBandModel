@@ -8,34 +8,37 @@
 extern const int DDS_PHASE_MODULUS;
 
 /**
- * @brief Полуполосный DDC. Каскад модулятора на fs/2, полуполосного ФНЧ (raised-cosine), дециматора на 2
+ * @brief Полуполосный DDC. Состоит:
+ *	- двухканальный симметричный модулятор на +/- fs/4
+ *	- полуполосный ФНЧ (raised-cosine)
+ *	- дециматор на 2
 */
 class HalfBandDDC
 {
 public:
-	HalfBandDDC();
-
 	/**
-	 * @brief обработка очередного отсчета. функция должна быть вызвана дважды перед получением выходного отсчета
-	 * @param in вход
+	 * @brief инициализация
+	 * @param level уровень DDC в дереве
 	*/
-	void process(const xip_complex& in);
+	HalfBandDDC(unsigned level);
 
 	/**
-	 * @brief получить выходной отсчет. перед каждым вызовом next необходимо подать на вход два отсчета через process
-	 * @param out 
+	 * @brief обработка очередного отсчета (многоканального). функция должна быть вызвана дважды для получения выходного отсчета
+	 * @param in массив с многоканальным входным отсчетом, размер не менее m_inChannels
+	 * @param out массив с многоканальным выходным отсчетом (память должна быть аллоцирована в 2 раза больше от входного)
 	 * @return есть отсчет (да/нет)
 	*/
-	bool next(xip_complex& out);
+	bool process(const xip_complex* in, xip_complex* out);
 
 private:
 	DDS m_dds;
 	LowpassFir m_lpFir;
+	unsigned m_level;							// уровень DDC в дереве
+	unsigned m_inChannels;						// количество входных потоков данных --> 2^(m_level-1)
+	unsigned m_outChannels;						// количество выходных потоков данных --> 2^m_level
 
-	int16_t m_dph_up = DDS_PHASE_MODULUS/4;		// набег фазы --> [-DDS_PHASE_MODULUS/4, +DDS_PHASE_MODULUS/4]
-	int16_t m_dph_down = DDS_PHASE_MODULUS - DDS_PHASE_MODULUS / 4;
+	int16_t m_dph = DDS_PHASE_MODULUS/4;		// набег фазы --> [-DDS_PHASE_MODULUS/4, +DDS_PHASE_MODULUS/4]
 
-	xip_complex m_lastSample{ 0, 0 };			// последний обработанный отсчет
 	int m_inSampleCounter = 0;					// счетчик входных отсчетов [0, 1]
 };
 

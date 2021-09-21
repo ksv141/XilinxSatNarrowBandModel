@@ -68,9 +68,8 @@ void Demodulator::process()
 			// для сигнального созвездия +/-4096 сигнал с выхода АРУ будет в диапазоне [-2^14, 2^14]
 
 			//******** петля ФАПЧ, компенсация частотного смещения ****************
-			xip_real dds_phase, dds_sin, dds_cos;
-			dds.process(err_pll, dds_phase, dds_sin, dds_cos);	// сигнал ГУН
-			xip_complex pll_corr{ dds_cos, dds_sin };
+			xip_complex pll_corr{ 0, 0 };
+			dds.process(err_pll, pll_corr);	// сигнал ГУН
 			xip_multiply_complex(sample, pll_corr, sample);		// компенсация
 			xip_complex_shift(sample, -(int)(dds.getOutputWidth() - 1));
 			//*********************************************************************

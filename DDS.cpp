@@ -1,11 +1,15 @@
 #include "DDS.h"
 
-DDS::DDS(int phase_modulus)
+DDS::DDS(int phase_modulus, bool two_simmmetric_channels)
 {
 	if (phase_modulus < 0 || phase_modulus > 16384)
 		throw std::runtime_error("invalid phase modulus");
 	m_phaseModulus = phase_modulus;
-	init_dds_lib();
+
+	if (two_simmmetric_channels)
+		init_dds_lib(2);
+	else 
+		init_dds_lib(1);
 }
 
 DDS::~DDS()
@@ -13,7 +17,7 @@ DDS::~DDS()
 	destroy_dds_lib();
 }
 
-int DDS::process(double dph, double& out_phase, double& out_sin, double& out_cos)
+int DDS::process(double dph, xip_complex& out)
 {
 	if (xip_dds_v6_0_xip_array_real_set_data(dds_in, dph, 0, 0, 0) != XIP_STATUS_OK) {
 		printf("ERROR: Could not set data to dds input array\n");
@@ -33,24 +37,75 @@ int DDS::process(double dph, double& out_phase, double& out_sin, double& out_cos
 	}
 
 	xip_real value;
-	if (xip_dds_v6_0_xip_array_real_get_data(dds_out, &value, 0, 0, 0) != XIP_STATUS_OK) {
-		printf("ERROR: Could not get data from dds output array\n");
-		return -1;
-	}
-	out_phase = value;
-
 	const int SCALE_FACTOR = sizeof(int) * CHAR_BIT - dds_cnfg.Output_Width;
 	if (xip_dds_v6_0_xip_array_real_get_data(dds_out, &value, 0, 0, 1) != XIP_STATUS_OK) {
 		printf("ERROR: Could not get data from dds output array\n");
 		return -1;
 	}
-	out_sin = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
+	out.im = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
 
 	if (xip_dds_v6_0_xip_array_real_get_data(dds_out, &value, 0, 0, 2) != XIP_STATUS_OK) {
 		printf("ERROR: Could not get data from dds output array\n");
 		return -1;
 	}
-	out_cos = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
+	out.re = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
+
+	return 0;
+}
+
+int DDS::process(double dph, xip_complex& out_up, xip_complex& out_down)
+{
+	if (dds_cnfg.Channels != 2) {
+		printf("ERROR: DDS must be set in two channel mode\n");
+		return -1;
+	}
+
+	double dph_down = m_phaseModulus - dph;
+
+	if (xip_dds_v6_0_xip_array_real_set_data(dds_in, dph, 0, 0, 0) != XIP_STATUS_OK) {
+		printf("ERROR: Could not set data to dds input array\n");
+		return -1;
+	}
+	if (xip_dds_v6_0_xip_array_real_set_data(dds_in, dph_down, 0, 1, 0) != XIP_STATUS_OK) {
+		printf("ERROR: Could not set data to dds input array\n");
+		return -1;
+	}
+
+	if (xip_dds_v6_0_data_do(dds_model,		//pointer to c model instance
+		dds_in,								//pointer to input data structure
+		dds_out,							//pointer to output structure
+		dds_in->dim[0],						//first dimension of either data structure
+		dds_cnfg.Channels,					//2nd dimension of either data structure
+		no_of_input_fields,					//3rd dimension of input
+		no_of_output_fields					//3rd dimension of output
+	) != XIP_STATUS_OK) {
+		printf("ERROR: C model did not complete successfully\n");
+		return -1;
+	}
+
+	xip_real value;
+	const int SCALE_FACTOR = sizeof(int) * CHAR_BIT - dds_cnfg.Output_Width;
+	if (xip_dds_v6_0_xip_array_real_get_data(dds_out, &value, 0, 0, 1) != XIP_STATUS_OK) {
+		printf("ERROR: Could not get data from dds output array\n");
+		return -1;
+	}
+	out_up.im = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
+	if (xip_dds_v6_0_xip_array_real_get_data(dds_out, &value, 0, 0, 2) != XIP_STATUS_OK) {
+		printf("ERROR: Could not get data from dds output array\n");
+		return -1;
+	}
+	out_up.re = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
+
+	if (xip_dds_v6_0_xip_array_real_get_data(dds_out, &value, 0, 1, 1) != XIP_STATUS_OK) {
+		printf("ERROR: Could not get data from dds output array\n");
+		return -1;
+	}
+	out_down.im = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
+	if (xip_dds_v6_0_xip_array_real_get_data(dds_out, &value, 0, 1, 2) != XIP_STATUS_OK) {
+		printf("ERROR: Could not get data from dds output array\n");
+		return -1;
+	}
+	out_down.re = (((int)value << SCALE_FACTOR) >> SCALE_FACTOR);
 
 	return 0;
 }
@@ -64,7 +119,7 @@ unsigned int DDS::getOutputWidth()
  * @brief инициализация библиотеки xip dds
  * @return 
 */
-int DDS::init_dds_lib()
+int DDS::init_dds_lib(unsigned channels)
 {
 	xip_status status = xip_dds_v6_0_default_config(&dds_cnfg);
 
@@ -76,7 +131,7 @@ int DDS::init_dds_lib()
 	dds_cnfg.name = "dds_compiler_v6_0";
 	dds_cnfg.PartsPresent = XIP_DDS_PHASE_GEN_AND_SIN_COS_LUT;
 	dds_cnfg.DDS_Clock_Rate = 100.0;
-	dds_cnfg.Channels = 1;
+	dds_cnfg.Channels = channels;
 	dds_cnfg.Mode_of_Operation = XIP_DDS_MOO_RASTERIZED; // XIP_DDS_MOO_CONVENTIONAL
 	dds_cnfg.Modulus = m_phaseModulus;			// диапазон изменения фазы [0, 16383] --> [0, 2pi]
 	dds_cnfg.ParameterEntry = XIP_DDS_HARDWARE_PARAMS;
