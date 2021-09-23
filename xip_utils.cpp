@@ -363,6 +363,10 @@ int xip_cordic_rect_to_polar(const xip_complex& in, xip_real& mag, xip_real& arg
 
 int int32_division(double a, double b, double& res)
 {
+	if (a == 0 || b == 0) {
+		res = 0;
+		return 0;
+	}
 	if ((b < 0) || (a < INT32_MIN) || (a > INT32_MAX)) {
 		printf("int32_division error: invalid argument\n");
 		return -1;

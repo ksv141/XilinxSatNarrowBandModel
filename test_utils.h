@@ -31,8 +31,8 @@ extern const double PI;
 extern const double _2_PI;
 extern const int DDS_PHASE_MODULUS;
 extern const uint16_t FRAME_DATA_SIZE;
-extern uint32_t DPDI_BURST_ML_SATGE_1;
-extern uint32_t DPDI_BURST_ML_SATGE_2;
+extern const uint32_t DPDI_BURST_ML_SATGE_1;
+extern const uint32_t DPDI_BURST_ML_SATGE_2;
 
 /**
  * @brief частотное смещение сигнала
@@ -153,5 +153,13 @@ extern bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint
  * @param out_down выходной файл (PCM стерео I/Q 16-бит)
 */
 extern void signal_halfband_ddc(const string& in, const string& out_up, const string& out_down);
+
+/**
+ * @brief обнаружение сигнала и определение частотного смещения
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param corr_num номер коррелятора, обнаружившего сигнал
+ * @param freq_est_stage_1 грубая оценка частотного смещения [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi].
+*/
+extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1);
 
 #endif // TESTUTILS_H

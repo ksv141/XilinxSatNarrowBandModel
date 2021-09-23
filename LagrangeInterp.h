@@ -28,25 +28,42 @@ class LagrangeInterp {
 public:
 	// frac - отношение частоты дискретизации входного сигнала к выходному --> [0.001, 1000]
 	// если передискретизация не требуется, то frac = 1 
-	LagrangeInterp(xip_real frac = 1);
+	// num_datapath количество параллельных потоков
+	LagrangeInterp(xip_real frac = 1, unsigned num_datapath = 1);
 
-	LagrangeInterp(xip_real from_sampling_freq, xip_real to_sampling_freq);
+	// num_datapath количество параллельных потоков
+	LagrangeInterp(xip_real from_sampling_freq, xip_real to_sampling_freq, unsigned num_datapath = 1);
 
 	~LagrangeInterp();
 
 	/**
-	 * @brief обработка очередного отсчета. в буфер отсчетов добавляется очередной отсчет (FIFO)
+	 * @brief обработка очередного отсчета (одноканальный режим). в буфер отсчетов добавляется очередной отсчет (FIFO)
 	 * @param in 
 	*/
 	void process(const xip_complex& in);
 
 	/**
-	 * @brief получить следующий отсчет. true - есть отсчет, false - нет отсчета (требуется подать на вход следующий)
+	 * @brief обработка очередного отсчета (многоканальный режим)
+	 * @param in массив с многоканальным входным отсчетом
+	*/
+	void process(const xip_complex* in);
+
+	/**
+	 * @brief получить следующий отсчет (одноканальный режим). 
+	 * true - есть отсчет, false - нет отсчета (требуется подать на вход следующий)
 	 * @param out 
 	 * @return 
 	*/
 	bool next(xip_complex& out);
-	
+
+	/**
+	 * @brief получить следующий отсчет (многоканальный режим). 
+	 * true - есть отсчет, false - нет отсчета (требуется подать на вход следующий)
+	 * @param out
+	 * @return
+	*/
+	bool next(xip_complex* out);
+
 	/**
 	 * @brief добавить смещение тактов относительно выходных отсчетов. вещественная версия
 	 * @param value -> [-1.0, 1.0] относительно выходных отсчетов, производится приведение value в пределы [-1.0, 1.0]
@@ -74,13 +91,22 @@ private:
 	int lagrange_load_coeff();
 
 	/**
-	 * @brief интерполяция очередного отсчета
+	 * @brief интерполяция очередного отсчета (одноканальный режим)
 	 * @param values массив интерполируемых значений
 	 * @param out результат интерполяции
 	 * @param pos позиция интерполяции --> [0, LAGRANGE_INTERVALS-1]
 	 * @return 
 	*/
 	int interpolate(xip_complex* values, xip_complex& out, uint32_t pos);
+
+	/**
+	 * @brief интерполяция очередного отсчета (многоканальный режим)
+	 * @param samples_pos позиция в многоканальном массиве интерполируемых значений
+	 * @param out многоканальный результат интерполяции
+	 * @param pos позиция интерполяции --> [0, LAGRANGE_INTERVALS-1]
+	 * @return
+	*/
+	int interpolate(int samples_pos, xip_complex* out, uint32_t pos);
 
 	/**
 	 * @brief деинициализация библиотеки xip fir и освобождение памяти
@@ -98,8 +124,10 @@ private:
 	double* lagrange_coeff;											// наборы коэффициентов фильтра, следуют по порядку
 	const uint32_t FixPointPosition = LAGRANGE_FIXED_POINT_POSITION;
 	const uint32_t FixPointPosMaxVal = 1 << FixPointPosition;
+	unsigned m_numDataPath = 1;										// количество параллельных потоков
 
-	vector<xip_complex> samples;	// FIFO-буфер отсчетов
+
+	vector< vector<xip_complex> > samples;							// многоканальный FIFO-буфер отсчетов
 
 	// переменные состояния интерполятора
 	int32_t dx;
