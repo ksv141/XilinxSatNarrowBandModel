@@ -160,6 +160,6 @@ extern void signal_halfband_ddc(const string& in, const string& out_up, const st
  * @param corr_num номер коррелятора, обнаружившего сигнал
  * @param freq_est_stage_1 грубая оценка частотного смещения [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi].
 */
-extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1);
+extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2);
 
 #endif // TESTUTILS_H

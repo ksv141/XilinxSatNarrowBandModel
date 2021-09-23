@@ -44,15 +44,6 @@ public:
 	bool process(xip_complex in, int16_t& dph, xip_real& cur_est);
 
 	/**
-	 * @brief оценка частоты сигнала во внешнем буфере (например, в другом корреляторе)
-	 * @param samples входной буфер отсчетов
-	 * @param dph оценка частоты (набег фазы за символ) --> [-8192, 8192]
-	 * оценка правдоподобная только при превышении порога
-	 * @return есть (true) или нет (false) срабатывание порога
-	*/
-	bool processBuffer(const deque<xip_complex>& samples, int16_t& dph);
-
-	/**
 	 * @brief возвращает буфер коррелятора
 	*/
 	deque<xip_complex>& getBuffer();

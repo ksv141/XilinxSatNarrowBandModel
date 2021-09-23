@@ -45,7 +45,7 @@ const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации
 
 // параметры корреляторов
 const uint32_t DPDI_BURST_ML_SATGE_1 = 3000;			// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
-const uint32_t DPDI_BURST_ML_SATGE_2 = 300000;			// порог обнаружения сигнала коррелятора второй стадии (точная оценка частоты)
+const uint32_t DPDI_BURST_ML_SATGE_2 = 3500;			// порог обнаружения сигнала коррелятора второй стадии (точная оценка частоты)
 
 int main()
 {
@@ -70,17 +70,18 @@ int main()
 
 	//signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
 	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x64.pcm", 64);
-	signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_383500.pcm", 383500, 1600000);
-	signal_freq_shift("out_mod_interp_x64_383500.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
-	signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
-	signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
+	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_383500.pcm", 383500, 1600000);
+	//signal_freq_shift("out_mod_interp_x64_383500.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
+	//signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
+	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
 
 	//signal_halfband_ddc("out_mod_decim_x16.pcm", "out_mod_halfband_25_up.pcm", "out_mod_halfband_25_down.pcm");
 
 	unsigned corr_num = 0;
 	int16_t freq_1 = 0;
-	signal_ddc_estimate("out_mod_decim_x16.pcm", corr_num, freq_1);
-	cout << "corr = " << corr_num << endl << "freq 1 = " << freq_1 << endl;
+	int16_t freq_2 = 0;
+	signal_ddc_estimate("out_mod_decim_x16.pcm", corr_num, freq_1, freq_2);
+	cout << "corr = " << corr_num << endl << "freq 1 = " << freq_1 << endl << "freq 2 = " << freq_2 << endl;
 
 	//signal_halfband_ddc("out_mod_halfband_200_down.pcm", "out_mod_halfband_100_up.pcm", "out_mod_halfband_100_down.pcm");
 

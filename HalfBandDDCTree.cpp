@@ -8,7 +8,7 @@ HalfBandDDCTree::HalfBandDDCTree():
 	m_correlators(n_ternimals, { FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, SignalSource::preambleLength,
 								1, 32, 1, DPDI_BURST_ML_SATGE_1 }),
 	m_tuneCorrelator(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, SignalSource::preambleLength,
-		32, 1, 1, DPDI_BURST_ML_SATGE_2)
+		8, 4, 1, DPDI_BURST_ML_SATGE_2)
 {
 	for (int i = 0; i <= n_levels; i++)
 		out_ddc[i] = new xip_complex[1 << (i + 1)];
@@ -59,8 +59,7 @@ bool HalfBandDDCTree::process(const xip_complex& in)
 			xip_real corr_est = 0;
 			if (m_correlators[i].process(out_itrp[i], m_freqEstStage_1, corr_est)) {
 				m_freqEstCorrNum = i;
-				freqShiftBuffer(-m_freqEstStage_1);	// частотный сдвиг буфера многоканального коррелятора, который обнаружил сигнал
-				est = processTuneCorrelator();		// точный коррелятор на буфере, где обнаружен сигнал
+				est = processTuneCorrelator(-m_freqEstStage_1);		// точный коррелятор на буфере, где обнаружен сигнал
 				break;
 			}
 			//m_outCorrelator << corr_est << "\t";
@@ -71,27 +70,27 @@ bool HalfBandDDCTree::process(const xip_complex& in)
 	return false;
 }
 
-bool HalfBandDDCTree::processTuneCorrelator()
-{
-	deque<xip_complex>& corr_reg = m_correlators[m_freqEstCorrNum].getBuffer();
-	return m_tuneCorrelator.processBuffer(corr_reg, m_freqEstStage_2);
-}
-
-void HalfBandDDCTree::freqShiftBuffer(int16_t dph)
+bool HalfBandDDCTree::processTuneCorrelator(int16_t dph)
 {
 	deque<xip_complex>& corr_reg = m_correlators[m_freqEstCorrNum].getBuffer();
 
 	if (dph < 0)
 		dph += DDS_PHASE_MODULUS;
-
 	DDS dds(DDS_PHASE_MODULUS);
 
-	for (xip_complex& sample : corr_reg) {
+	xip_real corr_est = 0;
+	for (deque<xip_complex>::reverse_iterator it = corr_reg.rbegin(); it != corr_reg.rend(); it++) {
 		xip_complex mod_sample{ 0, 0 };
 		dds.process(dph, mod_sample);
-		xip_multiply_complex(sample, mod_sample, sample);
-		xip_complex_shift(sample, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+		xip_multiply_complex(*it, mod_sample, *it);
+		xip_complex_shift(*it, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
+		if (m_tuneCorrelator.process(*it, m_freqEstStage_2, corr_est)) {
+			return true;
+		}
+		//m_outCorrelator << corr_est << endl;
 	}
+	return false;
 }
 
 xip_complex* HalfBandDDCTree::getData()
@@ -107,4 +106,9 @@ unsigned HalfBandDDCTree::getFreqEstCorrNum()
 int16_t HalfBandDDCTree::getfreqEstStage_1()
 {
 	return m_freqEstStage_1;
+}
+
+int16_t HalfBandDDCTree::getfreqEstStage_2()
+{
+	return m_freqEstStage_2;
 }
