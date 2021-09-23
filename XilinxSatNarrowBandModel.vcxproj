@@ -172,6 +172,7 @@
     <ClInclude Include="LowpassFir.h" />
     <ClInclude Include="mls.h" />
     <ClInclude Include="Modulator.h" />
+    <ClInclude Include="PhaseTimingCorrelator.h" />
     <ClInclude Include="Pif.h" />
     <ClInclude Include="PolyphaseDecimator.h" />
     <ClInclude Include="PolyphaseInterpolator.h" />
@@ -200,6 +201,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mls.cpp" />
     <ClCompile Include="Modulator.cpp" />
+    <ClCompile Include="PhaseTimingCorrelator.cpp" />
     <ClCompile Include="Pif.cpp" />
     <ClCompile Include="PolyphaseDecimator.cpp" />
     <ClCompile Include="PolyphaseInterpolator.cpp" />
