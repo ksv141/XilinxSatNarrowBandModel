@@ -463,3 +463,36 @@ void signal_halfband_ddc(const string& in, const string& out_up, const string& o
 	fclose(out_file_up);
 	fclose(out_file_down);
 }
+
+void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+
+	//ofstream dbg_out("dbg_out.txt");
+	HalfBandDDCTree ddc_tree;
+	int16_t re;
+	int16_t im;
+	xip_complex sample;
+	int counter = 0;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		if (++counter == 1000) {
+			counter = 0;
+			cout << ". ";
+		}
+		sample.re = re;
+		sample.im = im;
+		xip_complex res{ 0,0 };
+		if (!ddc_tree.process(sample))
+			continue;
+		corr_num = ddc_tree.getFreqEstCorrNum();
+		freq_est_stage_1 = ddc_tree.getfreqEstStage_1();
+		break;
+		//dbg_out << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+}

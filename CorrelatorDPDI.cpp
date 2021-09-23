@@ -95,6 +95,16 @@ bool CorrelatorDPDI::process(xip_complex in, int16_t& dph, xip_real& cur_est)
     }
 }
 
+bool CorrelatorDPDI::processBuffer(const deque<xip_complex>& samples, int16_t& dph)
+{
+	return false;
+}
+
+deque<xip_complex>& CorrelatorDPDI::getBuffer()
+{
+	return m_correlationReg;
+}
+
 void CorrelatorDPDI::init(int8_t* preamble_data, uint16_t preamble_length)
 {
     if (preamble_length < m_correlatorM * m_correlatorL)

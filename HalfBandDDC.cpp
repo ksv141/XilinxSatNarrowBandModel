@@ -2,10 +2,10 @@
 
 HalfBandDDC::HalfBandDDC(unsigned level):
 	m_dds(DDS_PHASE_MODULUS, true),
-	m_lpFir("rc_normal_x2_25_19.fcf", 19, 1, 1 << level),
+	m_lpFir("rc_normal_x2_25_19.fcf", 19, 1, 1 << (level + 1)),
 	m_level(level),
-	m_inChannels(1 << (level-1)),
-	m_outChannels(1 << level)
+	m_inChannels(1 << level),
+	m_outChannels(1 << (level + 1))
 {
 }
 

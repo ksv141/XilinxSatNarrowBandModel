@@ -104,6 +104,21 @@ bool LagrangeInterp::next(xip_complex& out)
 	return true;
 }
 
+bool LagrangeInterp::next(xip_complex* out)
+{
+	if (x_ptr > pos_ptr)
+		return false;
+
+	const uint32_t coeffs_shift = FixPointPosition - LAGRANGE_INTERVALS_LOG2;
+	interpolate((x_ptr - &samples[0][0]) - LAGRANGE_ORDER, out, static_cast<unsigned>(fx >> coeffs_shift));
+
+	int32_t x = fx + dx;
+	fx = x & (FixPointPosMaxVal - 1);
+	x_ptr += x >> FixPointPosition;
+
+	return true;
+}
+
 // инициализация фильтра-интерполятора Лагранжа
 // загружаются 1024 набора по 8 коэффициентов, каждый набор задействуется в зависимости от смещения интерполятора
 // смещение дискретное с величиной 1/1024 от интервала между отсчетами
@@ -220,6 +235,51 @@ int LagrangeInterp::interpolate(xip_complex* values, xip_complex& out, uint32_t 
 	// нормализация сдвигом
 	//xip_complex_shift(out, -(int)(lagrange_interp_fir_cnfg.data_width - lagrange_interp_fir_cnfg.data_fract_width - 1));
 	xip_complex_shift(out, -15);
+
+	return 0;
+}
+
+int LagrangeInterp::interpolate(int samples_pos, xip_complex* out, uint32_t pos)
+{
+	if (pos >= LAGRANGE_INTERVALS)
+		throw std::range_error("pos must be less then LAGRANGE_INTERVALS");
+
+	// Установка набора коэффициентов фильтра, соответствующего смещению pos
+	lagrange_interp_fir_cnfg_packet.fsel->data[0] = pos;
+	// Send config data
+	if (xip_fir_v7_2_config_send(lagrange_interp_fir, &lagrange_interp_fir_cnfg_packet) != XIP_STATUS_OK) {
+		printf("Error sending config packet\n");
+		return -1;
+	}
+
+	// инициализация входных данных
+	// интерполируемые данные загружаем в фильтр в обратном порядке
+	for (int k = 0; k < m_numDataPath; k++) {
+		for (int i = 0; i < LAGRANGE_ORDER; i++) {
+			xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, samples[k][samples_pos + LAGRANGE_ORDER - i - 1].re, 0, k*2, i, P_BASIC);		// re
+			xip_fir_v7_2_xip_array_real_set_chan(lagrange_interp_in, samples[k][samples_pos + LAGRANGE_ORDER - i - 1].im, 0, k*2+1, i, P_BASIC);	// im
+		}
+	}
+
+
+	// Send input data and filter
+	if (xip_fir_v7_2_data_send(lagrange_interp_fir, lagrange_interp_in) != XIP_STATUS_OK) {
+		printf("Error sending data\n");
+		return -1;
+	}
+
+	// Retrieve filtered data
+	if (xip_fir_v7_2_data_get(lagrange_interp_fir, lagrange_interp_out, 0) != XIP_STATUS_OK) {
+		printf("Error getting data\n");
+		return -1;
+	}
+
+	for (unsigned k = 0; k < m_numDataPath; k++) {
+		xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out[k].re, 0, k*2, LAGRANGE_ORDER - 1, P_BASIC);	// re
+		xip_fir_v7_2_xip_array_real_get_chan(lagrange_interp_out, &out[k].im, 0, k*2+1, LAGRANGE_ORDER - 1, P_BASIC);	// im
+		// нормализация сдвигом
+		xip_complex_shift(out[k], -15);
+	}
 
 	return 0;
 }

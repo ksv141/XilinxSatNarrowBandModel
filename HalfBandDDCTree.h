@@ -1,10 +1,25 @@
 #ifndef HALFBANDDDCTREE_H
 #define HALFBANDDDCTREE_H
 
+#include <vector>
+#include <fstream>
+#include "constellation.h"
 #include "HalfBandDDC.h"
 #include "LagrangeInterp.h"
+#include "DDS.h"
+#include "LowpassFir.h"
+#include "CorrelatorDPDI.h"
+#include "SignalSource.h"
+#include "autoganecontrol.h"
+
+using namespace std;
 
 extern const int INIT_SAMPLE_RATE;
+extern const int DDS_PHASE_MODULUS;
+extern const int AGC_WND_SIZE_LOG2;
+extern const uint16_t FRAME_DATA_SIZE;
+extern const uint32_t DPDI_BURST_ML_SATGE_1;
+extern const uint32_t DPDI_BURST_ML_SATGE_2;
 
 /**
  * @brief Бинарное дерево полуполосных DDC (5 уровней)
@@ -12,8 +27,11 @@ extern const int INIT_SAMPLE_RATE;
 class HalfBandDDCTree
 {
 	static const unsigned n_levels = 4;					// количество уровней
-	static const unsigned n_ternimals = 1 << n_levels;	// количество терминальных элементов дерева
-	static const int terminal_fs = 25000;				// частота дискретизации в терминальном элементе
+	static const unsigned n_ternimals = 1 << (n_levels + 1);	// количество терминальных элементов дерева (с учетом сдвинутого диапазона)
+	static const unsigned in_fs = 400000;				// частота дискретизации на входе дерева
+	static const int terminal_fs = in_fs >> n_levels;	// частота дискретизации в терминальном элементе (25000 Гц)
+	static const int freq_shift = terminal_fs >> 2;		// частота сдвига для перекрытия полос частот корреляторов (6250 Гц)
+
 public:
 	/**
 	 * @brief 
@@ -30,17 +48,62 @@ public:
 	bool process(const xip_complex& in);
 
 	/**
+	 * @brief обработать буфер многоканального коррелятора, который обнаружил сигнал, одноканальным точным коррелятором
+	 * @return
+	*/
+	bool processTuneCorrelator();
+
+	/**
+	 * @brief частотный сдвиг буфера многоканального коррелятора, который обнаружил сигнал
+	 * @param dph набег фазы --> [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS]
+	 * @return
+	*/
+	void freqShiftBuffer(int16_t dph);
+
+	/**
 	 * @brief возвращает массив с выходным многоканальным отсчетом
 	 * @return 
 	*/
 	xip_complex* getData();
 
+	/**
+	 * @brief возвращает номер коррелятора, обнаружившего сигнал
+	 * @return
+	*/
+	unsigned getFreqEstCorrNum();
+
+	/**
+	 * @brief возвращает частоту с выхода грубого коррелятора
+	 * @return
+	*/
+	int16_t getfreqEstStage_1();
+
 private:
+	AutoGaneControl m_agc;					// АРУ на входе дерева DDC для нормировки уровней корреляторов
+
 	HalfBandDDC m_ddc[n_levels] = { 1, 2, 3, 4 };
 
 	xip_complex* out_ddc[n_levels + 1];		// массивы на входе и выходе ddc каждого уровня
+	// на выходе последнего уровня [0...15] - несмещенные поддиапазоны, [16...31] - смещенные поддиапазоны
+
+	xip_complex* out_itrp;					// массив с многоканального выхода интерполятора
 
 	LagrangeInterp itrp;					// многоканальный интерполятор
+
+	DDS m_freqShifter;						// генератор для частотного сдвига (обеспечение перекрытия полос частот корреляторов)
+	int16_t m_freqShiftMod;
+
+	LowpassFir m_matchedFir;				// согласованный фильтр на 2B перед коррелятором
+
+	vector<CorrelatorDPDI> m_correlators;	// многоканальный коррелятор (грубая оценка)
+
+	CorrelatorDPDI m_tuneCorrelator;		// одноканальный коррелятор (точная оценка)
+
+	int16_t m_freqEstStage_1;				// частота с выхода грубого коррелятора
+	unsigned m_freqEstCorrNum;				// номер коррелятора, обнаружившего сигнал
+	int16_t m_freqEstStage_2;				// частота с выхода точного коррелятора
+
+	ofstream m_outCorrelator;				// файл с данными коррелятора (для отладки)
 };
 
 #endif // HALFBANDDDCTREE_H
