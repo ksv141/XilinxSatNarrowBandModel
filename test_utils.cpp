@@ -424,6 +424,38 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F,
 	return res;
 }
 
+bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& phase, xip_real& time_shift)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return false;
+
+	//ofstream dbg_out("dbg_out.txt");
+
+	PhaseTimingCorrelator corr_stage((int8_t*)SignalSource::preambleData, SignalSource::preambleLength,	burst_est);
+	int16_t re;
+	int16_t im;
+	bool res = false;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		int16_t ph = 0;
+		xip_real t_shift = 0;
+		xip_real corr_est = 0;
+		if (corr_stage.process(sample, ph, t_shift, corr_est)) {
+			phase = ph;
+			time_shift = t_shift;
+			res = true;
+			break;
+		}
+		//dbg_out << corr_est << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	return res;
+}
+
 void signal_halfband_ddc(const string& in, const string& out_up, const string& out_down)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");

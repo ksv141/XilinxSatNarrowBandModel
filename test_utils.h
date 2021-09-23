@@ -142,10 +142,16 @@ extern void signal_lowpass(const string& in, const string& out, const string& co
 extern void signal_agc(const string& in, const string& out, unsigned window_size_log2, double norm_power);
 
 /**
- * @brief вычисление коррел€ционного отклика сигнала
+ * @brief вычисление коррел€ционного отклика частотного коррел€тора
  * @param in входной файл (PCM стерео I/Q 16-бит)
 */
 extern bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F, uint32_t burst_est, int16_t& freq_est);
+
+/**
+ * @brief вычисление коррел€ционного отклика фазового коррел€тора
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+*/
+extern bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& phase, xip_real& time_shift);
 
 /**
  * @brief разделение сигнала на половину полосы

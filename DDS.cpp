@@ -17,7 +17,7 @@ DDS::~DDS()
 	destroy_dds_lib();
 }
 
-int DDS::process(double dph, xip_complex& out)
+int DDS::process(xip_real dph, xip_complex& out)
 {
 	if (xip_dds_v6_0_xip_array_real_set_data(dds_in, dph, 0, 0, 0) != XIP_STATUS_OK) {
 		printf("ERROR: Could not set data to dds input array\n");
@@ -53,7 +53,7 @@ int DDS::process(double dph, xip_complex& out)
 	return 0;
 }
 
-int DDS::process(double dph, xip_complex& out_up, xip_complex& out_down)
+int DDS::process(xip_real dph, xip_complex& out_up, xip_complex& out_down)
 {
 	if (dds_cnfg.Channels != 2) {
 		printf("ERROR: DDS must be set in two channel mode\n");
@@ -110,6 +110,11 @@ int DDS::process(double dph, xip_complex& out_up, xip_complex& out_down)
 	return 0;
 }
 
+int DDS::setPhaseOffset(xip_real poff)
+{
+	return 0;
+}
+
 unsigned int DDS::getOutputWidth()
 {
 	return dds_cnfg.Output_Width;
@@ -140,7 +145,7 @@ int DDS::init_dds_lib(unsigned channels)
 	dds_cnfg.Noise_Shaping = XIP_DDS_NS_AUTO;
 	dds_cnfg.Phase_Increment = XIP_DDS_PINCPOFF_STREAM;	// в ФАПЧ и петле Доплера фаза будет постоянно меняться 
 	dds_cnfg.Resync = XIP_DDS_ABSENT;
-	dds_cnfg.Phase_Offset = XIP_DDS_PINCPOFF_NONE;
+	dds_cnfg.Phase_Offset = XIP_DDS_PINCPOFF_PROG;		// фазу можно установить через config-пакет
 	dds_cnfg.Output_Selection = XIP_DDS_OUT_SIN_AND_COS;
 	dds_cnfg.Negative_Sine = XIP_DDS_ABSENT;			// возможно пригодится, чтобы сразу получать комплексно-сопряженный сигнал
 	dds_cnfg.Negative_Cosine = XIP_DDS_ABSENT;			
