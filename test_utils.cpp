@@ -464,7 +464,7 @@ void signal_halfband_ddc(const string& in, const string& out_up, const string& o
 	fclose(out_file_down);
 }
 
-void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1)
+void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");
 	if (!in_file)
@@ -489,6 +489,7 @@ void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est
 			continue;
 		corr_num = ddc_tree.getFreqEstCorrNum();
 		freq_est_stage_1 = ddc_tree.getfreqEstStage_1();
+		freq_est_stage_2 = ddc_tree.getfreqEstStage_2();
 		break;
 		//dbg_out << res << endl;
 	}

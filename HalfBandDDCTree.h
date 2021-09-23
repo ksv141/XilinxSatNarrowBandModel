@@ -49,16 +49,10 @@ public:
 
 	/**
 	 * @brief обработать буфер многоканального коррелятора, который обнаружил сигнал, одноканальным точным коррелятором
+	 * @param dph частотный сдвиг буфера --> [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS]
 	 * @return
 	*/
-	bool processTuneCorrelator();
-
-	/**
-	 * @brief частотный сдвиг буфера многоканального коррелятора, который обнаружил сигнал
-	 * @param dph набег фазы --> [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS]
-	 * @return
-	*/
-	void freqShiftBuffer(int16_t dph);
+	bool processTuneCorrelator(int16_t dph);
 
 	/**
 	 * @brief возвращает массив с выходным многоканальным отсчетом
@@ -77,6 +71,12 @@ public:
 	 * @return
 	*/
 	int16_t getfreqEstStage_1();
+
+	/**
+	 * @brief возвращает частоту с выхода точного коррелятора
+	 * @return
+	*/
+	int16_t getfreqEstStage_2();
 
 private:
 	AutoGaneControl m_agc;					// АРУ на входе дерева DDC для нормировки уровней корреляторов
