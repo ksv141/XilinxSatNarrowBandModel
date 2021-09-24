@@ -8,7 +8,7 @@ PhaseTimingCorrelator::PhaseTimingCorrelator(int8_t* preamble_data, uint16_t pre
     m_timingSyncReg.resize(4, 0);
 }
 
-bool PhaseTimingCorrelator::process(xip_complex in, int16_t& phase, xip_real& time_shift, xip_real& phase_est)
+bool PhaseTimingCorrelator::process(xip_complex in, int16_t& phase, xip_real& time_shift, xip_real& phase_est, xip_real& time_est)
 {
     // помещаем отсчет в FIFO
     m_correlationReg.pop_back();
@@ -34,11 +34,13 @@ bool PhaseTimingCorrelator::process(xip_complex in, int16_t& phase, xip_real& ti
 	xip_real im_sqr = 0;
     xip_multiply_real(rx_ph.im, rx_ph.im, im_sqr);
 	xip_real_shift(im_sqr, -10);					// сдвигаем до [-2^10, +2^10]
-	xip_real est = re_sqr + im_sqr;                   // јбсолютное значение коррел€ционного отклика
+	xip_real est = re_sqr + im_sqr;                 // јбсолютное значение коррел€ционного отклика
 
     phase_est = est;
 
     xip_real rxx = std::max(rx_ph.re, rx_ph.im);
+
+    time_est = rxx;
 
     m_timingSyncReg.pop_back();
     m_timingSyncReg.push_front(rxx);

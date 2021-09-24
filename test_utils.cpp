@@ -486,14 +486,15 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 		xip_complex sample{ re, im };
 		int16_t ph = 0;
 		xip_real t_shift = 0;
-		xip_real corr_est = 0;
-		if (corr_stage.process(sample, ph, t_shift, corr_est)) {
+		xip_real phase_est = 0;
+		xip_real time_est = 0;
+		if (corr_stage.process(sample, ph, t_shift, phase_est, time_est)) {
 			phase = ph;
 			time_shift = t_shift;
 			res = true;
-			break;
+			//break;
 		}
-		dbg_out << corr_est << endl;
+		dbg_out << phase_est << "\t" << time_est << endl;
 	}
 
 	dbg_out.close();

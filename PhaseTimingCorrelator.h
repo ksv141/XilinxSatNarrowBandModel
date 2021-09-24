@@ -16,6 +16,7 @@ using namespace std;
 
 /**
  * @brief Коррелятор для фазовой и символьной синхронизации по преамбуле
+ * (A Fast Synchronizer for Burst Modems with Simultaneous Symbol Timing and Carrier Phase Estimations Dengwei Fu and Alan N. Willson, Jr.)
 */
 class PhaseTimingCorrelator
 {
@@ -36,7 +37,7 @@ public:
 	 * @param phase_est текущий корреляционный отклик (используется для отладки)
 	 * @return есть (true) или нет (false) срабатывание порога коррелятора
 	*/
-	bool process(xip_complex in, int16_t& phase, xip_real& time_shift, xip_real& phase_est);
+	bool process(xip_complex in, int16_t& phase, xip_real& time_shift, xip_real& phase_est, xip_real& time_est);
 
 private:
 	/**
