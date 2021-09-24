@@ -5,6 +5,7 @@
 #include <deque>
 #include <vector>
 #include <stdexcept>
+#include <algorithm>
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "xip_utils.h"

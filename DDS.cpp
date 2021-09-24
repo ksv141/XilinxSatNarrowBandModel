@@ -112,6 +112,12 @@ int DDS::process(xip_real dph, xip_complex& out_up, xip_complex& out_down)
 
 int DDS::setPhaseOffset(xip_real poff)
 {
+	memcpy(pinc_poff_config->din_poff, &poff, dds_cnfg.Channels * sizeof(xip_dds_v6_0_data));
+	// Run the config routine
+	if (xip_dds_v6_0_config_do(dds_model, pinc_poff_config) != XIP_STATUS_OK) {
+		printf("ERROR: config_packet failed\n");
+		return -1;
+	}
 	return 0;
 }
 
@@ -201,6 +207,12 @@ int DDS::init_dds_lib(unsigned channels)
 		if (dds_cnfg.Output_Selection == XIP_DDS_OUT_SIN_AND_COS) no_of_output_fields += 2; //SIN and COS
 	}
 
+	// Create config packet - pass pointer by reference
+	if (xip_dds_v6_0_alloc_config_pkt(&pinc_poff_config, dds_cnfg.Channels, dds_cnfg.Channels) != XIP_STATUS_OK) {
+		printf("ERROR: Unable to reserve memory for config packet\n");
+		return -1;
+	}
+
 	// Create input data packet
 	dds_in = xip_array_real_create();
 	xip_array_real_reserve_dim(dds_in, 3); //dimensions are (Number of samples, channels, PINC/POFF/Phase)
@@ -240,6 +252,9 @@ int DDS::destroy_dds_lib()
 		return -1;
 	}
 	if (xip_array_real_destroy(dds_out) != XIP_STATUS_OK) {
+		return -1;
+	}
+	if (xip_dds_v6_0_free_config_pkt(&pinc_poff_config) != XIP_STATUS_OK) {
 		return -1;
 	}
 	if (xip_dds_v6_0_destroy(dds_model) != XIP_STATUS_OK) {

@@ -63,6 +63,15 @@ extern void signal_freq_shift_symmetric(const string& in, const string& out_up, 
 extern void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_mod);
 
 /**
+ * @brief частотное и фазовое смещение сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param freq_shift_mod смещение частоты в единицах работы DDS --> [-8192, 8192]
+ * @param phase смещение фазы в единицах работы DDS --> [-8192, 8192]
+*/
+extern void signal_freq_phase_shift(const string& in, const string& out, int16_t freq_shift_mod, int16_t phase);
+
+/**
  * @brief двухканальное симметричное частотное смещение сигнала
  * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param out_up выходной файл со сдвигом вверх (PCM стерео I/Q 16-бит)

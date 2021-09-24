@@ -5,9 +5,9 @@ HalfBandDDCTree::HalfBandDDCTree():
 	itrp(terminal_fs, INIT_SAMPLE_RATE, n_ternimals),
 	m_freqShifter(DDS_PHASE_MODULUS),
 	m_matchedFir("rc_root_x2_25_19.fcf", 19, 0, n_ternimals),
-	m_correlators(n_ternimals, { FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, SignalSource::preambleLength,
+	m_correlators(n_ternimals, { FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength,
 								1, 32, 1, DPDI_BURST_ML_SATGE_1 }),
-	m_tuneCorrelator(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, SignalSource::preambleLength,
+	m_tuneCorrelator(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength,
 		8, 4, 1, DPDI_BURST_ML_SATGE_2)
 {
 	for (int i = 0; i <= n_levels; i++)

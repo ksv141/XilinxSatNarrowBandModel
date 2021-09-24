@@ -21,7 +21,7 @@ bool PhaseTimingCorrelator::process(xip_complex in, int16_t& phase, xip_real& ti
         xip_complex res;
         xip_multiply_complex(p, *reg_it, res);
         // единичный отклик [-2^26, +2^26]
-        xip_complex_shift(res, -16);            // сдвигаем до [-2^10, +2^10]
+        xip_complex_shift(res, -18);            // сдвигаем до [-2^10, +2^10]
         rx_ph.re += res.re;
         rx_ph.im += res.im;
 
@@ -29,10 +29,12 @@ bool PhaseTimingCorrelator::process(xip_complex in, int16_t& phase, xip_real& ti
     }
 
     xip_real re_sqr = 0;
-    xip_multiply_real(rx_ph.re, rx_ph.re, re_sqr);
-    xip_real im_sqr = 0;
+    xip_multiply_real(rx_ph.re, rx_ph.re, re_sqr);	// --> [-2^20, +2^20]
+	xip_real_shift(re_sqr, -10);					// сдвигаем до [-2^10, +2^10]
+	xip_real im_sqr = 0;
     xip_multiply_real(rx_ph.im, rx_ph.im, im_sqr);
-    xip_real est = re_sqr + im_sqr;                   // јбсолютное значение коррел€ционного отклика
+	xip_real_shift(im_sqr, -10);					// сдвигаем до [-2^10, +2^10]
+	xip_real est = re_sqr + im_sqr;                   // јбсолютное значение коррел€ционного отклика
 
     phase_est = est;
 

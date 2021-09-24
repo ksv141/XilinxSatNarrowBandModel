@@ -55,6 +55,7 @@ private:
 
 	xip_dds_v6_0_config dds_cnfg;
 	xip_dds_v6_0* dds_model;
+	xip_dds_v6_0_config_pkt* pinc_poff_config;	// config- пакет для частотного/фазового смещения
 
 	xip_array_real* dds_in;		// 3-D массив, содержащий текущий отсчет для обработки
 	xip_array_real* dds_out;	// 3-D массив, содержащий результат обработки

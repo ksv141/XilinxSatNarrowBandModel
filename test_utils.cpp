@@ -59,6 +59,51 @@ void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_m
 	fclose(out_file);
 }
 
+void signal_freq_phase_shift(const string& in, const string& out, int16_t freq_shift_mod, int16_t phase)
+{
+	if ((freq_shift_mod > DDS_PHASE_MODULUS / 2) || (freq_shift_mod < -DDS_PHASE_MODULUS / 2))
+		throw out_of_range("frequency shift is out of range");
+
+	FILE * in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE * out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	double dph = freq_shift_mod;	// набег фазы за такт в диапазоне[0, 16383] -- > [0, 2pi]
+	double poff = phase;			// фазовое смещение в диапазоне[0, 16383] -- > [0, 2pi]
+
+	//ofstream dbg_out("dbg_out.txt");
+	if (dph < 0)
+		dph += DDS_PHASE_MODULUS;
+	if (poff < 0)
+		poff += DDS_PHASE_MODULUS;
+
+	DDS dds(DDS_PHASE_MODULUS);
+	dds.setPhaseOffset(poff);
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_complex mod_sample{ 0, 0 };
+		dds.process(dph, mod_sample);
+		xip_complex res;
+		xip_multiply_complex(sample, mod_sample, res);
+		xip_complex_shift(res, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
+		tC::write_real<int16_t>(out_file, res.re);
+		tC::write_real<int16_t>(out_file, res.im);
+
+		//dbg_out << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}
+
 void signal_freq_shift_symmetric(const string& in, const string& out_up, const string& out_down, int16_t freq_shift_mod)
 {
 	if ((freq_shift_mod > DDS_PHASE_MODULUS / 2) || (freq_shift_mod < -DDS_PHASE_MODULUS / 2))
@@ -225,7 +270,7 @@ void generate_sin_signal(const string& out, double freq, double sample_freq, siz
 	if (!out_file)
 		return;
 
-	//ofstream dbg_out("dbg_out.txt");
+	ofstream dbg_out("dbg_out.txt");
 
 	double dph = _2_PI * freq / sample_freq;	// набег фазы за такт
 	double ph = 0;						// текущая фаза
@@ -238,9 +283,9 @@ void generate_sin_signal(const string& out, double freq, double sample_freq, siz
 		xip_complex_shift(res, bits-1);
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
-		//dbg_out << res << endl;
+		dbg_out << res << endl;
 	}
-	//dbg_out.close();
+	dbg_out.close();
 	fclose(out_file);
 }
 
@@ -430,7 +475,7 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 	if (!in_file)
 		return false;
 
-	//ofstream dbg_out("dbg_out.txt");
+	ofstream dbg_out("dbg_out.txt");
 
 	PhaseTimingCorrelator corr_stage((int8_t*)SignalSource::preambleData, SignalSource::preambleLength,	burst_est);
 	int16_t re;
@@ -448,10 +493,10 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 			res = true;
 			break;
 		}
-		//dbg_out << corr_est << endl;
+		dbg_out << corr_est << endl;
 	}
 
-	//dbg_out.close();
+	dbg_out.close();
 	fclose(in_file);
 	return res;
 }
