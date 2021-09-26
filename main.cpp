@@ -58,13 +58,15 @@ int main()
 	init_channel_matched_fir();
 
 	//generate_sin_signal("sin.pcm", 1, 50, 100, 10);
-	//signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 1000);
-	//signal_lowpass("out_mod_ph.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
-	//signal_agc("out_mod_mf.pcm", "out_mod_rcv_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
+	signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 100);
+	signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 100);
+	signal_lowpass("out_mod_tm.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
+	signal_agc("out_mod_mf.pcm", "out_mod_rcv_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
 	int16_t phase = 0;
 	xip_real time_shift = 0;
-	signal_phase_time_est_stage("out_mod_rcv_agc.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift);
-	cout << phase << endl << time_shift << endl;
+	int t_count;
+	signal_phase_time_est_stage("out_mod_rcv_agc.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
+	cout << "ph = " << phase << "\ttm = " << time_shift << "\tt_count = " << t_count << endl;
 
 	//signal_halfband_ddc("out_mod_shift_up_6.pcm", "out_mod_shift_ddc_up.pcm", "out_mod_shift_ddc_down.pcm");
 	//signal_halfband_ddc("out_mod_shift_ddc_down.pcm", "out_mod_shift_ddc_up_1.pcm", "out_mod_shift_ddc_down_1.pcm");

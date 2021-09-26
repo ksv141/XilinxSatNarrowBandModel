@@ -469,7 +469,7 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F,
 	return res;
 }
 
-bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& phase, xip_real& time_shift)
+bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& phase, xip_real& time_shift, int& t_count)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");
 	if (!in_file)
@@ -484,17 +484,27 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
-		int16_t ph = 0;
-		xip_real t_shift = 0;
-		xip_real phase_est = 0;
-		xip_real time_est = 0;
-		if (corr_stage.process(sample, ph, t_shift, phase_est, time_est)) {
-			phase = ph;
-			time_shift = t_shift;
-			res = true;
-			//break;
+		if (corr_stage.isPhaseEstMode()) {
+			int16_t ph = 0;
+			xip_real phase_est = 0;
+			if (corr_stage.phaseEstimate(sample, ph, phase_est)) {
+				phase = ph;
+			}
 		}
-		dbg_out << phase_est << "\t" << time_est << endl;
+		else {
+			xip_real t_shift = 0;
+			xip_real time_est = 0;
+			if (corr_stage.getSymbolTimingProcCounter()) {
+				if (corr_stage.symbolTimingEstimate(sample, t_shift, time_est)) {
+					xip_real_shift(t_shift, -2);
+					time_shift = t_shift;
+					t_count = corr_stage.getSymbolTimingProcCounter();
+					res = true;
+					break;
+				}
+			}
+			dbg_out << time_est << endl;
+		}
 	}
 
 	dbg_out.close();

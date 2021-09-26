@@ -30,14 +30,34 @@ public:
 	PhaseTimingCorrelator(int8_t* preamble_data, uint16_t preamble_length, uint32_t burst_est);
 
 	/**
-	 * @brief оценка фазового и тактового сдвига
+	 * @brief оценка фазового сдвига
 	 * @param in входной отсчет
-	 * @param phase оценка сдвига фазы --> [-8192, 8192] 
-	 * @param time_shift оценка сдвига тактов
+	 * @param phase оценка сдвига фазы --> [-8192, 8192]
 	 * @param phase_est текущий коррел€ционный отклик (используетс€ дл€ отладки)
 	 * @return есть (true) или нет (false) срабатывание порога коррел€тора
 	*/
-	bool process(xip_complex in, int16_t& phase, xip_real& time_shift, xip_real& phase_est, xip_real& time_est);
+	bool phaseEstimate(xip_complex in, int16_t& phase, xip_real& phase_est);
+
+	/**
+	 * @brief оценка тактового сдвига
+	 * @param in входной отсчет
+	 * @param time_shift оценка сдвига тактов
+	 * @param time_est текущий коррел€ционный отклик (используетс€ дл€ отладки)
+	 * @return есть (true) или нет (false) срабатывание услови€ дл€ оценки сдвига
+	*/
+	bool symbolTimingEstimate(xip_complex in, xip_real& time_shift, xip_real& time_est);
+
+	/**
+	 * @brief возвращает текущий режим коррел€тора
+	 * @return 
+	*/
+	bool isPhaseEstMode();
+
+	/**
+	 * @brief возвращает число попыток оценить тактовый сдвиг
+	 * @return 
+	*/
+	uint8_t getSymbolTimingProcCounter();
 
 private:
 	/**
@@ -45,9 +65,18 @@ private:
 	*/
 	void init(int8_t* preamble_data, uint16_t preamble_length);
 
+	/**
+	 * @brief вычисление коррел€ции
+	 * @param in входной отсчет
+	*/
+	void process(xip_complex in);
+
 	deque<xip_complex> m_correlationReg;     // FIFO-регистр дл€ вычислени€ коррел€ции
 	deque<xip_real> m_timingSyncReg;		 // FIFO-регистр дл€ тактовой синхронизации
 	vector<xip_complex> m_preamble;          // –егистр с преамбулой (в виде комплексно-сопр€женных чисел)
+	xip_complex m_currentCorrelation;		 // текущее значение с выхода коррел€тора
+	bool m_phaseEstMode;					 // режим оценки фазового сдвига (используетс€ дл€ переключени€ в режим оценки тактов)
+	uint8_t m_symbolTimingProcCounter;		 // счетчик попыток оценить тактовый сдвиг (условие может не выполнитьс€)
 
 	uint16_t m_preambleLength;           // –азмер преамбулы
 	xip_real m_burstEstML;               // ѕороговое значение дл€ коррел€ционного отклика (критерий максимального правдоподоби€)
