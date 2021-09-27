@@ -164,6 +164,7 @@
     <ClInclude Include="DDS.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="Demodulator.h" />
+    <ClInclude Include="DoplerEstimate.h" />
     <ClInclude Include="FirMultiplier.h" />
     <ClInclude Include="FirSummator.h" />
     <ClInclude Include="HalfBandDDC.h" />
@@ -190,6 +191,7 @@
     <ClCompile Include="DDS.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="Demodulator.cpp" />
+    <ClCompile Include="DoplerEstimate.cpp" />
     <ClCompile Include="FirMultiplier.cpp" />
     <ClCompile Include="FirSummator.cpp" />
     <ClCompile Include="fx_cmpl_point.cpp" />

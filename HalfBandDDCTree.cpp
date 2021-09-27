@@ -183,5 +183,6 @@ int16_t HalfBandDDCTree::countTotalFreqShift()
 	xip_multiply_real((xip_real)m_freqEstStage_2, resample_coeff, f2_resample);
 
 	int16_t freq = corr_num * f1 + f2 - ddc_shift + f1_resample + f2_resample;
+//	int16_t freq = corr_num * f1 + f2 - ddc_shift;
 	return freq;
 }
