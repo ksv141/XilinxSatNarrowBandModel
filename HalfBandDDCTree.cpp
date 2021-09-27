@@ -60,7 +60,8 @@ bool HalfBandDDCTree::process(const xip_complex& in)
 			xip_real corr_est = 0;
 			if (m_correlators[i].process(out_itrp[i], m_freqEstStage_1, corr_est)) {
 				m_freqEstCorrNum = i;
-				est = processTuneCorrelator(-m_freqEstStage_1);		// точный коррелятор на буфере, где обнаружен сигнал
+				est = processTuneCorrelator(-m_freqEstStage_1);			// точный коррелятор на буфере, где обнаружен сигнал
+				processPhaseTimingCorrelator(-m_freqEstStage_2);		// оценка фазы и тактов на буфере, где обнаружен сигнал
 				break;
 			}
 			//m_outCorrelator << corr_est << "\t";

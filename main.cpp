@@ -58,6 +58,8 @@ int main()
 	init_channel_matched_fir();
 
 	//generate_sin_signal("sin.pcm", 1, 50, 100, 10);
+
+
 	signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 5000);
 	signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 500);
 	signal_lowpass("out_mod_tm.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);

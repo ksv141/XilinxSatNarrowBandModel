@@ -174,8 +174,12 @@ extern void signal_halfband_ddc(const string& in, const string& out_up, const st
  * @brief обнаружение сигнала и определение частотного смещения
  * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param corr_num номер коррелятора, обнаружившего сигнал
- * @param freq_est_stage_1 грубая оценка частотного смещения [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi].
+ * @param freq_est_stage_1 грубая оценка частотного смещения [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
+ * @param freq_est_stage_2 точная оценка частотного смещения [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
+ * @param phase_est оценка смещения фазы [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
+ * @param symbol_timing_est оценка тактового смещения [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
 */
-extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2);
+extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2,
+								int16_t& phase_est, int16_t& symbol_timing_est);
 
 #endif // TESTUTILS_H
