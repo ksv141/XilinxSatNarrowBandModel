@@ -105,44 +105,20 @@ int main()
 	cout << "corr = " << corr_num << endl << "freq 1 = " << freq_1 << endl << "freq 2 = " << freq_2 << endl
 		<< "phase = " << phase <<  endl << "t_shift = " << t_shift << endl;
 
-	xip_real ddc_shift = 0;
-	if (corr_num > 15) {
-		corr_num -= 16;
-		ddc_shift = 6250;
-	}
-	xip_real freq_total = corr_num * 25000 + 12500 - ddc_shift;
-	freq_total += ((double)freq_1 * INIT_SAMPLE_RATE / DDS_PHASE_MODULUS) + ((double)freq_2 * INIT_SAMPLE_RATE / DDS_PHASE_MODULUS);
+	//double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
+	//cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;
 
-	double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
-	cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;
-	cout << "freq total = " << freq_total << endl;
-	//signal_halfband_ddc("out_mod_halfband_200_down.pcm", "out_mod_halfband_100_up.pcm", "out_mod_halfband_100_down.pcm");
+	total_freq_est -= DDS_PHASE_MODULUS >> 1;	// полоса смещена вниз к 0
+	signal_freq_shift("out_mod_decim_x16.pcm", "out_mod_decim_x16_shift.pcm", -total_freq_est);
+	signal_lowpass("out_mod_decim_x16_shift.pcm", "out_mod_decim_x16_shift_lowpass.pcm", "lowpass_400_50kHz.fcf", 42);
+	signal_decimate("out_mod_decim_x16_shift_lowpass.pcm", "out_mod_decim_x4.pcm", 4);
+	signal_lowpass("out_mod_decim_x4.pcm", "out_mod_decim_x4_lowpass.pcm", "lowpass_100_9143Hz.fcf", 57);
+	signal_decimate("out_mod_decim_x4_lowpass.pcm", "out_mod_decim_x1.pcm", 4);
 
-	//signal_decimate("out_mod_halfband_100.pcm", "out_mod_decim_x1.pcm", 4);
-	//signal_decimate("out_mod_decim_x4.pcm", "out_mod_decim_x1.pcm", 4);
-
-	//signal_resample("out_mod_halfband_25.pcm", "out_mod_rcv.pcm", 25000, INIT_SAMPLE_RATE);
-	//signal_lowpass("out_mod_rcv.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
-	//signal_agc("out_mod_mf.pcm", "out_mod_rcv_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
-
-	//int16_t freq_est_stage_1 = 0;
-	//signal_freq_est_stage("out_mod_rcv_agc.pcm", 1, 32, 1, DPDI_BURST_ML_SATGE_1, freq_est_stage_1);
-	//signal_freq_shift("out_mod_rcv.pcm", "out_mod_rcv_st_1.pcm", -freq_est_stage_1);
-
-	//signal_lowpass("out_mod_rcv_st_1.pcm", "out_mod_rcv_st_1_mf.pcm", "rc_root_x2_25_19.fcf", 19);
-	//signal_agc("out_mod_rcv_st_1_mf.pcm", "out_mod_rcv_st_1_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
-
-	//int16_t freq_est_stage_2 = 0;
-	//signal_freq_est_stage("out_mod_rcv_st_1_agc.pcm", 8, 4, 1, DPDI_BURST_ML_SATGE_2, freq_est_stage_2);
-	//signal_freq_shift("out_mod_rcv_st_1.pcm", "out_mod_rcv_st_2.pcm", -freq_est_stage_2);
-
-	//int16_t freq_est_sum = (387500./1600000.)*DDS_PHASE_MODULUS + freq_est_stage_1*(BAUD_RATE*2./1600000.) + freq_est_stage_2* (BAUD_RATE * 2. / 1600000.);
-	//signal_freq_shift("out_mod_interp_x64_390500.pcm", "out_mod_rcv_x64.pcm", -freq_est_sum);
-	//
-	//signal_decimate("out_mod_rcv_x64.pcm", "out_mod_rcv_x1.pcm", 64);
-
-	//Demodulator dmd("out_mod_halfband_25_down.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
-	//dmd.process();
+	Demodulator dmd("out_mod_decim_x1.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
+	dmd.setPhaseShift(-phase);
+	dmd.setSymbolTimingShift(-t_shift);
+	dmd.process();
 
 	destroy_xip_multiplier();
 	destroy_xip_cordic_sqrt();

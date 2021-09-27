@@ -48,6 +48,16 @@ public:
 	*/
 	void process();
 
+	/**
+	 * @brief установить начальную фазу ФАПЧ
+	*/
+	void setPhaseShift(int16_t phase_shift);
+
+	/**
+	 * @brief установить начальное смещение интерполятора
+	*/
+	void setSymbolTimingShift(int16_t time_shift);
+
 private:
 	FILE* m_inFile;
 	FILE* m_outDmdFile;

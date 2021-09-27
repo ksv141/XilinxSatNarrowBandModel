@@ -124,3 +124,16 @@ void Demodulator::process()
 	}
 	dbg_out.close();
 }
+
+void Demodulator::setPhaseShift(int16_t phase_shift)
+{
+	xip_real poff = phase_shift;
+	if (poff < 0)
+		poff += DDS_PHASE_MODULUS;
+	dds.setPhaseOffset(poff);
+}
+
+void Demodulator::setSymbolTimingShift(int16_t time_shift)
+{
+	dmd_interp.shift((int32_t)time_shift);
+}

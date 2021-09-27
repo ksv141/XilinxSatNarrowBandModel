@@ -3,8 +3,6 @@
 
 #include "cmpy_v6_0_bitacc_cmodel.h"
 #include "constellation.h"
-#include "FirMultiplier.h"
-#include "FirSummator.h"
 #include "xip_utils.h"
 
 // Оценка тактового смещения (для СТС)
