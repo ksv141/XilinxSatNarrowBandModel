@@ -24,7 +24,7 @@ extern const uint32_t DPDI_BURST_ML_SATGE_2;
 extern const uint32_t PHASE_BURST_ML_SATGE_3;
 
 /**
- * @brief Бинарное дерево полуполосных DDC (5 уровней)
+ * @brief Бинарное дерево полуполосных DDC (4 уровня)
 */
 class HalfBandDDCTree
 {
@@ -99,6 +99,13 @@ public:
 	 * @return 
 	*/
 	int16_t getSymbolTimingEst();
+
+	/**
+	 * @brief рассчитать общий частотный сдвиг обнаруженного сигнала с учетом всех корреляторов
+	 * [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] относительно Fs на входе дерева
+	 * @return 
+	*/
+	int16_t countTotalFreqShift();
 
 private:
 	AutoGaneControl m_agc;					// АРУ на входе дерева DDC для нормировки уровней корреляторов

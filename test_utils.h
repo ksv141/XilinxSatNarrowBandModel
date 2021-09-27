@@ -177,9 +177,10 @@ extern void signal_halfband_ddc(const string& in, const string& out_up, const st
  * @param freq_est_stage_1 грубая оценка частотного смещения [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
  * @param freq_est_stage_2 точная оценка частотного смещения [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
  * @param phase_est оценка смещения фазы [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
- * @param symbol_timing_est оценка тактового смещения [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
+ * @param symbol_timing_est оценка тактового смещения [-1024, 1024]
+ * @param total_freq_est общая оценка частотного смещения в единицах входной частоты [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
 */
 extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2,
-								int16_t& phase_est, int16_t& symbol_timing_est);
+								int16_t& phase_est, int16_t& symbol_timing_est, int16_t& total_freq_est);
 
 #endif // TESTUTILS_H

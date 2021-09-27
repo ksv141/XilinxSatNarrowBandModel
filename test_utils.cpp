@@ -552,7 +552,7 @@ void signal_halfband_ddc(const string& in, const string& out_up, const string& o
 }
 
 void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2,
-						int16_t& phase_est, int16_t& symbol_timing_est)
+						int16_t& phase_est, int16_t& symbol_timing_est, int16_t& total_freq_est)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");
 	if (!in_file)
@@ -580,6 +580,7 @@ void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est
 		freq_est_stage_2 = ddc_tree.getfreqEstStage_2();
 		phase_est = ddc_tree.getPhaseEst();
 		symbol_timing_est = ddc_tree.getSymbolTimingEst();
+		total_freq_est = ddc_tree.countTotalFreqShift();
 		break;
 		//dbg_out << res << endl;
 	}

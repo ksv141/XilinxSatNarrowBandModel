@@ -161,3 +161,27 @@ int16_t HalfBandDDCTree::getSymbolTimingEst()
 {
 	return m_symbolTimingEst;
 }
+
+int16_t HalfBandDDCTree::countTotalFreqShift()
+{
+	const int16_t f1 = DDS_PHASE_MODULUS >> n_levels;
+	const int16_t f2 = f1 >> 1;
+	const int16_t f3 = f2 >> 1;
+	const unsigned corr_count = n_ternimals >> 1;
+	const xip_real resample_coeff = (xip_real)INIT_SAMPLE_RATE / (xip_real)in_fs;	// коэффициент пересчета частоты
+	int16_t ddc_shift = 0;
+	unsigned corr_num = m_freqEstCorrNum;
+	if (corr_num >= corr_count) {		// принадлежит ли номер коррелятора сдвинутому диапазону
+		corr_num -= corr_count;
+		ddc_shift = f3;					// поправка на сдвиг диапазона
+	}
+
+	// пересчет частоты из 2B во входную
+	xip_real f1_resample;
+	xip_multiply_real((xip_real)m_freqEstStage_1, resample_coeff, f1_resample);
+	xip_real f2_resample;
+	xip_multiply_real((xip_real)m_freqEstStage_2, resample_coeff, f2_resample);
+
+	int16_t freq = corr_num * f1 + f2 - ddc_shift + f1_resample + f2_resample;
+	return freq;
+}
