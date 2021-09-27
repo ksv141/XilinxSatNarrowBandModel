@@ -11,6 +11,7 @@
 #include "CorrelatorDPDI.h"
 #include "SignalSource.h"
 #include "autoganecontrol.h"
+#include "PhaseTimingCorrelator.h"
 
 using namespace std;
 
@@ -20,6 +21,7 @@ extern const int AGC_WND_SIZE_LOG2;
 extern const uint16_t FRAME_DATA_SIZE;
 extern const uint32_t DPDI_BURST_ML_SATGE_1;
 extern const uint32_t DPDI_BURST_ML_SATGE_2;
+extern const uint32_t PHASE_BURST_ML_SATGE_3;
 
 /**
  * @brief Бинарное дерево полуполосных DDC (5 уровней)
@@ -53,6 +55,13 @@ public:
 	 * @return
 	*/
 	bool processTuneCorrelator(int16_t dph);
+
+	/**
+	 * @brief обработать буфер многоканального коррелятора, который обнаружил сигнал, коррелятором для оценки фазы и тактов
+	 * @param dph частотный сдвиг буфера --> [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS]
+	 * @return
+	*/
+	bool processPhaseTimingCorrelator(int16_t dph);
 
 	/**
 	 * @brief возвращает массив с выходным многоканальным отсчетом
@@ -95,13 +104,14 @@ private:
 
 	LowpassFir m_matchedFir;				// согласованный фильтр на 2B перед коррелятором
 
-	vector<CorrelatorDPDI> m_correlators;	// многоканальный коррелятор (грубая оценка)
-
-	CorrelatorDPDI m_tuneCorrelator;		// одноканальный коррелятор (точная оценка)
+	vector<CorrelatorDPDI> m_correlators;	// многоканальный коррелятор (1-я стадия, грубая оценка)
+	CorrelatorDPDI m_tuneCorrelator;		// одноканальный коррелятор (2-я стадия, точная оценка)
+	PhaseTimingCorrelator m_phaseTimingCorrelator;	// коррелятор для оценки фазы и тактов (3-я стадия)
 
 	int16_t m_freqEstStage_1;				// частота с выхода грубого коррелятора
 	unsigned m_freqEstCorrNum;				// номер коррелятора, обнаружившего сигнал
 	int16_t m_freqEstStage_2;				// частота с выхода точного коррелятора
+	//int16_t m_p
 
 	ofstream m_outCorrelator;				// файл с данными коррелятора (для отладки)
 };

@@ -8,7 +8,8 @@ HalfBandDDCTree::HalfBandDDCTree():
 	m_correlators(n_ternimals, { FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength,
 								1, 32, 1, DPDI_BURST_ML_SATGE_1 }),
 	m_tuneCorrelator(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength,
-		8, 4, 1, DPDI_BURST_ML_SATGE_2)
+		8, 4, 1, DPDI_BURST_ML_SATGE_2),
+	m_phaseTimingCorrelator((int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength, PHASE_BURST_ML_SATGE_3)
 {
 	for (int i = 0; i <= n_levels; i++)
 		out_ddc[i] = new xip_complex[1 << (i + 1)];
@@ -84,6 +85,52 @@ bool HalfBandDDCTree::processTuneCorrelator(int16_t dph)
 		dds.process(dph, mod_sample);
 		xip_multiply_complex(*it, mod_sample, *it);
 		xip_complex_shift(*it, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
+		if (m_tuneCorrelator.process(*it, m_freqEstStage_2, corr_est)) {
+			return true;
+		}
+		//m_outCorrelator << corr_est << endl;
+	}
+	return false;
+}
+
+bool HalfBandDDCTree::processPhaseTimingCorrelator(int16_t dph)
+{
+	deque<xip_complex>& corr_reg = m_correlators[m_freqEstCorrNum].getBuffer();
+
+	if (dph < 0)
+		dph += DDS_PHASE_MODULUS;
+	DDS dds(DDS_PHASE_MODULUS);
+
+	xip_real corr_est = 0;
+	for (deque<xip_complex>::reverse_iterator it = corr_reg.rbegin(); it != corr_reg.rend(); it++) {
+		xip_complex mod_sample{ 0, 0 };
+		dds.process(dph, mod_sample);
+		xip_multiply_complex(*it, mod_sample, *it);
+		xip_complex_shift(*it, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
+
+		if (m_phaseTimingCorrelator.isPhaseEstMode()) {
+			int16_t ph = 0;
+			xip_real phase_est = 0;
+			if (m_phaseTimingCorrelator.phaseEstimate(*it, ph, phase_est)) {
+				phase = ph;
+			}
+		}
+		else {
+			xip_real t_shift = 0;
+			xip_real time_est = 0;
+			if (m_phaseTimingCorrelator.getSymbolTimingProcCounter()) {
+				if (m_phaseTimingCorrelator.symbolTimingEstimate(*it, t_shift, time_est)) {
+					xip_real_shift(t_shift, -2); // !!!!!! подобрано для DDS_PHASE_MODULUS = 16384 и LAGRANGE_INTERVALS = 1024 !!!!
+					time_shift = t_shift;
+					t_count = m_phaseTimingCorrelator.getSymbolTimingProcCounter();
+					res = true;
+					break;
+				}
+			}
+
+
 
 		if (m_tuneCorrelator.process(*it, m_freqEstStage_2, corr_est)) {
 			return true;

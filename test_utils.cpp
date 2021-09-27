@@ -496,7 +496,7 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 			xip_real time_est = 0;
 			if (corr_stage.getSymbolTimingProcCounter()) {
 				if (corr_stage.symbolTimingEstimate(sample, t_shift, time_est)) {
-					xip_real_shift(t_shift, -2);
+					xip_real_shift(t_shift, -2); // !!!!!! подобрано для DDS_PHASE_MODULUS = 16384 и LAGRANGE_INTERVALS = 1024 !!!!
 					time_shift = t_shift;
 					t_count = corr_stage.getSymbolTimingProcCounter();
 					res = true;
