@@ -22,6 +22,7 @@
 #include "autoganecontrol.h"
 #include "HalfBandDDC.h"
 #include "HalfBandDDCTree.h"
+#include "PhaseTimingCorrelator.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -60,6 +61,15 @@ extern void signal_freq_shift_symmetric(const string& in, const string& out_up, 
  * @param freq_shift_mod смещение частоты в единицах работы DDS --> [-8192, 8192]
 */
 extern void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_mod);
+
+/**
+ * @brief частотное и фазовое смещение сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param freq_shift_mod смещение частоты в единицах работы DDS --> [-8192, 8192]
+ * @param phase смещение фазы в единицах работы DDS --> [-8192, 8192]
+*/
+extern void signal_freq_phase_shift(const string& in, const string& out, int16_t freq_shift_mod, int16_t phase);
 
 /**
  * @brief двухканальное симметричное частотное смещение сигнала
@@ -141,10 +151,16 @@ extern void signal_lowpass(const string& in, const string& out, const string& co
 extern void signal_agc(const string& in, const string& out, unsigned window_size_log2, double norm_power);
 
 /**
- * @brief вычисление коррел€ционного отклика сигнала
+ * @brief вычисление коррел€ционного отклика частотного коррел€тора
  * @param in входной файл (PCM стерео I/Q 16-бит)
 */
 extern bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F, uint32_t burst_est, int16_t& freq_est);
+
+/**
+ * @brief вычисление коррел€ционного отклика фазового коррел€тора
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+*/
+extern bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& phase, xip_real& time_shift, int& t_count);
 
 /**
  * @brief разделение сигнала на половину полосы
@@ -158,8 +174,13 @@ extern void signal_halfband_ddc(const string& in, const string& out_up, const st
  * @brief обнаружение сигнала и определение частотного смещени€
  * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param corr_num номер коррел€тора, обнаружившего сигнал
- * @param freq_est_stage_1 груба€ оценка частотного смещени€ [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi].
+ * @param freq_est_stage_1 груба€ оценка частотного смещени€ [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
+ * @param freq_est_stage_2 точна€ оценка частотного смещени€ [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
+ * @param phase_est оценка смещени€ фазы [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
+ * @param symbol_timing_est оценка тактового смещени€ [-1024, 1024]
+ * @param total_freq_est обща€ оценка частотного смещени€ в единицах входной частоты [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS] --> [0, 2pi]
 */
-extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2);
+extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2,
+								int16_t& phase_est, int16_t& symbol_timing_est, int16_t& total_freq_est);
 
 #endif // TESTUTILS_H

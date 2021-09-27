@@ -28,13 +28,20 @@ public:
 	 * @brief одноканальная генерация
 	 * @param dph набег фазы --> [0, phase_modulus]
 	*/
-	int process(double dph, xip_complex& out);
+	int process(xip_real dph, xip_complex& out);
 
 	/**
 	 * @brief двухканальная генерация (вверх и вниз)
 	 * @param dph набег фазы вверх --> [0, phase_modulus], вниз берется симметрично относительно phase_modulus
 	*/
-	int process(double dph, xip_complex& out_up, xip_complex& out_down);
+	int process(xip_real dph, xip_complex& out_up, xip_complex& out_down);
+
+	/**
+	 * @brief установка фазового сдвига через config-канал
+	 * @param poff фазовый сдвиг --> [0, phase_modulus]
+	 * @return 
+	*/
+	int setPhaseOffset(xip_real poff);
 
 	/**
 	 * @brief возвращает ширину возвращаемых sin/cos в битах
@@ -48,6 +55,7 @@ private:
 
 	xip_dds_v6_0_config dds_cnfg;
 	xip_dds_v6_0* dds_model;
+	xip_dds_v6_0_config_pkt* pinc_poff_config;	// config- пакет для частотного/фазового смещения
 
 	xip_array_real* dds_in;		// 3-D массив, содержащий текущий отсчет для обработки
 	xip_array_real* dds_out;	// 3-D массив, содержащий результат обработки

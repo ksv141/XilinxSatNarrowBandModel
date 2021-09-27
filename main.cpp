@@ -31,6 +31,9 @@ static const double _2_PI = PI * 2;
 
 // глобальные параметры
 const int DDS_PHASE_MODULUS = 16384;				// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
+													// выбор этой величины будет влиять на коэффициент масштабирования 
+													// оценки тактового смещения в классе PhaseTimingCorrelator
+
 const int DDS_RAD_CONST = (int)(DDS_PHASE_MODULUS * 8 / _2_PI);	// радиан на одну позицию фазы << 3 == 20860 (16 бит)
 const uint16_t FRAME_DATA_SIZE = 1115;					// размер данных в кадре (байт)
 const int AGC_WND_SIZE_LOG2 = 5;					// log2 окна усреднения АРУ
@@ -46,6 +49,7 @@ const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации
 // параметры корреляторов
 const uint32_t DPDI_BURST_ML_SATGE_1 = 3000;			// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
 const uint32_t DPDI_BURST_ML_SATGE_2 = 3500;			// порог обнаружения сигнала коррелятора второй стадии (точная оценка частоты)
+const uint32_t PHASE_BURST_ML_SATGE_3 = 5000;			// порог обнаружения сигнала коррелятора третьей стадии (оценка фазы и тактов)
 
 int main()
 {
@@ -55,6 +59,20 @@ int main()
 	init_xip_cordic_sqrt();
 	init_xip_cordic_rect_to_polar();
 	init_channel_matched_fir();
+
+	//generate_sin_signal("sin.pcm", 1, 50, 100, 10);
+
+
+	//signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 5000);
+	//signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 500);
+	//signal_lowpass("out_mod_tm.pcm", "out_mod_mf.pcm", "rc_root_x2_25_19.fcf", 19);
+	//signal_agc("out_mod_mf.pcm", "out_mod_rcv_agc.pcm", AGC_WND_SIZE_LOG2, get_cur_constell_pwr());
+
+	//int16_t phase = 0;
+	//xip_real time_shift = 0;
+	//int t_count;
+	//signal_phase_time_est_stage("out_mod_rcv_agc.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
+	//cout << "ph = " << phase << "\ttm = " << time_shift << "\tt_count = " << t_count << endl;
 
 	//signal_halfband_ddc("out_mod_shift_up_6.pcm", "out_mod_shift_ddc_up.pcm", "out_mod_shift_ddc_down.pcm");
 	//signal_halfband_ddc("out_mod_shift_ddc_down.pcm", "out_mod_shift_ddc_up_1.pcm", "out_mod_shift_ddc_down_1.pcm");
@@ -80,9 +98,24 @@ int main()
 	unsigned corr_num = 0;
 	int16_t freq_1 = 0;
 	int16_t freq_2 = 0;
-	signal_ddc_estimate("out_mod_decim_x16.pcm", corr_num, freq_1, freq_2);
-	cout << "corr = " << corr_num << endl << "freq 1 = " << freq_1 << endl << "freq 2 = " << freq_2 << endl;
+	int16_t phase = 0;
+	int16_t t_shift = 0;
+	int16_t total_freq_est = 0;
+	signal_ddc_estimate("out_mod_decim_x16.pcm", corr_num, freq_1, freq_2, phase, t_shift, total_freq_est);
+	cout << "corr = " << corr_num << endl << "freq 1 = " << freq_1 << endl << "freq 2 = " << freq_2 << endl
+		<< "phase = " << phase <<  endl << "t_shift = " << t_shift << endl;
 
+	xip_real ddc_shift = 0;
+	if (corr_num > 15) {
+		corr_num -= 16;
+		ddc_shift = 6250;
+	}
+	xip_real freq_total = corr_num * 25000 + 12500 - ddc_shift;
+	freq_total += ((double)freq_1 * INIT_SAMPLE_RATE / DDS_PHASE_MODULUS) + ((double)freq_2 * INIT_SAMPLE_RATE / DDS_PHASE_MODULUS);
+
+	double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
+	cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;
+	cout << "freq total = " << freq_total << endl;
 	//signal_halfband_ddc("out_mod_halfband_200_down.pcm", "out_mod_halfband_100_up.pcm", "out_mod_halfband_100_down.pcm");
 
 	//signal_decimate("out_mod_halfband_100.pcm", "out_mod_decim_x1.pcm", 4);
