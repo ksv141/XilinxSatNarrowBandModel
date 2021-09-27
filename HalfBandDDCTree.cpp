@@ -115,6 +115,7 @@ bool HalfBandDDCTree::processPhaseTimingCorrelator(int16_t dph)
 			int16_t ph = 0;
 			xip_real phase_est = 0;
 			m_phaseTimingCorrelator.phaseEstimate(*it, m_phaseEst, phase_est);
+			//m_outCorrelator << phase_est << endl;
 		}
 		else {
 			int16_t t_shift = 0;

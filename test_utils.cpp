@@ -583,7 +583,6 @@ void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est
 		break;
 		//dbg_out << res << endl;
 	}
-
 	//dbg_out.close();
 	fclose(in_file);
 }

@@ -32,7 +32,8 @@ void PhaseTimingCorrelator::process(xip_complex in)
     m_currentCorrelation = rx_ph;
 
     // Продвигаем корреляцию в регистр оценки сдвига тактов
-    xip_real rxx = (fabs(rx_ph.re) > fabs(rx_ph.im)) ? rx_ph.re : rx_ph.im;
+    //xip_real rxx = (fabs(rx_ph.re) > fabs(rx_ph.im)) ? rx_ph.re : rx_ph.im;
+    xip_real rxx = std::max(fabs(rx_ph.re), fabs(rx_ph.im));
     m_timingSyncReg.pop_back();
     m_timingSyncReg.push_front(rxx);
 }
