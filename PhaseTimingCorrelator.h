@@ -45,7 +45,7 @@ public:
 	 * @param time_est текущий корреляционный отклик (используется для отладки)
 	 * @return есть (true) или нет (false) срабатывание условия для оценки сдвига
 	*/
-	bool symbolTimingEstimate(xip_complex in, xip_real& time_shift, xip_real& time_est);
+	bool symbolTimingEstimate(xip_complex in, int16_t& time_shift, xip_real& time_est);
 
 	/**
 	 * @brief возвращает текущий режим коррелятора

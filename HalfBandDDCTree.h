@@ -59,7 +59,8 @@ public:
 	/**
 	 * @brief обработать буфер многоканального коррелятора, который обнаружил сигнал, коррелятором для оценки фазы и тактов
 	 * @param dph частотный сдвиг буфера --> [-DDS_PHASE_MODULUS, DDS_PHASE_MODULUS]
-	 * @return
+	 * @return true - если оценка для фазы и тактов выполнена, false - если не оценены один или оба параметра
+	 * если один или оба параметра оценить не удалось, то он становится равен 0
 	*/
 	bool processPhaseTimingCorrelator(int16_t dph);
 
@@ -87,6 +88,18 @@ public:
 	*/
 	int16_t getfreqEstStage_2();
 
+	/**
+	 * @brief возвращает фазу
+	 * @return 
+	*/
+	int16_t getPhaseEst();
+
+	/**
+	 * @brief возвращает смещение тактов
+	 * @return 
+	*/
+	int16_t getSymbolTimingEst();
+
 private:
 	AutoGaneControl m_agc;					// АРУ на входе дерева DDC для нормировки уровней корреляторов
 
@@ -111,7 +124,8 @@ private:
 	int16_t m_freqEstStage_1;				// частота с выхода грубого коррелятора
 	unsigned m_freqEstCorrNum;				// номер коррелятора, обнаружившего сигнал
 	int16_t m_freqEstStage_2;				// частота с выхода точного коррелятора
-	//int16_t m_p
+	int16_t m_phaseEst;						// фаза с выхода коррелятора 3-й стадии
+	int16_t m_symbolTimingEst;				// тактовое смещение с выхода коррелятора 3-й стадии
 
 	ofstream m_outCorrelator;				// файл с данными коррелятора (для отладки)
 };

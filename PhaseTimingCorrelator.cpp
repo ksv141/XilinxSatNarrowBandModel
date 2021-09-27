@@ -64,7 +64,7 @@ bool PhaseTimingCorrelator::phaseEstimate(xip_complex in, int16_t& phase, xip_re
     return false;
 }
 
-bool PhaseTimingCorrelator::symbolTimingEstimate(xip_complex in, xip_real& time_shift, xip_real& time_est)
+bool PhaseTimingCorrelator::symbolTimingEstimate(xip_complex in, int16_t& time_shift, xip_real& time_est)
 {
     process(in);
     time_est = m_timingSyncReg[0];
@@ -79,8 +79,9 @@ bool PhaseTimingCorrelator::symbolTimingEstimate(xip_complex in, xip_real& time_
 
     xip_real mag;
     xip_real arg;
-    xip_cordic_rect_to_polar(rt, mag, arg);
-    time_shift = arg;    //mu_est = 2.0f / static_cast<float>(M_PI_2) * std::arg(rt);
+    xip_cordic_rect_to_polar(rt, mag, arg);     //mu_est = 2.0f / static_cast<float>(M_PI_2) * std::arg(rt);
+    xip_real_shift(arg, -2); // !!!!!! подобрано для DDS_PHASE_MODULUS = 16384 и LAGRANGE_INTERVALS = 1024 !!!!
+    time_shift = (int16_t)arg;    
 
     return true;
 }
