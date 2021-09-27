@@ -4,8 +4,10 @@ Demodulator::Demodulator(const string& input_file, const string& output_dmd_file
 	m_agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr()),
 	pif_sts(PIF_STS_Kp, PIF_STS_Ki),
 	pif_pll(PIF_PLL_Kp, PIF_PLL_Ki),
+	pif_dopl(PIF_DOPL_Kp, PIF_DOPL_Ki),
 	dds(DDS_PHASE_MODULUS),
-	dmd_interp(25000, 18286, 1)
+	dmd_interp(25000, 18286, 1),
+	m_doplFreqEst(0)
 {
 	m_inFile = fopen(input_file.c_str(), "rb");
 	if (!m_inFile)
@@ -116,7 +118,12 @@ void Demodulator::process()
 			// коррекция смещения интерполятора
 			dmd_interp.shift((int32_t)sts_err);
 			//*********************************************************************
-
+			
+			//************* Оценка смещения Доплера *******************************
+			xip_real dopl_err = m_doplEst.getErr(sample, est);
+			pif_dopl.process(sts_err, m_doplFreqEst);	// сглаживание и интеграция сигнала ошибки в ПИФ
+			//*********************************************************************
+			
 			// пишем в файл
 			tC::write_real<int16_t>(m_outDmdFile, sample.re);
 			tC::write_real<int16_t>(m_outDmdFile, sample.im);

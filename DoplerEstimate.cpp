@@ -2,6 +2,7 @@
 
 DoplerEstimate::DoplerEstimate()
 {
+    m_reg.resize(4, { 0, 0 });
 }
 
 int16_t DoplerEstimate::getErr(const xip_complex& out_symb, const xip_complex& est)

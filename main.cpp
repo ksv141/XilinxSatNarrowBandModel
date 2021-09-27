@@ -42,6 +42,8 @@ const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной
 const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
 const double PIF_PLL_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
 const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
+const double PIF_DOPL_Kp = 0.026311636311692643;	// коэффициент пропорциональной составляющей ПИФ Допл (при specific_locking_band = 0.01)
+const double PIF_DOPL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
 
 const int BAUD_RATE = 9143;							// бодовая скорость в канале
 const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации на выходе канального фильтра

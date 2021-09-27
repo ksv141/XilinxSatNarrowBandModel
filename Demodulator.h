@@ -11,6 +11,7 @@
 #include "xip_utils.h"
 #include "constellation.h"
 #include "StsEstimate.h"
+#include "DoplerEstimate.h"
 #include "Pif.h"
 #include "LagrangeInterp.h"
 #include "xip_utils.h"
@@ -25,6 +26,8 @@ extern const double PIF_STS_Kp;		// коэффициент пропорциональной составляющей ПИ
 extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТС
 extern const double PIF_PLL_Kp;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ
 extern const double PIF_PLL_Ki;		// коэффициент интегральной составляющей ПИФ ФАПЧ
+extern const double PIF_DOPL_Kp;	// коэффициент пропорциональной составляющей ПИФ Допл (при specific_locking_band = 0.01)
+extern const double PIF_DOPL_Ki;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
 
 extern const int DDS_PHASE_MODULUS; // диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
 extern const int DDS_RAD_CONST;		// радиан на одну позицию фазы << 3 == 20860 (16 бит)
@@ -64,11 +67,15 @@ private:
 	FILE* m_outBinFile;
 
 	StsEstimate m_stsEst;		// блок оценки ошибки тактовой синхры
+	DoplerEstimate m_doplEst;	// блок оценки смещения Доплера
 	Pif pif_sts;				// ПИФ СТС
 	Pif pif_pll;				// ПИФ ФАПЧ
+	Pif pif_dopl;				// ПИФ петли компенсации Доплера
 	LagrangeInterp dmd_interp;	// интерполятор СТС
 	AutoGaneControl m_agc;		// АРУ
 	DDS dds;					// ГУН петли ФАПЧ
+
+	xip_real m_doplFreqEst;		// оценка частоты смещения Доплера
 };
 
 #endif // DEMODULATOR_H
