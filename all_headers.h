@@ -25,5 +25,6 @@
 #include "HalfBandDDCTree.h"
 #include "PhaseTimingCorrelator.h"
 #include "test_utils.h"
+#include "NarrowBandDemodulator.h"
 
 #endif // ALLHEADERS_H

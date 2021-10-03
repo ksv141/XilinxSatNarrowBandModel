@@ -6,10 +6,7 @@ HalfBandDDCTree::HalfBandDDCTree():
 	m_freqShifter(DDS_PHASE_MODULUS),
 	m_matchedFir("rc_root_x2_25_19.fcf", 19, 0, n_ternimals),
 	m_correlators(n_ternimals, { FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength,
-								1, 32, 1, DPDI_BURST_ML_SATGE_1 }),
-	m_tuneCorrelator(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength,
-		8, 4, 1, DPDI_BURST_ML_SATGE_2),
-	m_phaseTimingCorrelator((int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength, PHASE_BURST_ML_SATGE_3)
+								1, 32, 1, DPDI_BURST_ML_SATGE_1 })
 {
 	for (int i = 0; i <= n_levels; i++)
 		out_ddc[i] = new xip_complex[1 << (i + 1)];
@@ -58,9 +55,9 @@ bool HalfBandDDCTree::process(const xip_complex& in)
 		bool est = false;
 		for (int i = 0; i < n_ternimals; i++) {
 			xip_real corr_est = 0;
-			if (m_correlators[i].process(out_itrp[i], m_freqEstStage_1, corr_est)) {
+			if (m_correlators[i].process(out_itrp[i], m_freqEst, corr_est)) {
 				m_freqEstCorrNum = i;
-				est = processTuneCorrelator(-m_freqEstStage_1);			// точный коррелятор на буфере, где обнаружен сигнал
+				est = processTuneCorrelator(-m_freqEst);			// точный коррелятор на буфере, где обнаружен сигнал
 				processPhaseTimingCorrelator(-m_freqEstStage_2);		// оценка фазы и тактов на буфере, где обнаружен сигнал
 				break;
 			}
@@ -144,7 +141,7 @@ unsigned HalfBandDDCTree::getFreqEstCorrNum()
 
 int16_t HalfBandDDCTree::getfreqEstStage_1()
 {
-	return m_freqEstStage_1;
+	return m_freqEst;
 }
 
 int16_t HalfBandDDCTree::getfreqEstStage_2()
@@ -178,7 +175,7 @@ int16_t HalfBandDDCTree::countTotalFreqShift()
 
 	// пересчет частоты из 2B во входную
 	xip_real f1_resample;
-	xip_multiply_real((xip_real)m_freqEstStage_1, resample_coeff, f1_resample);
+	xip_multiply_real((xip_real)m_freqEst, resample_coeff, f1_resample);
 	xip_real f2_resample;
 	xip_multiply_real((xip_real)m_freqEstStage_2, resample_coeff, f2_resample);
 

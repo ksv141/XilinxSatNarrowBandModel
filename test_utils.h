@@ -23,6 +23,7 @@
 #include "HalfBandDDC.h"
 #include "HalfBandDDCTree.h"
 #include "PhaseTimingCorrelator.h"
+#include "NarrowBandDemodulator.h"
 
 using namespace std;
 using namespace xilinx_m;

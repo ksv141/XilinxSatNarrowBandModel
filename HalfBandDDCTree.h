@@ -11,7 +11,6 @@
 #include "CorrelatorDPDI.h"
 #include "SignalSource.h"
 #include "autoganecontrol.h"
-#include "PhaseTimingCorrelator.h"
 
 using namespace std;
 
@@ -24,7 +23,7 @@ extern const uint32_t DPDI_BURST_ML_SATGE_2;
 extern const uint32_t PHASE_BURST_ML_SATGE_3;
 
 /**
- * @brief Бинарное дерево полуполосных DDC (4 уровня)
+ * @brief Бинарное дерево полуполосных DDC
 */
 class HalfBandDDCTree
 {
@@ -125,14 +124,9 @@ private:
 	LowpassFir m_matchedFir;				// согласованный фильтр на 2B перед коррелятором
 
 	vector<CorrelatorDPDI> m_correlators;	// многоканальный коррелятор (1-я стадия, грубая оценка)
-	CorrelatorDPDI m_tuneCorrelator;		// одноканальный коррелятор (2-я стадия, точная оценка)
-	PhaseTimingCorrelator m_phaseTimingCorrelator;	// коррелятор для оценки фазы и тактов (3-я стадия)
 
-	int16_t m_freqEstStage_1;				// частота с выхода грубого коррелятора
+	int16_t m_freqEst;						// частота с выхода грубого коррелятора
 	unsigned m_freqEstCorrNum;				// номер коррелятора, обнаружившего сигнал
-	int16_t m_freqEstStage_2;				// частота с выхода точного коррелятора
-	int16_t m_phaseEst;						// фаза с выхода коррелятора 3-й стадии
-	int16_t m_symbolTimingEst;				// тактовое смещение с выхода коррелятора 3-й стадии
 
 	ofstream m_outCorrelator;				// файл с данными коррелятора (для отладки)
 };
