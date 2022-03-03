@@ -78,24 +78,39 @@ int main()
 
 	//signal_halfband_ddc("out_mod_shift_up_6.pcm", "out_mod_shift_ddc_up.pcm", "out_mod_shift_ddc_down.pcm");
 	//signal_halfband_ddc("out_mod_shift_ddc_down.pcm", "out_mod_shift_ddc_up_1.pcm", "out_mod_shift_ddc_down_1.pcm");
+	//signal_halfband_ddc("out_mod_decim_x16.pcm", "out_mod_halfband_25_up.pcm", "out_mod_halfband_25_down.pcm");
 
+
+	//************ ‘ормирователь ѕ—ѕ в виде бинарного файла *************
+	//SignalSource::generateBinFile(3000, "data.bin");
+
+	//************ ћодул€тор *****************
+	// ‘ормирует кадры с добавлением преамбулы
 	//Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
 	//Modulator mdl("1.zip", "out_mod.pcm", FRAME_DATA_SIZE);
 	//mdl.process();
 
-	//signal_time_shift("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 128);
-	//signal_time_shift_dyn("out_mod_fr_shift.pcm", "out_mod_tm_shift.pcm", 10);
-	//double resample_coeff = 1.0;
-	//signal_resample("out_mod.pcm", "out_mod_rsmpl.pcm", INIT_SAMPLE_RATE, INIT_SAMPLE_RATE* resample_coeff);
-
+	//************ ѕередискретизаци€ до 1600 к√ц ***************
 	//signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
 	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x64.pcm", 64);
+
+	//************ ћоделирование произвольного смещени€ несущей в пределах полосы первого обнаружител€
+	// ¬сего 4 обнаружител€ с полосой 400 к√ц каждый дл€ перекрыти€ полосы 1600 к√ц
+	// ¬се обнаружители работают одинаково
 	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_383500.pcm", 383500, 1600000);
+
+
+
+	//************ ќЅЌј–”∆»“≈Ћ№ —»√ЌјЋј » ƒ≈ћќƒ”Ћя“ќ– ****************
+	//************ ѕеренос сигнала в полосу обнаружител€ (+/- 200 к√ц)
 	//signal_freq_shift("out_mod_interp_x64_383500.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
+	
+	//************ ‘Ќ„ дл€ отфильтровки сигнала в полосе обнаружител€
 	//signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
+	
+	//************ ƒецимаци€ до полосы обнаружител€ с 1600 до 400 к√ц
 	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
 
-	//signal_halfband_ddc("out_mod_decim_x16.pcm", "out_mod_halfband_25_up.pcm", "out_mod_halfband_25_down.pcm");
 
 	unsigned corr_num = 0;
 	int16_t freq_1 = 0;
@@ -107,8 +122,10 @@ int main()
 	cout << "corr = " << corr_num << endl << "freq 1 = " << freq_1 << endl << "freq 2 = " << freq_2 << endl
 		<< "phase = " << phase <<  endl << "t_shift = " << t_shift << endl;
 
-	//double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
-	//cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;
+	double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
+	cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;
+
+	return 0;
 
 	total_freq_est -= DDS_PHASE_MODULUS >> 1;	// полоса смещена вниз к 0
 	signal_freq_shift("out_mod_decim_x16.pcm", "out_mod_decim_x16_shift.pcm", -total_freq_est);
@@ -121,6 +138,7 @@ int main()
 	dmd.setPhaseShift(-phase);
 	dmd.setSymbolTimingShift(-t_shift);
 	dmd.process();
+
 
 	destroy_xip_multiplier();
 	destroy_xip_cordic_sqrt();
