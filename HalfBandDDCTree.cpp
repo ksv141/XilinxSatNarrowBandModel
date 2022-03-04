@@ -68,7 +68,7 @@ bool HalfBandDDCTree::process(const xip_complex& in, xip_complex& out)
 					m_freqEstCorrNum = i;									// номер коррелятора, обнаружившего сигнал
 					m_estDone = processTuneCorrelator(-m_freqEstStage_1);	// точный коррелятор на буфере, где обнаружен сигнал
 					//processPhaseTimingCorrelator(-m_freqEstStage_2);		// оценка фазы и тактов на буфере, где обнаружен сигнал
-					m_freqEstSum = m_freqEstStage_1 + m_freqEstStage_2;
+					m_freqEstSum = -(m_freqEstStage_1 + m_freqEstStage_2);
 					if (m_freqEstSum < 0)
 						m_freqEstSum += DDS_PHASE_MODULUS;
 					break;
