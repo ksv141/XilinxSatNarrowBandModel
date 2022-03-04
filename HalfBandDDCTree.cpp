@@ -18,7 +18,7 @@ HalfBandDDCTree::HalfBandDDCTree():
 
 	m_freqShiftMod = DDS_PHASE_MODULUS / (in_fs / freq_shift);
 
-	m_outCorrelator.open("correlators.out");
+	//m_outCorrelator.open("correlators.out");
 }
 
 HalfBandDDCTree::~HalfBandDDCTree()
@@ -27,7 +27,8 @@ HalfBandDDCTree::~HalfBandDDCTree()
 		delete[] out_ddc[i];
 	delete[] out_itrp;
 
-	m_outCorrelator.close();
+	if (m_outCorrelator.is_open())
+		m_outCorrelator.close();
 }
 
 bool HalfBandDDCTree::process(const xip_complex& in)
@@ -56,12 +57,15 @@ bool HalfBandDDCTree::process(const xip_complex& in)
 	if (itrp.next(out_itrp)) {
 		m_matchedFir.process(out_itrp, out_itrp);
 		bool est = false;
+		// ищем коррел€ционный отклик по всем коррел€торам
 		for (int i = 0; i < n_ternimals; i++) {
 			xip_real corr_est = 0;
 			if (m_correlators[i].process(out_itrp[i], m_freqEstStage_1, corr_est)) {
-				m_freqEstCorrNum = i;
+				// если коррел€тор обнаружил сигнал, то получаем от него грубую оценку частоты,
+				// корректируем частоту сигнала в буфере и передаем его на второй коррел€тор дл€ точной оценки частоты
+				m_freqEstCorrNum = i;									// номер коррел€тора, обнаружившего сигнал
 				est = processTuneCorrelator(-m_freqEstStage_1);			// точный коррел€тор на буфере, где обнаружен сигнал
-				processPhaseTimingCorrelator(-m_freqEstStage_2);		// оценка фазы и тактов на буфере, где обнаружен сигнал
+				//processPhaseTimingCorrelator(-m_freqEstStage_2);		// оценка фазы и тактов на буфере, где обнаружен сигнал
 				break;
 			}
 			//m_outCorrelator << corr_est << "\t";

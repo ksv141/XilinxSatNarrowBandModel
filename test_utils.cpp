@@ -587,3 +587,35 @@ void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est
 	//dbg_out.close();
 	fclose(in_file);
 }
+
+void signal_estimate_demodulate(const string& in, const string& dem_out)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(dem_out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	//ofstream dbg_out("dbg_out.txt");
+	HalfBandDDCTree ddc_tree;
+	int16_t re;
+	int16_t im;
+	xip_complex sample;
+	int counter = 0;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		if (++counter == 1000) {
+			counter = 0;
+			cout << ". ";
+		}
+		sample.re = re;
+		sample.im = im;
+		xip_complex res{ 0,0 };
+		ddc_tree.process(sample);
+		//dbg_out << res << endl;
+	}
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}

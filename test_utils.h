@@ -184,4 +184,11 @@ extern void signal_halfband_ddc(const string& in, const string& out_up, const st
 extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2,
 								int16_t& phase_est, int16_t& symbol_timing_est, int16_t& total_freq_est);
 
+/**
+ * @brief обнаружение сигнала, определение частотного смещения и демодуляция
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param dem_out сигнал на входе блока принятия решения на скорости 1B (PCM стерео I/Q 16-бит)
+*/
+extern void signal_estimate_demodulate(const string& in, const string& dem_out);
+
 #endif // TESTUTILS_H
