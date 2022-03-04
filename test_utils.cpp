@@ -533,8 +533,8 @@ void signal_halfband_ddc(const string& in, const string& out_up, const string& o
 		sample.re = re;
 		sample.im = im;
 		xip_complex res{ 0,0 };
-		if (!ddc_tree.process(sample))
-			continue;
+		//if (!ddc_tree.process(sample))
+		//	continue;
 
 		xip_complex* out_sample = ddc_tree.getData();
 		tC::write_real<int16_t>(out_file_up, out_sample[14].re);
@@ -573,8 +573,8 @@ void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est
 		sample.re = re;
 		sample.im = im;
 		xip_complex res{ 0,0 };
-		if (!ddc_tree.process(sample))
-			continue;
+		//if (!ddc_tree.process(sample))
+		//	continue;
 		corr_num = ddc_tree.getFreqEstCorrNum();
 		freq_est_stage_1 = ddc_tree.getfreqEstStage_1();
 		freq_est_stage_2 = ddc_tree.getfreqEstStage_2();
@@ -612,7 +612,11 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 		sample.re = re;
 		sample.im = im;
 		xip_complex res{ 0,0 };
-		ddc_tree.process(sample);
+		xip_complex out_sample{ 0,0 };
+		if (ddc_tree.process(sample, out_sample)) {
+			tC::write_real<int16_t>(out_file, out_sample.re);
+			tC::write_real<int16_t>(out_file, out_sample.im);
+		}
 		//dbg_out << res << endl;
 	}
 	//dbg_out.close();

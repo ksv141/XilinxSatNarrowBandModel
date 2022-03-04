@@ -44,10 +44,11 @@ public:
 
 	/**
 	 * @brief обработать очередной отсчет. для получения выходных данных требуется вызвать 2^n_levels раз
-	 * @param in 
-	 * @return 
+	 * @param in - входной отсчет
+	 * @param out - выходной отсчет
+	 * @return true - есть выходной отсчет, false - нет выходного отсчета
 	*/
-	bool process(const xip_complex& in);
+	bool process(const xip_complex& in, xip_complex& out);
 
 	/**
 	 * @brief обработать буфер многоканального коррелятора, который обнаружил сигнал, одноканальным точным коррелятором

@@ -33,7 +33,7 @@ HalfBandDDCTree::~HalfBandDDCTree()
 		m_outCorrelator.close();
 }
 
-bool HalfBandDDCTree::process(const xip_complex& in)
+bool HalfBandDDCTree::process(const xip_complex& in, xip_complex& out)
 {
 	// АРУ на входе дерева DDC для нормировки уровней корреляторов
 	xip_complex in_agc{ 0, 0 };
@@ -75,15 +75,19 @@ bool HalfBandDDCTree::process(const xip_complex& in)
 				}
 				//m_outCorrelator << corr_est << "\t";
 			}
+			return false;
 		}
 		else {	// если сигнал обнаружен коррелятором, корректируем частоту и демодулируем
 			xip_complex mod_sample{ 0, 0 };
+			xip_complex out_sample = out_itrp[m_freqEstCorrNum];
 			m_freqCorrector.process(m_freqEstSum, mod_sample);
-			xip_multiply_complex(out_itrp[m_freqEstCorrNum], mod_sample, out_itrp[m_freqEstCorrNum]);
-			xip_complex_shift(out_itrp[m_freqEstCorrNum], -(int)(m_freqCorrector.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+			xip_multiply_complex(out_sample, mod_sample, out_sample);
+			xip_complex_shift(out_sample, -(int)(m_freqCorrector.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
+			out = out_sample;
+			return true;
 		}
 		//m_outCorrelator << endl;
-		return m_estDone;
 	}
 	return false;
 }
