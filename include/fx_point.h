@@ -4,11 +4,11 @@
 #include <iostream>
 #include <limits> 
 #include <cmath>
-#include <algorithm>
 
 #define _USE_MATH_DEFINES
 
 #include <cassert>
+#include <algorithm>
 
 namespace xilinx_m
 {

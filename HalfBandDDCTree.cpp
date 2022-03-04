@@ -18,7 +18,7 @@ HalfBandDDCTree::HalfBandDDCTree():
 
 	m_freqShiftMod = DDS_PHASE_MODULUS / (in_fs / freq_shift);
 
-	m_outCorrelator.open("correlators.out");
+	//m_outCorrelator.open("correlators.out");
 }
 
 HalfBandDDCTree::~HalfBandDDCTree()
@@ -27,7 +27,8 @@ HalfBandDDCTree::~HalfBandDDCTree()
 		delete[] out_ddc[i];
 	delete[] out_itrp;
 
-	m_outCorrelator.close();
+	if (m_outCorrelator.is_open())
+		m_outCorrelator.close();
 }
 
 bool HalfBandDDCTree::process(const xip_complex& in)
