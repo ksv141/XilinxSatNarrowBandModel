@@ -27,6 +27,7 @@
 #include "ChannelMatchedFir.h"
 #include "Pif.h"
 #include "StsEstimate.h"
+#include "DoplerEstimate.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -44,6 +45,8 @@ extern const double PIF_PLL_Kp;		// коэффициент пропорциональной составляющей ПИ
 extern const double PIF_PLL_Ki;		// коэффициент интегральной составляющей ПИФ ФАПЧ
 extern const double PIF_STS_Kp;		// коэффициент пропорциональной составляющей ПИФ СТС
 extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТС
+extern const double PIF_DOPL_Kp;	// коэффициент пропорциональной составляющей ПИФ Допл (при specific_locking_band = 0.01)
+extern const double PIF_DOPL_Ki;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
 
 
 /**
@@ -72,6 +75,16 @@ extern void signal_freq_shift_symmetric(const string& in, const string& out_up, 
  * @param freq_shift_mod смещение частоты в единицах работы DDS --> [-8192, 8192]
 */
 extern void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_mod);
+
+
+/**
+ * @brief доплеровское частотное смещение сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param freq_ampl амплитуда изменения частоты в Гц
+ * @param freq_peiod период изменения частоты в сек
+*/
+extern void signal_freq_shift_dopl(const string& in, const string& out, double fs, double freq_ampl, double freq_peiod);
 
 /**
  * @brief частотное и фазовое смещение сигнала

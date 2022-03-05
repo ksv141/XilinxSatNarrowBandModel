@@ -61,6 +61,34 @@ void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_m
 	fclose(out_file);
 }
 
+void signal_freq_shift_dopl(const string& in, const string& out, double fs, double freq_ampl, double freq_peiod)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_complex mod_sample{ 0, 0 };
+		//dds.process(dph, mod_sample);
+		xip_complex res;
+		xip_multiply_complex(sample, mod_sample, res);
+		//xip_complex_shift(res, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
+		tC::write_real<int16_t>(out_file, res.re);
+		tC::write_real<int16_t>(out_file, res.im);
+	}
+
+	fclose(in_file);
+	fclose(out_file);
+}
+
 void signal_freq_phase_shift(const string& in, const string& out, int16_t freq_shift_mod, int16_t phase)
 {
 	if ((freq_shift_mod > DDS_PHASE_MODULUS / 2) || (freq_shift_mod < -DDS_PHASE_MODULUS / 2))
@@ -611,7 +639,9 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	DDS pll_dds(DDS_PHASE_MODULUS);				// генератор ФАПЧ
 	Pif pif_pll(PIF_PLL_Kp, PIF_PLL_Ki);		// ПИФ ФАПЧ
 	StsEstimate m_stsEst;						// блок оценки ошибки тактовой синхры
-	Pif pif_sts(PIF_STS_Kp, PIF_STS_Ki);
+	Pif pif_sts(PIF_STS_Kp, PIF_STS_Ki);		// ПИФ СТС
+	DoplerEstimate doplEst;						// блок оценки смещения Доплера
+	Pif pif_dopl(PIF_DOPL_Kp, PIF_DOPL_Ki);		// ПИФ Доплера
 
 	int16_t re;
 	int16_t im;
@@ -621,6 +651,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	bool freq_est_done = false;
 	int i = 0;				// счетчик для 2B --> B
 	xip_real err_pll = 0;	// оценка ошибки ФАПЧ
+	xip_real doplFreqEst = 0;	// оценка смещения Доплера
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		if (++counter == 1000) {
@@ -726,6 +757,11 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 
 				// коррекция смещения интерполятора
 				dmd_interp.shift((int32_t)sts_err);
+				//*********************************************************************
+			
+				//************* Оценка смещения Доплера *******************************
+				xip_real dopl_err = doplEst.getErr(sample, est);
+				pif_dopl.process(sts_err, doplFreqEst);	// сглаживание и интеграция сигнала ошибки в ПИФ
 				//*********************************************************************
 
 				tC::write_real<int16_t>(out_file, sample.re);
