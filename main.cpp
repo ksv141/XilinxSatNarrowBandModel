@@ -112,31 +112,29 @@ int main()
 	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
 
 	//************ Обнаружение сигнала и демодуляция
-	signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_decim_x16_shift.pcm");
+	signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_dmd_1B.pcm");
 
 	return 0;
 
-	unsigned corr_num = 0;
-	int16_t freq_1 = 0;
-	int16_t freq_2 = 0;
-	int16_t phase = 0;
-	int16_t t_shift = 0;
-	int16_t total_freq_est = 0;
-	signal_ddc_estimate("out_mod_decim_x16.pcm", corr_num, freq_1, freq_2, phase, t_shift, total_freq_est);
-	cout << "corr = " << corr_num << endl << "freq 1 = " << freq_1 << endl << "freq 2 = " << freq_2 << endl
-		<< "phase = " << phase <<  endl << "t_shift = " << t_shift << endl;
+	//unsigned corr_num = 0;
+	//int16_t freq_1 = 0;
+	//int16_t freq_2 = 0;
+	//int16_t phase = 0;
+	//int16_t t_shift = 0;
+	//int16_t total_freq_est = 0;
+	//signal_ddc_estimate("out_mod_decim_x16.pcm", corr_num, freq_1, freq_2, phase, t_shift, total_freq_est);
+	//cout << "corr = " << corr_num << endl << "freq 1 = " << freq_1 << endl << "freq 2 = " << freq_2 << endl
+	//	<< "phase = " << phase <<  endl << "t_shift = " << t_shift << endl;
 
-	double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
-	cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;
+	//double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
+	//cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;
 
-	//return 0;
-
-	total_freq_est -= DDS_PHASE_MODULUS >> 1;	// полоса смещена вниз к 0
-	signal_freq_shift("out_mod_decim_x16.pcm", "out_mod_decim_x16_shift.pcm", -total_freq_est);
-	signal_lowpass("out_mod_decim_x16_shift.pcm", "out_mod_decim_x16_shift_lowpass.pcm", "lowpass_400_50kHz.fcf", 42);
-	signal_decimate("out_mod_decim_x16_shift_lowpass.pcm", "out_mod_decim_x4.pcm", 4);
-	signal_lowpass("out_mod_decim_x4.pcm", "out_mod_decim_x4_lowpass.pcm", "lowpass_100_9143Hz.fcf", 57);
-	signal_decimate("out_mod_decim_x4_lowpass.pcm", "out_mod_decim_x1.pcm", 4);
+	//total_freq_est -= DDS_PHASE_MODULUS >> 1;	// полоса смещена вниз к 0
+	//signal_freq_shift("out_mod_decim_x16.pcm", "out_mod_decim_x16_shift.pcm", -total_freq_est);
+	//signal_lowpass("out_mod_decim_x16_shift.pcm", "out_mod_decim_x16_shift_lowpass.pcm", "lowpass_400_50kHz.fcf", 42);
+	//signal_decimate("out_mod_decim_x16_shift_lowpass.pcm", "out_mod_decim_x4.pcm", 4);
+	//signal_lowpass("out_mod_decim_x4.pcm", "out_mod_decim_x4_lowpass.pcm", "lowpass_100_9143Hz.fcf", 57);
+	//signal_decimate("out_mod_decim_x4_lowpass.pcm", "out_mod_decim_x1.pcm", 4);
 
 	Demodulator dmd("out_mod_decim_x1.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
 	//dmd.setPhaseShift(-phase);

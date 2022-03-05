@@ -24,6 +24,9 @@
 #include "HalfBandDDCTree.h"
 #include "PhaseTimingCorrelator.h"
 #include "NarrowBandDemodulator.h"
+#include "ChannelMatchedFir.h"
+#include "Pif.h"
+#include "StsEstimate.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -35,6 +38,13 @@ extern const int DDS_PHASE_MODULUS;
 extern const uint16_t FRAME_DATA_SIZE;
 extern const uint32_t DPDI_BURST_ML_SATGE_1;
 extern const uint32_t DPDI_BURST_ML_SATGE_2;
+
+extern const int DDS_RAD_CONST;		// радиан на одну позицию фазы << 3 == 20860 (16 бит)
+extern const double PIF_PLL_Kp;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ
+extern const double PIF_PLL_Ki;		// коэффициент интегральной составляющей ПИФ ФАПЧ
+extern const double PIF_STS_Kp;		// коэффициент пропорциональной составляющей ПИФ СТС
+extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТС
+
 
 /**
  * @brief частотное смещение сигнала

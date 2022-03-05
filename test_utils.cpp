@@ -1,5 +1,7 @@
 #include "test_utils.h"
 
+using namespace std;
+
 void signal_freq_shift(const string& in, const string& out, double freq_shift, double fs)
 {
 	if (freq_shift > fs)
@@ -604,12 +606,21 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	LowpassFir lowpass_fir_2("lowpass_100_9143Hz.fcf", 57);	// ‘Ќ„ дл€ 2-й ступени децимации (100 к√ц --> 25 к√ц)
 	PolyphaseDecimator decim_1(4, "pph_decimator_x4.fcf", 96);	// дециматор 1-й ступени (400 к√ц --> 100 к√ц)
 	PolyphaseDecimator decim_2(4, "pph_decimator_x4.fcf", 96);	// дециматор 2-й ступени (100 к√ц --> 25 к√ц)
+	LagrangeInterp dmd_interp(25000, 18286, 1);	// интерпол€тор 25 к√ц --> 2B
+	AutoGaneControl agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr());	// ј–”
+	DDS pll_dds(DDS_PHASE_MODULUS);				// генератор ‘јѕ„
+	Pif pif_pll(PIF_PLL_Kp, PIF_PLL_Ki);		// ѕ»‘ ‘јѕ„
+	StsEstimate m_stsEst;						// блок оценки ошибки тактовой синхры
+	Pif pif_sts(PIF_STS_Kp, PIF_STS_Ki);
+
 	int16_t re;
 	int16_t im;
 	xip_complex sample;
 	int counter = 0;
 	int16_t total_freq_est = 0;
 	bool freq_est_done = false;
+	int i = 0;				// счетчик дл€ 2B --> B
+	xip_real err_pll = 0;	// оценка ошибки ‘јѕ„
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		if (++counter == 1000) {
@@ -622,6 +633,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 		if (!freq_est_done) {	// если сигнал еще не обнаружен, то продолжать его обнаружение
 			freq_est_done = ddc_tree.process(sample);
 			if (freq_est_done) {	// при обнаружении и оценке сигнала вычислить частотное смещение
+				// !!! оптимизировать вычисление total_freq_est
 				total_freq_est = ddc_tree.countTotalFreqShift();
 				total_freq_est -= DDS_PHASE_MODULUS >> 1;	// полоса смещена вниз к 0
 				total_freq_est = -total_freq_est;
@@ -634,7 +646,6 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 		else {	// если сигнал обнаружен коррел€тором, корректируем частоту и демодулируем
 			xip_complex sample{ re, im };
 			xip_complex mod_sample{ 0, 0 };
-			xip_complex res;
 			// коррекци€ частоты
 			freq_shift_dds.process(total_freq_est, mod_sample);
 			xip_multiply_complex(sample, mod_sample, sample);
@@ -650,10 +661,76 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 			// децимаци€ (100 к√ц --> 25 к√ц)
 			if (decim_2.process(sample))
 				continue;
-			decim_2.next(res);
+			decim_2.next(sample);
 
-			tC::write_real<int16_t>(out_file, res.re);
-			tC::write_real<int16_t>(out_file, res.im);
+			//********** демодул€ци€
+			// интерпол€тор 25 к√ц --> 2B
+			dmd_interp.process(sample);
+			while (dmd_interp.next(sample)) {
+				// согласованный фильтр на 2B
+				process_sample_channel_matched_receive(&sample, &sample);
+				// 2B --> B
+				if (i == 1) {
+					i = 0;
+					continue;
+				}
+				i = 1;
+
+				// ј–” дл€ точной оценки ошибки тактовой синхры
+				// уровень сигнала нормируетс€ относительно уровн€ сигнального созвезди€
+				if (!agc.process(sample, sample))
+					continue;
+				// дл€ сигнального созвезди€ +/-4096 сигнал с выхода ј–” будет в диапазоне [-2^14, 2^14]
+
+				//******** петл€ ‘јѕ„, компенсаци€ частотного смещени€ ****************
+				xip_complex pll_corr{ 0, 0 };
+				pll_dds.process(err_pll, pll_corr);					// сигнал √”Ќ
+				xip_multiply_complex(sample, pll_corr, sample);		// компенсаци€
+				xip_complex_shift(sample, -(int)(pll_dds.getOutputWidth() - 1));
+				//*********************************************************************
+				xip_complex est = nearest_point_psk4(sample);		// жесткое решение
+
+				//******** оценка частотного сдвига ***********************************
+				xip_complex err_pll_sample{ sample.re, -sample.im };  // комплексно-сопр€женное от текущего отсчета
+				xip_multiply_complex(err_pll_sample, est, err_pll_sample);
+				err_pll = err_pll_sample.im;	// ошибка ‘јѕ„
+
+				// примем максимальный диапазон отклонени€ фазы [-0.5, 0.5] рад
+				// дл€ сигнального созвезди€ +/-4096 сдвиг будет в диапазоне [-0.5*2^25, 0.5*2^25] --> рад << 25
+				// приведем к диапазону [-2^15, 2^15] дл€ работы ѕ»‘
+				xip_real_shift(err_pll, -10);
+				pif_pll.process(err_pll, err_pll);	// сглаживание и интеграци€ сигнала ошибки в ѕ»‘
+
+				// переведем в диапазон работы DDS --> [0, 16384] --> [0, 2pi]
+				xip_multiply_real(err_pll, DDS_RAD_CONST, err_pll);
+				xip_real_shift(err_pll, -18);
+				if (err_pll < 0)
+					err_pll += DDS_PHASE_MODULUS;
+				//*********************************************************************
+
+				//************ оценка ошибки тактовой синхры **************************
+				xip_real sts_err = m_stsEst.getErr(sample, est);
+				// дл€ сигнального созвезди€ +/-4096 ошибка будет в диапазоне [-2^26, 2^26]
+
+				// уменьшаем динамический диапазон до диапазона ѕ»‘ --> [-2^15, 2^15] 
+				// величину сдвига нужно подобирать исход€ из ресурсов. 
+				// дл€ максимальной точности можно без сдвига
+				// дл€ минимальной точности и экономии ресурса можно сдвинуть сразу до [-2^10, 2^10]
+				// меньше [-2^10, 2^10] ученьшать нецелесообразно, т.к. это диапазон интерпол€тора
+				xip_real_shift(sts_err, -11);
+
+				pif_sts.process(sts_err, sts_err);	// сглаживание и интеграци€ сигнала ошибки в ѕ»‘
+
+				// уменьшаем динамический диапазон до диапазона интерпол€тора --> [-2^10, 2^10]
+				xip_real_shift(sts_err, -3);
+
+				// коррекци€ смещени€ интерпол€тора
+				dmd_interp.shift((int32_t)sts_err);
+				//*********************************************************************
+
+				tC::write_real<int16_t>(out_file, sample.re);
+				tC::write_real<int16_t>(out_file, sample.im);
+			}
 		}
 		//dbg_out << res << endl;
 	}
