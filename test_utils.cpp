@@ -533,8 +533,8 @@ void signal_halfband_ddc(const string& in, const string& out_up, const string& o
 		sample.re = re;
 		sample.im = im;
 		xip_complex res{ 0,0 };
-		//if (!ddc_tree.process(sample))
-		//	continue;
+		if (!ddc_tree.process(sample))
+			continue;
 
 		xip_complex* out_sample = ddc_tree.getData();
 		tC::write_real<int16_t>(out_file_up, out_sample[14].re);
@@ -573,8 +573,8 @@ void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est
 		sample.re = re;
 		sample.im = im;
 		xip_complex res{ 0,0 };
-		//if (!ddc_tree.process(sample))
-		//	continue;
+		if (!ddc_tree.process(sample))
+			continue;
 		corr_num = ddc_tree.getFreqEstCorrNum();
 		freq_est_stage_1 = ddc_tree.getfreqEstStage_1();
 		freq_est_stage_2 = ddc_tree.getfreqEstStage_2();
@@ -599,10 +599,17 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 
 	//ofstream dbg_out("dbg_out.txt");
 	HalfBandDDCTree ddc_tree;
+	DDS freq_shift_dds(DDS_PHASE_MODULUS);		// генератор дл€ коррекции частотного сдвига
+	LowpassFir lowpass_fir_1("lowpass_400_50kHz.fcf", 42);	// ‘Ќ„ дл€ 1-й ступени децимации (400 к√ц --> 100 к√ц)
+	LowpassFir lowpass_fir_2("lowpass_100_9143Hz.fcf", 57);	// ‘Ќ„ дл€ 2-й ступени децимации (100 к√ц --> 25 к√ц)
+	PolyphaseDecimator decim_1(4, "pph_decimator_x4.fcf", 96);	// дециматор 1-й ступени (400 к√ц --> 100 к√ц)
+	PolyphaseDecimator decim_2(4, "pph_decimator_x4.fcf", 96);	// дециматор 2-й ступени (100 к√ц --> 25 к√ц)
 	int16_t re;
 	int16_t im;
 	xip_complex sample;
 	int counter = 0;
+	int16_t total_freq_est = 0;
+	bool freq_est_done = false;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		if (++counter == 1000) {
@@ -611,11 +618,42 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 		}
 		sample.re = re;
 		sample.im = im;
-		xip_complex res{ 0,0 };
-		xip_complex out_sample{ 0,0 };
-		if (ddc_tree.process(sample, out_sample)) {
-			tC::write_real<int16_t>(out_file, out_sample.re);
-			tC::write_real<int16_t>(out_file, out_sample.im);
+
+		if (!freq_est_done) {	// если сигнал еще не обнаружен, то продолжать его обнаружение
+			freq_est_done = ddc_tree.process(sample);
+			if (freq_est_done) {	// при обнаружении и оценке сигнала вычислить частотное смещение
+				total_freq_est = ddc_tree.countTotalFreqShift();
+				total_freq_est -= DDS_PHASE_MODULUS >> 1;	// полоса смещена вниз к 0
+				total_freq_est = -total_freq_est;
+				if ((total_freq_est > DDS_PHASE_MODULUS / 2) || (total_freq_est < -DDS_PHASE_MODULUS / 2))
+					throw out_of_range("frequency shift is out of range");
+				if (total_freq_est < 0)
+					total_freq_est += DDS_PHASE_MODULUS; // набег фазы за такт в диапазоне[0, 16383] -- > [0, 2pi]
+			}
+		}
+		else {	// если сигнал обнаружен коррел€тором, корректируем частоту и демодулируем
+			xip_complex sample{ re, im };
+			xip_complex mod_sample{ 0, 0 };
+			xip_complex res;
+			// коррекци€ частоты
+			freq_shift_dds.process(total_freq_est, mod_sample);
+			xip_multiply_complex(sample, mod_sample, sample);
+			xip_complex_shift(sample, -(int)(freq_shift_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+			// ‘Ќ„ 1
+			lowpass_fir_1.process(sample, sample);
+			// децимаци€ (400 к√ц --> 100 к√ц)
+			if (decim_1.process(sample))
+				continue;
+			decim_1.next(sample);
+			// ‘Ќ„ 2
+			lowpass_fir_2.process(sample, sample);
+			// децимаци€ (100 к√ц --> 25 к√ц)
+			if (decim_2.process(sample))
+				continue;
+			decim_2.next(res);
+
+			tC::write_real<int16_t>(out_file, res.re);
+			tC::write_real<int16_t>(out_file, res.im);
 		}
 		//dbg_out << res << endl;
 	}

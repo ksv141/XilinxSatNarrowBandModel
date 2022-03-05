@@ -4,14 +4,12 @@ HalfBandDDCTree::HalfBandDDCTree():
 	m_agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr()),
 	itrp(terminal_fs, INIT_SAMPLE_RATE, n_ternimals),
 	m_freqShifter(DDS_PHASE_MODULUS),
-	m_freqCorrector(DDS_PHASE_MODULUS),
 	m_matchedFir("rc_root_x2_25_19.fcf", 19, 0, n_ternimals),
 	m_correlators(n_ternimals, { FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength,
 								1, 32, 1, DPDI_BURST_ML_SATGE_1 }),
 	m_tuneCorrelator(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength,
 		8, 4, 1, DPDI_BURST_ML_SATGE_2),
-	m_phaseTimingCorrelator((int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength, PHASE_BURST_ML_SATGE_3),
-	m_estDone(false)
+	m_phaseTimingCorrelator((int8_t*)SignalSource::preambleData, (uint16_t)SignalSource::preambleLength, PHASE_BURST_ML_SATGE_3)
 {
 	for (int i = 0; i <= n_levels; i++)
 		out_ddc[i] = new xip_complex[1 << (i + 1)];
@@ -33,7 +31,7 @@ HalfBandDDCTree::~HalfBandDDCTree()
 		m_outCorrelator.close();
 }
 
-bool HalfBandDDCTree::process(const xip_complex& in, xip_complex& out)
+bool HalfBandDDCTree::process(const xip_complex& in)
 {
 	// АРУ на входе дерева DDC для нормировки уровней корреляторов
 	xip_complex in_agc{ 0, 0 };
@@ -58,36 +56,22 @@ bool HalfBandDDCTree::process(const xip_complex& in, xip_complex& out)
 	itrp.process(out_ddc[n_levels]);
 	if (itrp.next(out_itrp)) {
 		m_matchedFir.process(out_itrp, out_itrp);
+		bool est = false;
 		// ищем корреляционный отклик по всем корреляторам
-		if (!m_estDone) {
-			for (int i = 0; i < n_ternimals; i++) {
-				xip_real corr_est = 0;
-				if (m_correlators[i].process(out_itrp[i], m_freqEstStage_1, corr_est)) {
-					// если коррелятор обнаружил сигнал, то получаем от него грубую оценку частоты,
-					// корректируем частоту сигнала в буфере и передаем его на второй коррелятор для точной оценки частоты
-					m_freqEstCorrNum = i;									// номер коррелятора, обнаружившего сигнал
-					m_estDone = processTuneCorrelator(-m_freqEstStage_1);	// точный коррелятор на буфере, где обнаружен сигнал
-					//processPhaseTimingCorrelator(-m_freqEstStage_2);		// оценка фазы и тактов на буфере, где обнаружен сигнал
-					m_freqEstSum = -(m_freqEstStage_1 + m_freqEstStage_2);
-					if (m_freqEstSum < 0)
-						m_freqEstSum += DDS_PHASE_MODULUS;
-					break;
-				}
-				//m_outCorrelator << corr_est << "\t";
+		for (int i = 0; i < n_ternimals; i++) {
+			xip_real corr_est = 0;
+			if (m_correlators[i].process(out_itrp[i], m_freqEstStage_1, corr_est)) {
+				// если коррелятор обнаружил сигнал, то получаем от него грубую оценку частоты,
+				// корректируем частоту сигнала в буфере и передаем его на второй коррелятор для точной оценки частоты
+				m_freqEstCorrNum = i;									// номер коррелятора, обнаружившего сигнал
+				est = processTuneCorrelator(-m_freqEstStage_1);			// точный коррелятор на буфере, где обнаружен сигнал
+				//processPhaseTimingCorrelator(-m_freqEstStage_2);		// оценка фазы и тактов на буфере, где обнаружен сигнал
+				break;
 			}
-			return false;
-		}
-		else {	// если сигнал обнаружен коррелятором, корректируем частоту и демодулируем
-			xip_complex mod_sample{ 0, 0 };
-			xip_complex out_sample = out_itrp[m_freqEstCorrNum];
-			m_freqCorrector.process(m_freqEstSum, mod_sample);
-			xip_multiply_complex(out_sample, mod_sample, out_sample);
-			xip_complex_shift(out_sample, -(int)(m_freqCorrector.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
-
-			out = out_sample;
-			return true;
+			//m_outCorrelator << corr_est << "\t";
 		}
 		//m_outCorrelator << endl;
+		return est;
 	}
 	return false;
 }

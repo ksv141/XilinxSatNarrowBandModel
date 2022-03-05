@@ -111,9 +111,10 @@ int main()
 	//************ ƒецимаци€ до полосы обнаружител€ с 1600 до 400 к√ц
 	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
 
-	signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_est_2B.pcm");
-	return 0;
+	//************ ќбнаружение сигнала и демодул€ци€
+	signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_decim_x16_shift.pcm");
 
+	return 0;
 
 	unsigned corr_num = 0;
 	int16_t freq_1 = 0;
@@ -128,6 +129,7 @@ int main()
 	double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
 	cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;
 
+	//return 0;
 
 	total_freq_est -= DDS_PHASE_MODULUS >> 1;	// полоса смещена вниз к 0
 	signal_freq_shift("out_mod_decim_x16.pcm", "out_mod_decim_x16_shift.pcm", -total_freq_est);
@@ -137,8 +139,8 @@ int main()
 	signal_decimate("out_mod_decim_x4_lowpass.pcm", "out_mod_decim_x1.pcm", 4);
 
 	Demodulator dmd("out_mod_decim_x1.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
-	dmd.setPhaseShift(-phase);
-	dmd.setSymbolTimingShift(-t_shift);
+	//dmd.setPhaseShift(-phase);
+	//dmd.setSymbolTimingShift(-t_shift);
 	dmd.process();
 
 
