@@ -70,16 +70,32 @@ void signal_freq_shift_dopl(const string& in, const string& out, double fs, doub
 	if (!out_file)
 		return;
 
+	double dph_dop = _2_PI / (freq_peiod * fs);		// набег фазы изменения частоты Доплера за такт [0, 2pi]
+	double ampl_dop = _2_PI * freq_ampl / fs;		// амплитуда изменения частоты Доплера за такт [0, 2pi]
+	double ph_dop = 0;								// текущее значение фазы частоты Доплера
+
+	DDS dds(DDS_PHASE_MODULUS);
+	double dph = 0;		// текущее значение набега фазы за такт
 	int16_t re;
 	int16_t im;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
+
+		ph_dop = std::fmod(ph_dop + dph_dop, _2_PI);
+		dph = ampl_dop * std::sin(ph_dop) * DDS_PHASE_MODULUS;    // синусоидальная модель изменения набега фазы
+
+		if ((dph > DDS_PHASE_MODULUS / 2) || (dph < -DDS_PHASE_MODULUS / 2))
+			throw out_of_range("frequency shift is out of range");
+
+		if (dph < 0)					// набег фазы за такт в диапазоне[0, 16383] -- > [0, 2pi]
+			dph += DDS_PHASE_MODULUS;
+
 		xip_complex sample{ re, im };
 		xip_complex mod_sample{ 0, 0 };
-		//dds.process(dph, mod_sample);
+		dds.process(dph, mod_sample);
 		xip_complex res;
 		xip_multiply_complex(sample, mod_sample, res);
-		//xip_complex_shift(res, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+		xip_complex_shift(res, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
 
 		tC::write_real<int16_t>(out_file, res.re);
 		tC::write_real<int16_t>(out_file, res.im);
