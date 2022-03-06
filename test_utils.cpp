@@ -71,7 +71,7 @@ void signal_freq_shift_dopl(const string& in, const string& out, double fs, doub
 		return;
 
 	double dph_dop = _2_PI / (freq_peiod * fs);		// набег фазы изменени€ частоты ƒоплера за такт [0, 2pi]
-	double ampl_dop = _2_PI * freq_ampl / fs;		// амплитуда изменени€ частоты ƒоплера за такт [0, 2pi]
+	double ampl_dop = freq_ampl / fs;		// амплитуда изменени€ частоты ƒоплера за такт [0, 2pi]
 	double ph_dop = 0;								// текущее значение фазы частоты ƒоплера
 
 	DDS dds(DDS_PHASE_MODULUS);
@@ -82,7 +82,7 @@ void signal_freq_shift_dopl(const string& in, const string& out, double fs, doub
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 
 		ph_dop = std::fmod(ph_dop + dph_dop, _2_PI);
-		dph = ampl_dop * std::sin(ph_dop) * DDS_PHASE_MODULUS;    // синусоидальна€ модель изменени€ набега фазы
+		dph = (int16_t)(ampl_dop * std::sin(ph_dop) * DDS_PHASE_MODULUS);    // синусоидальна€ модель изменени€ набега фазы
 
 		if ((dph > DDS_PHASE_MODULUS / 2) || (dph < -DDS_PHASE_MODULUS / 2))
 			throw out_of_range("frequency shift is out of range");

@@ -83,10 +83,11 @@ int main()
 	//************ Моделирование произвольного смещения несущей в пределах полосы первого обнаружителя
 	// Всего 4 обнаружителя с полосой 400 кГц каждый для перекрытия полосы 1600 кГц
 	// Все обнаружители работают одинаково
-	signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_383500.pcm", 383500, 1600000);
+	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_383500.pcm", 383500, 1600000);
 
 	//************ Моделирование доплеровского частотного смещения ***********
-	signal_freq_shift_dopl("out_mod_interp_x64.pcm", "out_mod_interp_x64_383500.pcm", 1600000, 1000, 100);
+	//signal_freq_shift_dopl("out_mod_interp_x64.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
+
 
 	//************ ОБНАРУЖИТЕЛЬ СИГНАЛА И ДЕМОДУЛЯТОР ****************
 	//************ Перенос сигнала в полосу обнаружителя (+/- 200 кГц)
@@ -99,7 +100,7 @@ int main()
 	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
 
 	//************ Обнаружение сигнала и демодуляция
-	signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_dmd_1B.pcm");
 
 	return 0;
 
