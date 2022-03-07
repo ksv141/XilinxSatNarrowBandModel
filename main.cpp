@@ -77,32 +77,35 @@ int main()
 	//signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 500);
 
 	//************ ѕередискретизаци€ до 1600 к√ц ***************
-	//signal_resample("out_mod_tm.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
+	//signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
 	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x64.pcm", 64);
 
 	//************ ћоделирование произвольного смещени€ несущей в пределах полосы первого обнаружител€
 	// ¬сего 4 обнаружител€ с полосой 400 к√ц каждый дл€ перекрыти€ полосы 1600 к√ц
 	// ¬се обнаружители работают одинаково
+	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_shifted.pcm", 383500, 1600000);
 	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_383500.pcm", 383500, 1600000);
 
 	//************ ћоделирование доплеровского частотного смещени€ ***********
-	//signal_freq_shift_dopl("out_mod_interp_x64.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
+	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
 
 
 	//************ ќЅЌј–”∆»“≈Ћ№ —»√ЌјЋј » ƒ≈ћќƒ”Ћя“ќ– ****************
 	//************ ѕеренос сигнала в полосу обнаружител€ (+/- 200 к√ц)
 	//signal_freq_shift("out_mod_interp_x64_383500.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
-	
+	signal_freq_shift("out_mod_interp_x64_dopl.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
+
 	//************ ‘Ќ„ дл€ отфильтровки сигнала в полосе обнаружител€
-	//signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
+	signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
 	
 	//************ ƒецимаци€ до полосы обнаружител€ с 1600 до 400 к√ц
-	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
+	signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
 
 	//************ ќбнаружение сигнала и демодул€ци€
 	//signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_dmd_1B.pcm");
-	signal_estimate_demodulate("out_mod_interp_x64_383500.pcm", "out_mod_dmd_1B.pcm");
-	//signal_estimate_demodulate("out_mod_interp_x64_downshift_200.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate("out_mod_interp_x64_383500.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate("out_mod_interp_x64_shifted.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
 
 	return 0;
 

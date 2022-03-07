@@ -643,7 +643,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	if (!out_file)
 		return;
 
-	ofstream dbg_out("dbg_out.txt");
+	//ofstream dbg_out("dbg_out.txt");
 	HalfBandDDCTree ddc_tree;
 	DDS freq_shift_dds(DDS_PHASE_MODULUS);		// генератор для коррекции частотного сдвига в полосе обнаружителя
 	DDS estimator_dds(DDS_PHASE_MODULUS);		// генератор для переноса сигнала в полосу обнаружителя
@@ -807,9 +807,8 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 				tC::write_real<int16_t>(out_file, sample.im);
 			}
 		}
-		//dbg_out << res << endl;
 	}
-	dbg_out.close();
+	//dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
 }
