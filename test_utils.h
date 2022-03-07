@@ -48,6 +48,8 @@ extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТ
 extern const double PIF_DOPL_Kp;	// коэффициент пропорциональной составляющей ПИФ Допл (при specific_locking_band = 0.01)
 extern const double PIF_DOPL_Ki;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
 
+extern const int BAUD_RATE;			// бодовая скорость в канале
+extern const int HIGH_SAMPLE_RATE;	// частота дискретизации на входе демодулятора
 
 /**
  * @brief частотное смещение сигнала

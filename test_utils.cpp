@@ -643,11 +643,14 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	if (!out_file)
 		return;
 
-	//ofstream dbg_out("dbg_out.txt");
+	ofstream dbg_out("dbg_out.txt");
 	HalfBandDDCTree ddc_tree;
-	DDS freq_shift_dds(DDS_PHASE_MODULUS);		// генератор дл€ коррекции частотного сдвига
+	DDS freq_shift_dds(DDS_PHASE_MODULUS);		// генератор дл€ коррекции частотного сдвига в полосе обнаружител€
+	DDS estimator_dds(DDS_PHASE_MODULUS);		// генератор дл€ переноса сигнала в полосу обнаружител€
+	LowpassFir lowpass_fir_0("lowpass_200kHz.fcf", 51);		// ‘Ќ„ дл€ 0-й ступени децимации (1600 к√ц --> 400 к√ц)
 	LowpassFir lowpass_fir_1("lowpass_400_50kHz.fcf", 42);	// ‘Ќ„ дл€ 1-й ступени децимации (400 к√ц --> 100 к√ц)
 	LowpassFir lowpass_fir_2("lowpass_100_9143Hz.fcf", 57);	// ‘Ќ„ дл€ 2-й ступени децимации (100 к√ц --> 25 к√ц)
+	PolyphaseDecimator decim_0(4, "pph_decimator_x4.fcf", 96);	// дециматор 0-й ступени (1600 к√ц --> 400 к√ц)
 	PolyphaseDecimator decim_1(4, "pph_decimator_x4.fcf", 96);	// дециматор 1-й ступени (400 к√ц --> 100 к√ц)
 	PolyphaseDecimator decim_2(4, "pph_decimator_x4.fcf", 96);	// дециматор 2-й ступени (100 к√ц --> 25 к√ц)
 	LagrangeInterp dmd_interp(25000, 18286, 1);	// интерпол€тор 25 к√ц --> 2B
@@ -658,6 +661,11 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	Pif pif_sts(PIF_STS_Kp, PIF_STS_Ki);		// ѕ»‘ —“—
 	DoplerEstimate doplEst;						// блок оценки смещени€ ƒоплера
 	Pif pif_dopl(PIF_DOPL_Kp, PIF_DOPL_Ki);		// ѕ»‘ ƒоплера
+
+	double est_freq_shift = -200000;			// смещение частоты первого обнаружител€ (200 к√ц)
+	int16_t est_freq_shift_mod = (int16_t)((est_freq_shift / HIGH_SAMPLE_RATE) * DDS_PHASE_MODULUS);
+	if (est_freq_shift_mod < 0)
+		est_freq_shift_mod += DDS_PHASE_MODULUS;
 
 	int16_t re;
 	int16_t im;
@@ -670,12 +678,26 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	xip_real doplFreqEst = 0;	// оценка смещени€ ƒоплера
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
-		if (++counter == 1000) {
+		if (++counter == 10000) {
 			counter = 0;
 			cout << ". ";
 		}
 		sample.re = re;
 		sample.im = im;
+
+		//******* ѕриведение сигнала к полосе обнаружител€ ************
+		// ѕеренос сигнала в полосу обнаружител€ (+/- 200 к√ц)
+		xip_complex mod_sample{ 0, 0 };
+		estimator_dds.process(est_freq_shift_mod, mod_sample);
+		xip_multiply_complex(sample, mod_sample, sample);
+		xip_complex_shift(sample, -(int)(estimator_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+		// ‘Ќ„ дл€ отфильтровки сигнала в полосе обнаружител€
+		lowpass_fir_0.process(sample, sample);
+		// ƒецимаци€ до полосы обнаружител€ (1600 к√ц --> 400 к√ц)
+		if (decim_0.process(sample))
+			continue;
+		decim_0.next(sample);
+		//*************************************************************
 
 		if (!freq_est_done) {	// если сигнал еще не обнаружен, то продолжать его обнаружение
 			freq_est_done = ddc_tree.process(sample);
@@ -691,7 +713,6 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 			}
 		}
 		else {	// если сигнал обнаружен коррел€тором, корректируем частоту и демодулируем
-			xip_complex sample{ re, im };
 			xip_complex mod_sample{ 0, 0 };
 			// коррекци€ частоты
 			freq_shift_dds.process(total_freq_est, mod_sample);
@@ -776,8 +797,10 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 				//*********************************************************************
 			
 				//************* ќценка смещени€ ƒоплера *******************************
-				xip_real dopl_err = doplEst.getErr(sample, est);
-				pif_dopl.process(sts_err, doplFreqEst);	// сглаживание и интеграци€ сигнала ошибки в ѕ»‘
+				xip_real dopl_err = doplEst.getErr(sample, est);	// оценка дл€ 1B
+				pif_dopl.process(sts_err, doplFreqEst);				// сглаживание и интеграци€ сигнала ошибки в ѕ»‘
+				// !!! переделать в совокупность кратных целых
+				doplFreqEst = doplFreqEst * (xip_real)BAUD_RATE / (xip_real)HIGH_SAMPLE_RATE;	// пересчет набега фазы из 1B в 1600000 √ц
 				//*********************************************************************
 
 				tC::write_real<int16_t>(out_file, sample.re);
@@ -786,7 +809,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 		}
 		//dbg_out << res << endl;
 	}
-	//dbg_out.close();
+	dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
 }

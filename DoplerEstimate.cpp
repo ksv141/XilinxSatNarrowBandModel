@@ -18,7 +18,7 @@ int16_t DoplerEstimate::getErr(const xip_complex& out_symb, const xip_complex& e
     r2.im = -r2.im;
     xip_complex r3{ r1.re + r2.re, r1.im + r2.im };
 
-    // Оценка смещения по частоте (v = Arg{x}/2) на 1 символ
+    // Оценка смещения по частоте (v = Arg{x}/2) на 1 символ [-8192, 8191]
     xip_real mag;
     xip_real arg;
     xip_cordic_rect_to_polar(r3, mag, arg);

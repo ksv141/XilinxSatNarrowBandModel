@@ -47,6 +47,7 @@ const double PIF_DOPL_Ki = 0.00035088206622480023;	// коэффициент интегральной с
 
 const int BAUD_RATE = 9143;							// бодовая скорость в канале
 const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации на выходе канального фильтра
+const int HIGH_SAMPLE_RATE = 1600000;				// частота дискретизации на входе демодулятора
 
 // параметры корреляторов
 const uint32_t DPDI_BURST_ML_SATGE_1 = 3000;			// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
@@ -61,7 +62,6 @@ int main()
 	init_xip_cordic_sqrt();
 	init_xip_cordic_rect_to_polar();
 	init_channel_matched_fir();
-
 
 	//************ Формирователь ПСП в виде бинарного файла *************
 	//SignalSource::generateBinFile(3000, "data.bin");
@@ -101,6 +101,8 @@ int main()
 
 	//************ Обнаружение сигнала и демодуляция
 	//signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_dmd_1B.pcm");
+	signal_estimate_demodulate("out_mod_interp_x64_383500.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate("out_mod_interp_x64_downshift_200.pcm", "out_mod_dmd_1B.pcm");
 
 	return 0;
 
