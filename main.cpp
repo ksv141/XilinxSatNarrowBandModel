@@ -90,40 +90,16 @@ int main()
 	//************ Моделирование доплеровского частотного смещения ***********
 	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
 	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 10000);
+	signal_freq_shift_dopl("out_mod.pcm", "out_mod_dopl.pcm", INIT_SAMPLE_RATE, 6000, 50);
 
-
-	//************ ОБНАРУЖИТЕЛЬ СИГНАЛА И ДЕМОДУЛЯТОР ****************
-	//************ Перенос сигнала в полосу обнаружителя (+/- 200 кГц)
-	//signal_freq_shift("out_mod_interp_x64_383500.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
-	//signal_freq_shift("out_mod_interp_x64_dopl.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
-
-	//************ ФНЧ для отфильтровки сигнала в полосе обнаружителя
-	//signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
-	
-	//************ Децимация до полосы обнаружителя с 1600 до 400 кГц
-	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
 
 	//************ Обнаружение сигнала и демодуляция
 	//signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_383500.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_shifted.pcm", "out_mod_dmd_1B.pcm");
-	signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
 
-
-	//double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
-	//cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;
-
-	//total_freq_est -= DDS_PHASE_MODULUS >> 1;	// полоса смещена вниз к 0
-	//signal_freq_shift("out_mod_decim_x16.pcm", "out_mod_decim_x16_shift.pcm", -total_freq_est);
-	//signal_lowpass("out_mod_decim_x16_shift.pcm", "out_mod_decim_x16_shift_lowpass.pcm", "lowpass_400_50kHz.fcf", 42);
-	//signal_decimate("out_mod_decim_x16_shift_lowpass.pcm", "out_mod_decim_x4.pcm", 4);
-	//signal_lowpass("out_mod_decim_x4.pcm", "out_mod_decim_x4_lowpass.pcm", "lowpass_100_9143Hz.fcf", 57);
-	//signal_decimate("out_mod_decim_x4_lowpass.pcm", "out_mod_decim_x1.pcm", 4);
-
-	//Demodulator dmd("out_mod_decim_x1.pcm", "out_mod_dmd.pcm", "out_mod.bin", FRAME_DATA_SIZE);
-	//dmd.setPhaseShift(-phase);
-	//dmd.setSymbolTimingShift(-t_shift);
-	//dmd.process();
+	signal_estimate_demodulate_dopl_test("out_mod_dopl.pcm", "out_mod_dmd_1B.pcm");
 
 
 	destroy_xip_multiplier();
