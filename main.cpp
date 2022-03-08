@@ -63,6 +63,7 @@ int main()
 	init_xip_cordic_rect_to_polar();
 	init_channel_matched_fir();
 
+
 	//************ Формирователь ПСП в виде бинарного файла *************
 	//SignalSource::generateBinFile(3000, "data.bin");
 
@@ -88,26 +89,26 @@ int main()
 
 	//************ Моделирование доплеровского частотного смещения ***********
 	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
+	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 10000);
 
 
 	//************ ОБНАРУЖИТЕЛЬ СИГНАЛА И ДЕМОДУЛЯТОР ****************
 	//************ Перенос сигнала в полосу обнаружителя (+/- 200 кГц)
 	//signal_freq_shift("out_mod_interp_x64_383500.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
-	signal_freq_shift("out_mod_interp_x64_dopl.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
+	//signal_freq_shift("out_mod_interp_x64_dopl.pcm", "out_mod_interp_x64_downshift_200.pcm", -200000, 1600000);
 
 	//************ ФНЧ для отфильтровки сигнала в полосе обнаружителя
-	signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
+	//signal_lowpass("out_mod_interp_x64_downshift_200.pcm", "out_mod_interp_x64_downshift_200_lowpass.pcm", "lowpass_200kHz.fcf", 51);
 	
 	//************ Децимация до полосы обнаружителя с 1600 до 400 кГц
-	signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
+	//signal_decimate("out_mod_interp_x64_downshift_200_lowpass.pcm", "out_mod_decim_x16.pcm", 4);
 
 	//************ Обнаружение сигнала и демодуляция
 	//signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_383500.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_shifted.pcm", "out_mod_dmd_1B.pcm");
-	//signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
+	signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
 
-	return 0;
 
 	//double total_freq_est_hz = (double)total_freq_est * 400000.0 / DDS_PHASE_MODULUS;
 	//cout << "total_freq_est = " << total_freq_est << "(" << total_freq_est_hz << " Hz)" << endl;

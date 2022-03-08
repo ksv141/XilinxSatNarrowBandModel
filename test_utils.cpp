@@ -643,7 +643,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	if (!out_file)
 		return;
 
-	//ofstream dbg_out("dbg_out.txt");
+	ofstream dbg_out("dbg_out.txt");
 	HalfBandDDCTree ddc_tree;
 	DDS freq_shift_dds(DDS_PHASE_MODULUS);		// генератор для коррекции частотного сдвига в полосе обнаружителя
 	DDS estimator_dds(DDS_PHASE_MODULUS);		// генератор для переноса сигнала в полосу обнаружителя
@@ -661,6 +661,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	Pif pif_sts(PIF_STS_Kp, PIF_STS_Ki);		// ПИФ СТС
 	DoplerEstimate doplEst;						// блок оценки смещения Доплера
 	Pif pif_dopl(PIF_DOPL_Kp, PIF_DOPL_Ki);		// ПИФ Доплера
+	DDS dopl_dds(DDS_PHASE_MODULUS);			// генератор компенсации смещения Доплера
 
 	double est_freq_shift = -200000;			// смещение частоты первого обнаружителя (200 кГц)
 	int16_t est_freq_shift_mod = (int16_t)((est_freq_shift / HIGH_SAMPLE_RATE) * DDS_PHASE_MODULUS);
@@ -684,10 +685,16 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 		}
 		sample.re = re;
 		sample.im = im;
+		xip_complex mod_sample{ 0, 0 };
+
+		//******* Петля компенсации смещения Доплера ******************
+		dopl_dds.process(doplFreqEst, mod_sample);
+		xip_multiply_complex(sample, mod_sample, sample);
+		xip_complex_shift(sample, -(int)(dopl_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+		//*************************************************************
 
 		//******* Приведение сигнала к полосе обнаружителя ************
 		// Перенос сигнала в полосу обнаружителя (+/- 200 кГц)
-		xip_complex mod_sample{ 0, 0 };
 		estimator_dds.process(est_freq_shift_mod, mod_sample);
 		xip_multiply_complex(sample, mod_sample, sample);
 		xip_complex_shift(sample, -(int)(estimator_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
@@ -798,9 +805,16 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 			
 				//************* Оценка смещения Доплера *******************************
 				xip_real dopl_err = doplEst.getErr(sample, est);	// оценка для 1B
-				pif_dopl.process(sts_err, doplFreqEst);				// сглаживание и интеграция сигнала ошибки в ПИФ
-				// !!! переделать в совокупность кратных целых
-				doplFreqEst = doplFreqEst * (xip_real)BAUD_RATE / (xip_real)HIGH_SAMPLE_RATE;	// пересчет набега фазы из 1B в 1600000 Гц
+				xip_real dopl_err_B;
+				pif_dopl.process(dopl_err, dopl_err_B);			// сглаживание и интеграция сигнала ошибки в ПИФ
+				//dbg_out << dopl_err << '\t' << doplFreqEst << endl;
+
+				// !!! переделать в комбинацию целых
+				doplFreqEst = round(-dopl_err_B * (xip_real)BAUD_RATE / (xip_real)HIGH_SAMPLE_RATE);	// пересчет набега фазы из 1B в 1600000 Гц
+				if (doplFreqEst < 0)								// переведем в диапазон работы DDS --> [0, 16384]
+					doplFreqEst += DDS_PHASE_MODULUS;
+
+				//dbg_out << setw(15) << dopl_err << setw(15) << dopl_err_B << setw(15) << doplFreqEst << endl;
 				//*********************************************************************
 
 				tC::write_real<int16_t>(out_file, sample.re);
@@ -808,7 +822,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 			}
 		}
 	}
-	//dbg_out.close();
+	dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
 }
