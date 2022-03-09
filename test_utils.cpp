@@ -61,7 +61,23 @@ void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_m
 	fclose(out_file);
 }
 
-void signal_freq_shift_dopl(const string& in, const string& out, double fs, double freq_ampl, double freq_peiod)
+xip_real getLineValue(xip_real ph)
+{
+	xip_real val = 0;
+	if ((ph > _2_PI) && (ph < PI + _2_PI)) {
+		val = -(ph - _2_PI) * _2_PI + 1;
+	}
+	else if (ph <= _2_PI) {
+		val = ph * _2_PI;
+	}
+	else if (ph >= PI + _2_PI) {
+		val = (ph - (PI + _2_PI)) * _2_PI - 1;
+	}
+	return val;
+}
+
+void signal_freq_shift_dopl(const string& in, const string& out, double fs, 
+							double freq_ampl, double freq_peiod, int mode)
 {
 	FILE* in_file = fopen(in.c_str(), "rb");
 	if (!in_file)
@@ -82,7 +98,12 @@ void signal_freq_shift_dopl(const string& in, const string& out, double fs, doub
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 
 		ph_dop = std::fmod(ph_dop + dph_dop, _2_PI);
-		dph = (int16_t)(ampl_dop * std::sin(ph_dop) * DDS_PHASE_MODULUS);    // синусоидальная модель изменения набега фазы
+		if (mode == 0)
+			dph = (int16_t)(ampl_dop * std::sin(ph_dop) * DDS_PHASE_MODULUS);    // синусоидальная модель изменения набега фазы
+		else if (mode == 1)
+			dph = (int16_t)(ampl_dop * getLineValue(ph_dop) * DDS_PHASE_MODULUS);    // линейная модель изменения набега фазы
+		else
+			throw out_of_range("invalid dopler mode");
 
 		if ((dph > DDS_PHASE_MODULUS / 2) || (dph < -DDS_PHASE_MODULUS / 2))
 			throw out_of_range("frequency shift is out of range");

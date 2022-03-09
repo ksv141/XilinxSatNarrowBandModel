@@ -86,8 +86,10 @@ extern void signal_freq_shift(const string& in, const string& out, int16_t freq_
  * @param out выходной файл (PCM стерео I/Q 16-бит)
  * @param freq_ampl амплитуда изменения частоты в Гц
  * @param freq_peiod период изменения частоты в сек
+ * @param mode закон изменения частоты (0 - синус, 1 - линейный)
 */
-extern void signal_freq_shift_dopl(const string& in, const string& out, double fs, double freq_ampl, double freq_peiod);
+extern void signal_freq_shift_dopl(const string& in, const string& out, double fs, 
+									double freq_ampl, double freq_peiod, int mode = 0);
 
 /**
  * @brief частотное и фазовое смещение сигнала
