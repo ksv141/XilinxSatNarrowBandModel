@@ -57,12 +57,15 @@ bool HalfBandDDCTree::process(const xip_complex& in)
 	if (itrp.next(out_itrp)) {
 		m_matchedFir.process(out_itrp, out_itrp);
 		bool est = false;
+		// ищем коррел€ционный отклик по всем коррел€торам
 		for (int i = 0; i < n_ternimals; i++) {
 			xip_real corr_est = 0;
 			if (m_correlators[i].process(out_itrp[i], m_freqEstStage_1, corr_est)) {
-				m_freqEstCorrNum = i;
+				// если коррел€тор обнаружил сигнал, то получаем от него грубую оценку частоты,
+				// корректируем частоту сигнала в буфере и передаем его на второй коррел€тор дл€ точной оценки частоты
+				m_freqEstCorrNum = i;									// номер коррел€тора, обнаружившего сигнал
 				est = processTuneCorrelator(-m_freqEstStage_1);			// точный коррел€тор на буфере, где обнаружен сигнал
-				processPhaseTimingCorrelator(-m_freqEstStage_2);		// оценка фазы и тактов на буфере, где обнаружен сигнал
+				//processPhaseTimingCorrelator(-m_freqEstStage_2);		// оценка фазы и тактов на буфере, где обнаружен сигнал
 				break;
 			}
 			//m_outCorrelator << corr_est << "\t";

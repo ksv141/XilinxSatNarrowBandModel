@@ -1,5 +1,7 @@
 #include "test_utils.h"
 
+using namespace std;
+
 void signal_freq_shift(const string& in, const string& out, double freq_shift, double fs)
 {
 	if (freq_shift > fs)
@@ -55,6 +57,50 @@ void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_m
 	}
 
 	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}
+
+void signal_freq_shift_dopl(const string& in, const string& out, double fs, double freq_ampl, double freq_peiod)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	double dph_dop = _2_PI / (freq_peiod * fs);		// набег фазы изменения частоты Доплера за такт [0, 2pi]
+	double ampl_dop = freq_ampl / fs;		// амплитуда изменения частоты Доплера за такт [0, 2pi]
+	double ph_dop = 0;								// текущее значение фазы частоты Доплера
+
+	DDS dds(DDS_PHASE_MODULUS);
+	double dph = 0;		// текущее значение набега фазы за такт
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+
+		ph_dop = std::fmod(ph_dop + dph_dop, _2_PI);
+		dph = (int16_t)(ampl_dop * std::sin(ph_dop) * DDS_PHASE_MODULUS);    // синусоидальная модель изменения набега фазы
+
+		if ((dph > DDS_PHASE_MODULUS / 2) || (dph < -DDS_PHASE_MODULUS / 2))
+			throw out_of_range("frequency shift is out of range");
+
+		if (dph < 0)					// набег фазы за такт в диапазоне[0, 16383] -- > [0, 2pi]
+			dph += DDS_PHASE_MODULUS;
+
+		xip_complex sample{ re, im };
+		xip_complex mod_sample{ 0, 0 };
+		dds.process(dph, mod_sample);
+		xip_complex res;
+		xip_multiply_complex(sample, mod_sample, res);
+		xip_complex_shift(res, -(int)(dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+
+		tC::write_real<int16_t>(out_file, res.re);
+		tC::write_real<int16_t>(out_file, res.im);
+	}
+
 	fclose(in_file);
 	fclose(out_file);
 }
@@ -599,23 +645,330 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 
 	//ofstream dbg_out("dbg_out.txt");
 	HalfBandDDCTree ddc_tree;
+<<<<<<< HEAD
+=======
+	DDS freq_shift_dds(DDS_PHASE_MODULUS);		// генератор для коррекции частотного сдвига в полосе обнаружителя
+	DDS estimator_dds(DDS_PHASE_MODULUS);		// генератор для переноса сигнала в полосу обнаружителя
+	LowpassFir lowpass_fir_0("lowpass_200kHz.fcf", 51);		// ФНЧ для 0-й ступени децимации (1600 кГц --> 400 кГц)
+	LowpassFir lowpass_fir_1("lowpass_400_50kHz.fcf", 42);	// ФНЧ для 1-й ступени децимации (400 кГц --> 100 кГц)
+	LowpassFir lowpass_fir_2("lowpass_100_9143Hz.fcf", 57);	// ФНЧ для 2-й ступени децимации (100 кГц --> 25 кГц)
+	PolyphaseDecimator decim_0(4, "pph_decimator_x4.fcf", 96);	// дециматор 0-й ступени (1600 кГц --> 400 кГц)
+	PolyphaseDecimator decim_1(4, "pph_decimator_x4.fcf", 96);	// дециматор 1-й ступени (400 кГц --> 100 кГц)
+	PolyphaseDecimator decim_2(4, "pph_decimator_x4.fcf", 96);	// дециматор 2-й ступени (100 кГц --> 25 кГц)
+	LagrangeInterp dmd_interp(25000, 18286, 1);	// интерполятор 25 кГц --> 2B
+	AutoGaneControl agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr());	// АРУ
+	DDS pll_dds(DDS_PHASE_MODULUS);				// генератор ФАПЧ
+	Pif pif_pll(PIF_PLL_Kp, PIF_PLL_Ki);		// ПИФ ФАПЧ
+	StsEstimate m_stsEst;						// блок оценки ошибки тактовой синхры
+	Pif pif_sts(PIF_STS_Kp, PIF_STS_Ki);		// ПИФ СТС
+	DoplerEstimate doplEst;						// блок оценки смещения Доплера
+	Pif pif_dopl(PIF_DOPL_Kp, PIF_DOPL_Ki);		// ПИФ Доплера
+	DDS dopl_dds(DDS_PHASE_MODULUS);			// генератор компенсации смещения Доплера
+
+	double est_freq_shift = -200000;			// смещение частоты первого обнаружителя (200 кГц)
+	int16_t est_freq_shift_mod = (int16_t)((est_freq_shift / HIGH_SAMPLE_RATE) * DDS_PHASE_MODULUS);
+	if (est_freq_shift_mod < 0)
+		est_freq_shift_mod += DDS_PHASE_MODULUS;
+
+>>>>>>> d6aafa87d54c70477bdfba3c85558d79e8681e5f
 	int16_t re;
 	int16_t im;
 	xip_complex sample;
 	int counter = 0;
+<<<<<<< HEAD
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		if (++counter == 1000) {
+=======
+	int16_t total_freq_est = 0;
+	bool freq_est_done = false;
+	int i = 0;				// счетчик для 2B --> B
+	xip_real err_pll = 0;	// оценка ошибки ФАПЧ
+	xip_real doplFreqEst = 0;	// оценка смещения Доплера
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		if (++counter == 10000) {
+>>>>>>> d6aafa87d54c70477bdfba3c85558d79e8681e5f
 			counter = 0;
 			cout << ". ";
 		}
 		sample.re = re;
 		sample.im = im;
+<<<<<<< HEAD
 		xip_complex res{ 0,0 };
 		ddc_tree.process(sample);
 		//dbg_out << res << endl;
+=======
+		xip_complex mod_sample{ 0, 0 };
+
+		//******* Петля компенсации смещения Доплера ******************
+		dopl_dds.process(doplFreqEst, mod_sample);
+		xip_multiply_complex(sample, mod_sample, sample);
+		xip_complex_shift(sample, -(int)(dopl_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+		//*************************************************************
+
+		//******* Приведение сигнала к полосе обнаружителя ************
+		// Перенос сигнала в полосу обнаружителя (+/- 200 кГц)
+		estimator_dds.process(est_freq_shift_mod, mod_sample);
+		xip_multiply_complex(sample, mod_sample, sample);
+		xip_complex_shift(sample, -(int)(estimator_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+		// ФНЧ для отфильтровки сигнала в полосе обнаружителя
+		lowpass_fir_0.process(sample, sample);
+		// Децимация до полосы обнаружителя (1600 кГц --> 400 кГц)
+		if (decim_0.process(sample))
+			continue;
+		decim_0.next(sample);
+		//*************************************************************
+
+		if (!freq_est_done) {	// если сигнал еще не обнаружен, то продолжать его обнаружение
+			freq_est_done = ddc_tree.process(sample);
+			if (freq_est_done) {	// при обнаружении и оценке сигнала вычислить частотное смещение
+				// !!! оптимизировать вычисление total_freq_est
+				total_freq_est = ddc_tree.countTotalFreqShift();
+				total_freq_est -= DDS_PHASE_MODULUS >> 1;	// полоса смещена вниз к 0
+				total_freq_est = -total_freq_est;
+				if ((total_freq_est > DDS_PHASE_MODULUS / 2) || (total_freq_est < -DDS_PHASE_MODULUS / 2))
+					throw out_of_range("frequency shift is out of range");
+				if (total_freq_est < 0)
+					total_freq_est += DDS_PHASE_MODULUS; // набег фазы за такт в диапазоне[0, 16383] -- > [0, 2pi]
+			}
+		}
+		else {	// если сигнал обнаружен коррелятором, корректируем частоту и демодулируем
+			xip_complex mod_sample{ 0, 0 };
+			// коррекция частоты
+			freq_shift_dds.process(total_freq_est, mod_sample);
+			xip_multiply_complex(sample, mod_sample, sample);
+			xip_complex_shift(sample, -(int)(freq_shift_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+			// ФНЧ 1
+			lowpass_fir_1.process(sample, sample);
+			// децимация (400 кГц --> 100 кГц)
+			if (decim_1.process(sample))
+				continue;
+			decim_1.next(sample);
+			// ФНЧ 2
+			lowpass_fir_2.process(sample, sample);
+			// децимация (100 кГц --> 25 кГц)
+			if (decim_2.process(sample))
+				continue;
+			decim_2.next(sample);
+
+			//********** демодуляция
+			// интерполятор 25 кГц --> 2B
+			dmd_interp.process(sample);
+			while (dmd_interp.next(sample)) {
+				// согласованный фильтр на 2B
+				process_sample_channel_matched_receive(&sample, &sample);
+				// 2B --> B
+				if (i == 1) {
+					i = 0;
+					continue;
+				}
+				i = 1;
+
+				// АРУ для точной оценки ошибки тактовой синхры
+				// уровень сигнала нормируется относительно уровня сигнального созвездия
+				if (!agc.process(sample, sample))
+					continue;
+				// для сигнального созвездия +/-4096 сигнал с выхода АРУ будет в диапазоне [-2^14, 2^14]
+
+				//******** петля ФАПЧ, компенсация частотного смещения ****************
+				xip_complex pll_corr{ 0, 0 };
+				pll_dds.process(err_pll, pll_corr);					// сигнал ГУН
+				xip_multiply_complex(sample, pll_corr, sample);		// компенсация
+				xip_complex_shift(sample, -(int)(pll_dds.getOutputWidth() - 1));
+				//*********************************************************************
+				xip_complex est = nearest_point_psk4(sample);		// жесткое решение
+
+				//******** оценка частотного сдвига ***********************************
+				xip_complex err_pll_sample{ sample.re, -sample.im };  // комплексно-сопряженное от текущего отсчета
+				xip_multiply_complex(err_pll_sample, est, err_pll_sample);
+				err_pll = err_pll_sample.im;	// ошибка ФАПЧ
+
+				// примем максимальный диапазон отклонения фазы [-0.5, 0.5] рад
+				// для сигнального созвездия +/-4096 сдвиг будет в диапазоне [-0.5*2^25, 0.5*2^25] --> рад << 25
+				// приведем к диапазону [-2^15, 2^15] для работы ПИФ
+				xip_real_shift(err_pll, -10);
+				pif_pll.process(err_pll, err_pll);	// сглаживание и интеграция сигнала ошибки в ПИФ
+
+				// переведем в диапазон работы DDS --> [0, 16384] --> [0, 2pi]
+				xip_multiply_real(err_pll, DDS_RAD_CONST, err_pll);
+				xip_real_shift(err_pll, -18);
+				if (err_pll < 0)
+					err_pll += DDS_PHASE_MODULUS;
+				//*********************************************************************
+
+				//************ оценка ошибки тактовой синхры **************************
+				xip_real sts_err = m_stsEst.getErr(sample, est);
+				// для сигнального созвездия +/-4096 ошибка будет в диапазоне [-2^26, 2^26]
+
+				// уменьшаем динамический диапазон до диапазона ПИФ --> [-2^15, 2^15] 
+				// величину сдвига нужно подобирать исходя из ресурсов. 
+				// для максимальной точности можно без сдвига
+				// для минимальной точности и экономии ресурса можно сдвинуть сразу до [-2^10, 2^10]
+				// меньше [-2^10, 2^10] ученьшать нецелесообразно, т.к. это диапазон интерполятора
+				xip_real_shift(sts_err, -11);
+
+				pif_sts.process(sts_err, sts_err);	// сглаживание и интеграция сигнала ошибки в ПИФ
+
+				// уменьшаем динамический диапазон до диапазона интерполятора --> [-2^10, 2^10]
+				xip_real_shift(sts_err, -3);
+
+				// коррекция смещения интерполятора
+				dmd_interp.shift((int32_t)sts_err);
+				//*********************************************************************
+			
+				//************* Оценка смещения Доплера *******************************
+				xip_real dopl_err = doplEst.getErr(sample, est);	// оценка для 1B
+				xip_real dopl_err_B;
+				pif_dopl.process(dopl_err, dopl_err_B);			// сглаживание и интеграция сигнала ошибки в ПИФ
+				//dbg_out << dopl_err << '\t' << doplFreqEst << endl;
+
+				// !!! переделать в комбинацию целых
+				doplFreqEst = round(-dopl_err_B * (xip_real)BAUD_RATE / (xip_real)HIGH_SAMPLE_RATE);	// пересчет набега фазы из 1B в 1600000 Гц
+				if (doplFreqEst < 0)								// переведем в диапазон работы DDS --> [0, 16384]
+					doplFreqEst += DDS_PHASE_MODULUS;
+
+				//dbg_out << setw(15) << dopl_err << setw(15) << dopl_err_B << setw(15) << doplFreqEst << endl;
+				//*********************************************************************
+
+				tC::write_real<int16_t>(out_file, sample.re);
+				tC::write_real<int16_t>(out_file, sample.im);
+			}
+		}
+>>>>>>> d6aafa87d54c70477bdfba3c85558d79e8681e5f
 	}
 	//dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
 }
+<<<<<<< HEAD
+=======
+
+void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_out)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(dem_out.c_str(), "wb");
+	if (!out_file)
+		return;
+	ofstream dbg_out("dbg_out.txt");
+
+	LagrangeInterp dmd_interp(1, 1, 1);
+	AutoGaneControl agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr());	// АРУ
+	DDS pll_dds(DDS_PHASE_MODULUS);				// генератор ФАПЧ
+	Pif pif_pll(PIF_PLL_Kp, PIF_PLL_Ki);		// ПИФ ФАПЧ
+	StsEstimate m_stsEst;						// блок оценки ошибки тактовой синхры
+	Pif pif_sts(PIF_STS_Kp, PIF_STS_Ki);		// ПИФ СТС
+	DoplerEstimate doplEst;						// блок оценки смещения Доплера
+	Pif pif_dopl(PIF_DOPL_Kp, PIF_DOPL_Ki);		// ПИФ Доплера
+	DDS dopl_dds(DDS_PHASE_MODULUS);			// генератор компенсации смещения Доплера
+	xip_real err_pll = 0;	// оценка ошибки ФАПЧ
+	xip_real doplFreqEst = 0;	// оценка смещения Доплера
+	int i = 0;				// счетчик для 2B --> B
+	int16_t re;
+	int16_t im;
+	xip_complex sample;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		sample.re = re;
+		sample.im = im;
+
+		xip_complex mod_sample{ 0, 0 };
+		//******* Петля компенсации смещения Доплера ******************
+		dopl_dds.process(doplFreqEst, mod_sample);
+		xip_multiply_complex(sample, mod_sample, sample);
+		xip_complex_shift(sample, -(int)(dopl_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+		//*************************************************************
+
+		//********** демодуляция
+		// интерполятор 25 кГц --> 2B
+		dmd_interp.process(sample);
+		while (dmd_interp.next(sample)) {
+			// согласованный фильтр на 2B
+			process_sample_channel_matched_receive(&sample, &sample);
+			// 2B --> B
+			if (i == 1) {
+				i = 0;
+				continue;
+			}
+			i = 1;
+
+			// АРУ для точной оценки ошибки тактовой синхры
+			// уровень сигнала нормируется относительно уровня сигнального созвездия
+			if (!agc.process(sample, sample))
+				continue;
+			// для сигнального созвездия +/-4096 сигнал с выхода АРУ будет в диапазоне [-2^14, 2^14]
+
+			xip_complex dopl_sample = sample;
+
+			//******** петля ФАПЧ, компенсация частотного смещения ****************
+			xip_complex pll_corr{ 0, 0 };
+			pll_dds.process(err_pll, pll_corr);					// сигнал ГУН
+			xip_multiply_complex(sample, pll_corr, sample);		// компенсация
+			xip_complex_shift(sample, -(int)(pll_dds.getOutputWidth() - 1));
+			//*********************************************************************
+			xip_complex est = nearest_point_psk4(sample);		// жесткое решение
+
+			//******** оценка частотного сдвига ***********************************
+			xip_complex err_pll_sample{ sample.re, -sample.im };  // комплексно-сопряженное от текущего отсчета
+			xip_multiply_complex(err_pll_sample, est, err_pll_sample);
+			err_pll = err_pll_sample.im;	// ошибка ФАПЧ
+
+			// примем максимальный диапазон отклонения фазы [-0.5, 0.5] рад
+			// для сигнального созвездия +/-4096 сдвиг будет в диапазоне [-0.5*2^25, 0.5*2^25] --> рад << 25
+			// приведем к диапазону [-2^15, 2^15] для работы ПИФ
+			xip_real_shift(err_pll, -10);
+			pif_pll.process(err_pll, err_pll);	// сглаживание и интеграция сигнала ошибки в ПИФ
+
+			// переведем в диапазон работы DDS --> [0, 16384] --> [0, 2pi]
+			xip_multiply_real(err_pll, DDS_RAD_CONST, err_pll);
+			xip_real_shift(err_pll, -18);
+			if (err_pll < 0)
+				err_pll += DDS_PHASE_MODULUS;
+			//*********************************************************************
+
+			//************ оценка ошибки тактовой синхры **************************
+			xip_real sts_err = m_stsEst.getErr(sample, est);
+			// для сигнального созвездия +/-4096 ошибка будет в диапазоне [-2^26, 2^26]
+
+			// уменьшаем динамический диапазон до диапазона ПИФ --> [-2^15, 2^15] 
+			// величину сдвига нужно подобирать исходя из ресурсов. 
+			// для максимальной точности можно без сдвига
+			// для минимальной точности и экономии ресурса можно сдвинуть сразу до [-2^10, 2^10]
+			// меньше [-2^10, 2^10] ученьшать нецелесообразно, т.к. это диапазон интерполятора
+			xip_real_shift(sts_err, -11);
+
+			pif_sts.process(sts_err, sts_err);	// сглаживание и интеграция сигнала ошибки в ПИФ
+
+			// уменьшаем динамический диапазон до диапазона интерполятора --> [-2^10, 2^10]
+			xip_real_shift(sts_err, -3);
+
+			// коррекция смещения интерполятора
+			dmd_interp.shift((int32_t)sts_err);
+			//*********************************************************************
+
+			//************* Оценка смещения Доплера *******************************
+			xip_real dopl_err = doplEst.getErr(dopl_sample, est);	// оценка для 1B
+			xip_real dopl_err_B;
+			pif_dopl.process(dopl_err, dopl_err_B);			// сглаживание и интеграция сигнала ошибки в ПИФ
+			//dbg_out << dopl_err << '\t' << doplFreqEst << endl;
+
+			// !!! переделать в комбинацию целых
+			doplFreqEst = dopl_err;
+			if (doplFreqEst < 0)								// переведем в диапазон работы DDS --> [0, 16384]
+				doplFreqEst += DDS_PHASE_MODULUS;
+
+			dbg_out << setw(15) << dopl_err << setw(15) << dopl_err_B << setw(15) << doplFreqEst << endl;
+			//*********************************************************************
+
+			tC::write_real<int16_t>(out_file, sample.re);
+			tC::write_real<int16_t>(out_file, sample.im);
+		}
+	}
+
+	dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}
+>>>>>>> d6aafa87d54c70477bdfba3c85558d79e8681e5f
