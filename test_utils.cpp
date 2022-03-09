@@ -64,14 +64,14 @@ void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_m
 xip_real getLineValue(xip_real ph)
 {
 	xip_real val = 0;
-	if ((ph > _2_PI) && (ph < PI + _2_PI)) {
-		val = -(ph - _2_PI) * _2_PI + 1;
+	if ((ph > PI_2) && (ph < PI_34)) {
+		val = -(ph - PI_2) / PI_2 + 1;
 	}
-	else if (ph <= _2_PI) {
-		val = ph * _2_PI;
+	else if (ph <= PI_2) {
+		val = ph / PI_2;
 	}
-	else if (ph >= PI + _2_PI) {
-		val = (ph - (PI + _2_PI)) * _2_PI - 1;
+	else if (ph >= PI_34) {
+		val = (ph - PI_34) / PI_2 - 1;
 	}
 	return val;
 }
@@ -666,8 +666,6 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 
 	//ofstream dbg_out("dbg_out.txt");
 	HalfBandDDCTree ddc_tree;
-<<<<<<< HEAD
-=======
 	DDS freq_shift_dds(DDS_PHASE_MODULUS);		// генератор для коррекции частотного сдвига в полосе обнаружителя
 	DDS estimator_dds(DDS_PHASE_MODULUS);		// генератор для переноса сигнала в полосу обнаружителя
 	LowpassFir lowpass_fir_0("lowpass_200kHz.fcf", 51);		// ФНЧ для 0-й ступени децимации (1600 кГц --> 400 кГц)
@@ -691,16 +689,10 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	if (est_freq_shift_mod < 0)
 		est_freq_shift_mod += DDS_PHASE_MODULUS;
 
->>>>>>> d6aafa87d54c70477bdfba3c85558d79e8681e5f
 	int16_t re;
 	int16_t im;
 	xip_complex sample;
 	int counter = 0;
-<<<<<<< HEAD
-	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
-		tC::read_real<int16_t, int16_t>(in_file, im)) {
-		if (++counter == 1000) {
-=======
 	int16_t total_freq_est = 0;
 	bool freq_est_done = false;
 	int i = 0;				// счетчик для 2B --> B
@@ -709,17 +701,13 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		if (++counter == 10000) {
->>>>>>> d6aafa87d54c70477bdfba3c85558d79e8681e5f
 			counter = 0;
 			cout << ". ";
 		}
 		sample.re = re;
 		sample.im = im;
-<<<<<<< HEAD
-		xip_complex res{ 0,0 };
 		ddc_tree.process(sample);
 		//dbg_out << res << endl;
-=======
 		xip_complex mod_sample{ 0, 0 };
 
 		//******* Петля компенсации смещения Доплера ******************
@@ -792,6 +780,8 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 					continue;
 				// для сигнального созвездия +/-4096 сигнал с выхода АРУ будет в диапазоне [-2^14, 2^14]
 
+				xip_complex dopl_sample = sample;
+
 				//******** петля ФАПЧ, компенсация частотного смещения ****************
 				xip_complex pll_corr{ 0, 0 };
 				pll_dds.process(err_pll, pll_corr);					// сигнал ГУН
@@ -839,16 +829,16 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 				//*********************************************************************
 			
 				//************* Оценка смещения Доплера *******************************
-				xip_real dopl_err = doplEst.getErr(sample, est);	// оценка для 1B
+				xip_real dopl_err = doplEst.getErr(dopl_sample, est) + 0.5;	// оценка для 1B (0.5 - поправка на целочисленную погрешность)
 				xip_real dopl_err_B;
 				pif_dopl.process(dopl_err, dopl_err_B);			// сглаживание и интеграция сигнала ошибки в ПИФ
-				//dbg_out << dopl_err << '\t' << doplFreqEst << endl;
+					//dbg_out << dopl_err << '\t' << doplFreqEst << endl;
 
 				// !!! переделать в комбинацию целых
-				doplFreqEst = round(-dopl_err_B * (xip_real)BAUD_RATE / (xip_real)HIGH_SAMPLE_RATE);	// пересчет набега фазы из 1B в 1600000 Гц
+				doplFreqEst -= round(dopl_err_B * (xip_real)BAUD_RATE / (xip_real)HIGH_SAMPLE_RATE);	// пересчет набега фазы из 1B в 1600000 Гц
 				if (doplFreqEst < 0)								// переведем в диапазон работы DDS --> [0, 16384]
 					doplFreqEst += DDS_PHASE_MODULUS;
-
+				doplFreqEst = fmod(doplFreqEst, DDS_PHASE_MODULUS);
 				//dbg_out << setw(15) << dopl_err << setw(15) << dopl_err_B << setw(15) << doplFreqEst << endl;
 				//*********************************************************************
 
@@ -856,14 +846,11 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 				tC::write_real<int16_t>(out_file, sample.im);
 			}
 		}
->>>>>>> d6aafa87d54c70477bdfba3c85558d79e8681e5f
 	}
 	//dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
 }
-<<<<<<< HEAD
-=======
 
 void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_out)
 {
@@ -882,7 +869,8 @@ void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_ou
 	StsEstimate m_stsEst;						// блок оценки ошибки тактовой синхры
 	Pif pif_sts(PIF_STS_Kp, PIF_STS_Ki);		// ПИФ СТС
 	DoplerEstimate doplEst;						// блок оценки смещения Доплера
-	Pif pif_dopl(PIF_DOPL_Kp, PIF_DOPL_Ki);		// ПИФ Доплера
+	//Pif pif_dopl(PIF_DOPL_Kp, PIF_DOPL_Ki);		// ПИФ Доплера
+	Pif pif_dopl(0.01);		// ПИФ Доплера
 	DDS dopl_dds(DDS_PHASE_MODULUS);			// генератор компенсации смещения Доплера
 	xip_real err_pll = 0;	// оценка ошибки ФАПЧ
 	xip_real doplFreqEst = 0;	// оценка смещения Доплера
@@ -970,15 +958,18 @@ void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_ou
 			//*********************************************************************
 
 			//************* Оценка смещения Доплера *******************************
-			xip_real dopl_err = doplEst.getErr(dopl_sample, est);	// оценка для 1B
+			xip_real dopl_err = doplEst.getErr(dopl_sample, est) + 0.5;	// оценка для 1B (0.5 - поправка на целочисленную погрешность)
 			xip_real dopl_err_B;
 			pif_dopl.process(dopl_err, dopl_err_B);			// сглаживание и интеграция сигнала ошибки в ПИФ
 			//dbg_out << dopl_err << '\t' << doplFreqEst << endl;
 
 			// !!! переделать в комбинацию целых
-			doplFreqEst = dopl_err;
+			doplFreqEst -= dopl_err_B;
 			if (doplFreqEst < 0)								// переведем в диапазон работы DDS --> [0, 16384]
 				doplFreqEst += DDS_PHASE_MODULUS;
+			//if (doplFreqEst > DDS_PHASE_MODULUS)
+			//	doplFreqEst -= DDS_PHASE_MODULUS;
+			doplFreqEst = fmod(doplFreqEst, DDS_PHASE_MODULUS);
 
 			dbg_out << setw(15) << dopl_err << setw(15) << dopl_err_B << setw(15) << doplFreqEst << endl;
 			//*********************************************************************
@@ -992,4 +983,3 @@ void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_ou
 	fclose(in_file);
 	fclose(out_file);
 }
->>>>>>> d6aafa87d54c70477bdfba3c85558d79e8681e5f

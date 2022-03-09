@@ -36,6 +36,8 @@ using namespace xilinx_m;
 // утилиты для тестирования модема
 extern const double PI;
 extern const double _2_PI;
+extern const double PI_2;
+extern const double PI_34;
 extern const int DDS_PHASE_MODULUS;
 extern const uint16_t FRAME_DATA_SIZE;
 extern const uint32_t DPDI_BURST_ML_SATGE_1;
@@ -219,8 +221,6 @@ extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& f
 */
 extern void signal_estimate_demodulate(const string& in, const string& dem_out);
 
-<<<<<<< HEAD
-=======
 /**
  * @brief тестирование компенсации Доплера на скорости 2B
  * @param in входной файл (PCM стерео I/Q 16-бит)
@@ -228,5 +228,4 @@ extern void signal_estimate_demodulate(const string& in, const string& dem_out);
 */
 extern void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_out);
 
->>>>>>> d6aafa87d54c70477bdfba3c85558d79e8681e5f
 #endif // TESTUTILS_H

@@ -13,6 +13,8 @@ using namespace std;
 
 static const double PI = 3.141592653589793238463;
 static const double _2_PI = PI * 2;
+static const double PI_2 = PI / 2;
+static const double PI_34 = PI + PI / 2;
 
 /**
 * Скорости в канале (бод/с):
@@ -90,16 +92,16 @@ int main()
 	//************ Моделирование доплеровского частотного смещения ***********
 	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
 	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 10000);
-	signal_freq_shift_dopl("out_mod.pcm", "out_mod_dopl.pcm", INIT_SAMPLE_RATE, 6000, 50);
+	//signal_freq_shift_dopl("out_mod.pcm", "out_mod_dopl.pcm", INIT_SAMPLE_RATE, 6000, 50, 0);
 
 
 	//************ Обнаружение сигнала и демодуляция
 	//signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_383500.pcm", "out_mod_dmd_1B.pcm");
-	//signal_estimate_demodulate("out_mod_interp_x64_shifted.pcm", "out_mod_dmd_1B.pcm");
+	signal_estimate_demodulate("out_mod_interp_x64_shifted.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
 
-	signal_estimate_demodulate_dopl_test("out_mod_dopl.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate_dopl_test("out_mod_dopl.pcm", "out_mod_dmd_1B.pcm");
 
 
 	destroy_xip_multiplier();
