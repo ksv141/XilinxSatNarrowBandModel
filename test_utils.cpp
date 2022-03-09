@@ -664,7 +664,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 	if (!out_file)
 		return;
 
-	//ofstream dbg_out("dbg_out.txt");
+	ofstream dbg_out("dbg_out.txt");
 	HalfBandDDCTree ddc_tree;
 	DDS freq_shift_dds(DDS_PHASE_MODULUS);		// генератор для коррекции частотного сдвига в полосе обнаружителя
 	DDS estimator_dds(DDS_PHASE_MODULUS);		// генератор для переноса сигнала в полосу обнаружителя
@@ -706,8 +706,6 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 		}
 		sample.re = re;
 		sample.im = im;
-		ddc_tree.process(sample);
-		//dbg_out << res << endl;
 		xip_complex mod_sample{ 0, 0 };
 
 		//******* Петля компенсации смещения Доплера ******************
@@ -827,7 +825,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 				// коррекция смещения интерполятора
 				dmd_interp.shift((int32_t)sts_err);
 				//*********************************************************************
-			
+
 				//************* Оценка смещения Доплера *******************************
 				xip_real dopl_err = doplEst.getErr(dopl_sample, est) + 0.5;	// оценка для 1B (0.5 - поправка на целочисленную погрешность)
 				xip_real dopl_err_B;
@@ -835,11 +833,11 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 					//dbg_out << dopl_err << '\t' << doplFreqEst << endl;
 
 				// !!! переделать в комбинацию целых
-				doplFreqEst -= round(dopl_err_B * (xip_real)BAUD_RATE / (xip_real)HIGH_SAMPLE_RATE);	// пересчет набега фазы из 1B в 1600000 Гц
+				doplFreqEst -= dopl_err_B*(xip_real)BAUD_RATE / (xip_real)HIGH_SAMPLE_RATE;	// пересчет набега фазы из 1B в 1600000 Гц
 				if (doplFreqEst < 0)								// переведем в диапазон работы DDS --> [0, 16384]
 					doplFreqEst += DDS_PHASE_MODULUS;
 				doplFreqEst = fmod(doplFreqEst, DDS_PHASE_MODULUS);
-				//dbg_out << setw(15) << dopl_err << setw(15) << dopl_err_B << setw(15) << doplFreqEst << endl;
+				dbg_out << setw(15) << dopl_err << setw(15) << dopl_err_B << setw(15) << doplFreqEst << endl;
 				//*********************************************************************
 
 				tC::write_real<int16_t>(out_file, sample.re);
@@ -847,7 +845,7 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 			}
 		}
 	}
-	//dbg_out.close();
+	dbg_out.close();
 	fclose(in_file);
 	fclose(out_file);
 }
