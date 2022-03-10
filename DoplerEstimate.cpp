@@ -23,7 +23,10 @@ int16_t DoplerEstimate::getErr(const xip_complex& out_symb, const xip_complex& e
     xip_real arg;
     xip_cordic_rect_to_polar(r3, mag, arg);
     int16_t arg_int = (int16_t)arg;
-    arg_int >>= 1;
 
-    return arg_int;
+    arg_int >>= 1;  // при использовании сдвига возникает погрешность 0,5 из-за отбрасывания бита
+    if (m_roundBit++)
+        m_roundBit = 0;
+
+    return arg_int + m_roundBit;
 }

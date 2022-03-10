@@ -65,9 +65,14 @@ int main()
 	init_xip_cordic_rect_to_polar();
 	init_channel_matched_fir();
 
+	//int16_t x = -9;
+	//if (x & 1)
+	//	cout << 1 << endl;
+	//x >>= 1;
+	//cout << x << endl;
 
 	//************ Формирователь ПСП в виде бинарного файла *************
-	//SignalSource::generateBinFile(3000, "data.bin");
+	//SignalSource::generateBinFile(30000, "data_30.bin");
 
 	//************ Модулятор *****************
 	// Формирует кадры с добавлением преамбулы
@@ -82,6 +87,8 @@ int main()
 	//************ Передискретизация до 1600 кГц ***************
 	//signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
 	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x64.pcm", 64);
+	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x4.pcm", 4);
+	//signal_interpolate("out_mod.pcm", "out_mod_interp_x4.pcm", 4);
 
 	//************ Моделирование произвольного смещения несущей в пределах полосы первого обнаружителя
 	// Всего 4 обнаружителя с полосой 400 кГц каждый для перекрытия полосы 1600 кГц
@@ -92,16 +99,19 @@ int main()
 	//************ Моделирование доплеровского частотного смещения ***********
 	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
 	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 50000);
-	//signal_freq_shift_dopl("out_mod.pcm", "out_mod_dopl.pcm", INIT_SAMPLE_RATE, 6000, 50, 0);
+	//signal_freq_shift_dopl("out_mod.pcm", "out_mod_dopl.pcm", INIT_SAMPLE_RATE, 6000, 10, 0);
+	//signal_freq_shift_dopl("out_mod_25.pcm", "out_mod_dopl.pcm", 25000, 10000, 20, 0);
+	//signal_freq_shift_dopl("out_mod_interp_x4.pcm", "out_mod_dopl.pcm", 100000, 30000, 50, 0);
 
 
 	//************ Обнаружение сигнала и демодуляция
 	//signal_estimate_demodulate("out_mod_decim_x16.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_383500.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_shifted.pcm", "out_mod_dmd_1B.pcm");
-	signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
 
-	//signal_estimate_demodulate_dopl_test("out_mod_dopl.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate_dopl_test("out_mod_interp_x4.pcm", "out_mod_dmd_1B.pcm");
+	signal_estimate_demodulate_dopl_test("out_mod.pcm", "out_mod_dmd_1B.pcm");
 
 
 	destroy_xip_multiplier();

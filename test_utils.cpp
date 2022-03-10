@@ -86,8 +86,8 @@ void signal_freq_shift_dopl(const string& in, const string& out, double fs,
 	if (!out_file)
 		return;
 
-	double dph_dop = _2_PI / (freq_peiod * fs);		// набег фазы изменения частоты Доплера за такт [0, 2pi]
-	double ampl_dop = freq_ampl / fs;		// амплитуда изменения частоты Доплера за такт [0, 2pi]
+	double dph_dop = _2_PI / (freq_peiod * fs);		// набег фазы изменения частоты Доплера за такт, рад/отс [0, 2pi]
+	double ampl_dop = freq_ampl / fs;				// максимальное изменение частоты Доплера за такт, Гц/отс
 	double ph_dop = 0;								// текущее значение фазы частоты Доплера
 
 	DDS dds(DDS_PHASE_MODULUS);
@@ -859,9 +859,15 @@ void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_ou
 	if (!out_file)
 		return;
 	ofstream dbg_out("dbg_out.txt");
+	//freopen("out.txt", "w", stdout);
+
 
 	LagrangeInterp dmd_interp(1, 1, 1);
+	//LagrangeInterp dmd_interp(25000, 18286, 1);
 	AutoGaneControl agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr());	// АРУ
+	LowpassFir lowpass_fir_2("lowpass_100_9143Hz.fcf", 57);	// ФНЧ для 2-й ступени децимации (100 кГц --> 25 кГц)
+	PolyphaseDecimator decim_2(4, "pph_decimator_x4.fcf", 96);	// дециматор 2-й ступени (100 кГц --> 25 кГц)
+
 	DDS pll_dds(DDS_PHASE_MODULUS);				// генератор ФАПЧ
 	Pif pif_pll(PIF_PLL_Kp, PIF_PLL_Ki);		// ПИФ ФАПЧ
 	StsEstimate m_stsEst;						// блок оценки ошибки тактовой синхры
@@ -876,17 +882,35 @@ void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_ou
 	int16_t re;
 	int16_t im;
 	xip_complex sample;
+	int counter = 0;
+	int counter_all = 0;
+	double sum_dopl_err = 0;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		if (++counter == 10000) {
+			counter = 0;
+			cout << ". ";
+		}
+		counter_all++;
+
 		sample.re = re;
 		sample.im = im;
 
 		xip_complex mod_sample{ 0, 0 };
+		//if (counter_all == 76612)
+		//	cout << counter_all << endl;
 		//******* Петля компенсации смещения Доплера ******************
-		dopl_dds.process(doplFreqEst, mod_sample);
-		xip_multiply_complex(sample, mod_sample, sample);
-		xip_complex_shift(sample, -(int)(dopl_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
+		//dopl_dds.process(doplFreqEst, mod_sample);
+		//xip_multiply_complex(sample, mod_sample, sample);
+		//xip_complex_shift(sample, -(int)(dopl_dds.getOutputWidth() - 1));	// уменьшаем динамический диапазон результата (подобрано опытным путем)
 		//*************************************************************
+
+		//// ФНЧ 2
+		//lowpass_fir_2.process(sample, sample);
+		//// децимация (100 кГц --> 25 кГц)
+		//if (decim_2.process(sample))
+		//	continue;
+		//decim_2.next(sample);
 
 		//********** демодуляция
 		// интерполятор 25 кГц --> 2B
@@ -956,20 +980,20 @@ void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_ou
 			//*********************************************************************
 
 			//************* Оценка смещения Доплера *******************************
-			xip_real dopl_err = doplEst.getErr(dopl_sample, est) + 0.5;	// оценка для 1B (0.5 - поправка на целочисленную погрешность)
+			xip_real dopl_err = doplEst.getErr(dopl_sample, est);	// оценка для 1B (0.5 - поправка на целочисленную погрешность)
 			xip_real dopl_err_B;
 			pif_dopl.process(dopl_err, dopl_err_B);			// сглаживание и интеграция сигнала ошибки в ПИФ
-			//dbg_out << dopl_err << '\t' << doplFreqEst << endl;
+			//dopl_err_B += 0.0052;
+			dbg_out << dopl_err_B << endl;
 
 			// !!! переделать в комбинацию целых
-			doplFreqEst -= dopl_err_B;
+			doplFreqEst -= dopl_err_B;// *9143.0 / 100000.0;
 			if (doplFreqEst < 0)								// переведем в диапазон работы DDS --> [0, 16384]
 				doplFreqEst += DDS_PHASE_MODULUS;
-			//if (doplFreqEst > DDS_PHASE_MODULUS)
-			//	doplFreqEst -= DDS_PHASE_MODULUS;
 			doplFreqEst = fmod(doplFreqEst, DDS_PHASE_MODULUS);
+			//dbg_out << doplFreqEst << endl;
 
-			dbg_out << setw(15) << dopl_err << setw(15) << dopl_err_B << setw(15) << doplFreqEst << endl;
+			//dbg_out << setw(15) << dopl_err << setw(15) << dopl_err_B << setw(15) << doplFreqEst << endl;
 			//*********************************************************************
 
 			tC::write_real<int16_t>(out_file, sample.re);
