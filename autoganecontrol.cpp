@@ -45,6 +45,8 @@ bool AutoGaneControl::process(const xip_complex& in, xip_complex& out)
 	xip_multiply_real(in.im, m_normPowerSqrt, in_mul);
 	int32_division(in_mul, sum_pwr, out.im);
 
+	//xip_complex_shift(out, -1);
+
 	return true;
 }
 

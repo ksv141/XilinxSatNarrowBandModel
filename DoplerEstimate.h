@@ -19,7 +19,12 @@ public:
 	int16_t getErr(const xip_complex& out_symb, const xip_complex& est);
 
 private:
-	deque<xip_complex> m_reg;     // FIFO-регистр для вычисления ошибки
+	deque<xip_complex> m_reg;		// FIFO-регистр для вычисления ошибки
+	uint8_t m_roundBit = 0;			// бит округления при делении на 2
+
+public:
+	unsigned c = 0;
+	unsigned c1 = 0;
 };
 
 #endif // DOPLERESTIMATE_H

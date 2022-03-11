@@ -31,8 +31,8 @@ void Modulator::process()
 			if (!m_signalSource.nextSampleFromFile(sample))
 				break;
 
-		// канальный фильтр фильтр на 2B
-		process_sample_channel_matched_receive(&sample, &sample);
+		// канальный фильтр на 2B
+		process_sample_channel_matched_transmit(&sample, &sample);
 
 		// если диапазон сигнала +/-4096, то с выхода фильра 13-битный отсчет
 

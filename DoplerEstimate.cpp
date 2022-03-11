@@ -18,12 +18,15 @@ int16_t DoplerEstimate::getErr(const xip_complex& out_symb, const xip_complex& e
     r2.im = -r2.im;
     xip_complex r3{ r1.re + r2.re, r1.im + r2.im };
 
-    // ќценка смещени€ по частоте (v = Arg{x}/2) на 1 символ
+    // ќценка смещени€ по частоте (v = Arg{x}/2) на 1 символ [-8192, 8191]
     xip_real mag;
     xip_real arg;
     xip_cordic_rect_to_polar(r3, mag, arg);
     int16_t arg_int = (int16_t)arg;
-    arg_int >>= 1;
 
-    return arg_int;
+    arg_int >>= 1;  // при использовании сдвига возникает погрешность 0,5 из-за отбрасывани€ бита
+    if (m_roundBit++)
+        m_roundBit = 0;
+
+    return arg_int + m_roundBit;
 }

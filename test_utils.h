@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <complex>
 #include <cmath>
@@ -23,6 +24,11 @@
 #include "HalfBandDDC.h"
 #include "HalfBandDDCTree.h"
 #include "PhaseTimingCorrelator.h"
+#include "NarrowBandDemodulator.h"
+#include "ChannelMatchedFir.h"
+#include "Pif.h"
+#include "StsEstimate.h"
+#include "DoplerEstimate.h"
 
 using namespace std;
 using namespace xilinx_m;
@@ -30,10 +36,23 @@ using namespace xilinx_m;
 // утилиты для тестирования модема
 extern const double PI;
 extern const double _2_PI;
+extern const double PI_2;
+extern const double PI_34;
 extern const int DDS_PHASE_MODULUS;
 extern const uint16_t FRAME_DATA_SIZE;
 extern const uint32_t DPDI_BURST_ML_SATGE_1;
 extern const uint32_t DPDI_BURST_ML_SATGE_2;
+
+extern const int DDS_RAD_CONST;		// радиан на одну позицию фазы << 3 == 20860 (16 бит)
+extern const double PIF_PLL_Kp;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ
+extern const double PIF_PLL_Ki;		// коэффициент интегральной составляющей ПИФ ФАПЧ
+extern const double PIF_STS_Kp;		// коэффициент пропорциональной составляющей ПИФ СТС
+extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТС
+extern const double PIF_DOPL_Kp;	// коэффициент пропорциональной составляющей ПИФ Допл (при specific_locking_band = 0.01)
+extern const double PIF_DOPL_Ki;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
+
+extern const int BAUD_RATE;			// бодовая скорость в канале
+extern const int HIGH_SAMPLE_RATE;	// частота дискретизации на входе демодулятора
 
 /**
  * @brief частотное смещение сигнала
@@ -61,6 +80,18 @@ extern void signal_freq_shift_symmetric(const string& in, const string& out_up, 
  * @param freq_shift_mod смещение частоты в единицах работы DDS --> [-8192, 8192]
 */
 extern void signal_freq_shift(const string& in, const string& out, int16_t freq_shift_mod);
+
+
+/**
+ * @brief доплеровское частотное смещение сигнала
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param out выходной файл (PCM стерео I/Q 16-бит)
+ * @param freq_ampl амплитуда изменения частоты в Гц
+ * @param freq_peiod период изменения частоты в сек
+ * @param mode закон изменения частоты (0 - синус, 1 - линейный)
+*/
+extern void signal_freq_shift_dopl(const string& in, const string& out, double fs, 
+									double freq_ampl, double freq_peiod, int mode = 0);
 
 /**
  * @brief частотное и фазовое смещение сигнала
@@ -182,5 +213,19 @@ extern void signal_halfband_ddc(const string& in, const string& out_up, const st
 */
 extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& freq_est_stage_1, int16_t& freq_est_stage_2,
 								int16_t& phase_est, int16_t& symbol_timing_est, int16_t& total_freq_est);
+
+/**
+ * @brief обнаружение сигнала, определение частотного смещения и демодуляция
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param dem_out сигнал на входе блока принятия решения на скорости 1B (PCM стерео I/Q 16-бит)
+*/
+extern void signal_estimate_demodulate(const string& in, const string& dem_out);
+
+/**
+ * @brief тестирование компенсации Доплера на скорости 2B
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param dem_out сигнал на входе блока принятия решения на скорости 1B (PCM стерео I/Q 16-бит)
+*/
+extern void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_out);
 
 #endif // TESTUTILS_H
