@@ -1,8 +1,8 @@
 #include "Modulator.h"
 
 
-Modulator::Modulator(const string& input_file, const string& output_file, size_t data_length):
-	m_signalSource(input_file, true, data_length)
+Modulator::Modulator(const string& input_file, const string& output_file, bool has_preamble, bool has_postamble):
+	m_signalSource(input_file, true, has_preamble, has_postamble)
 {
 	m_outFile = fopen(output_file.c_str(), "wb");
 	if (!m_outFile)

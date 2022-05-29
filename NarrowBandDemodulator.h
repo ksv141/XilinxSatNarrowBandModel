@@ -4,6 +4,9 @@
 #include "HalfBandDDCTree.h"
 #include "PhaseTimingCorrelator.h"
 
+extern const size_t PREAMBLE_LENGTH;
+extern const int8_t PREAMBLE_DATA[];
+
 /**
  * @brief Узкополосный демодулятор
 */

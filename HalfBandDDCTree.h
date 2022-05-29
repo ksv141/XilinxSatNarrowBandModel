@@ -23,6 +23,10 @@ extern const uint32_t DPDI_BURST_ML_SATGE_1;
 extern const uint32_t DPDI_BURST_ML_SATGE_2;
 extern const uint32_t PHASE_BURST_ML_SATGE_3;
 
+extern const size_t PREAMBLE_LENGTH;
+extern const int8_t PREAMBLE_DATA[];
+
+
 /**
  * @brief Бинарное дерево полуполосных DDC (4 уровня)
 */

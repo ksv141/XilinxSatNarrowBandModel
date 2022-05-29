@@ -13,8 +13,14 @@
 
 using namespace std;
 
+extern const uint16_t FRAME_DATA_SIZE;
+extern const size_t PREAMBLE_LENGTH;
+extern const int8_t PREAMBLE_DATA[];
+extern const size_t POSTAMBLE_LENGTH;
+extern const int8_t POSTAMBLE_DATA[];
+
 /**
-* Источник сомплексного сигнала. Символы генерируются либо из ПСП, либо из ранее созданного файла.
+* Источник комплексного сигнала. Символы генерируются либо из ПСП, либо из ранее созданного файла.
 * Сигнал формируется в виде кадров с преамбулой 32 бита
 */
 
@@ -23,24 +29,26 @@ class SignalSource
 public:
 	/**
 	 * @brief конструктор для генерации из ПСП (по-умолчанию 4-чный)
-	 * @param data_length размер блока данных в кадре (байт)
+	 * @param признак включения преамбулы в кадр
+	 * @param признак включения хвостовика в кадр
 	*/
-	SignalSource(size_t data_length);
+	SignalSource(bool has_preamble, bool has_postamble);
 
 	/**
 	 * @brief конструктор для генерации из файла (текстовый или бинарный)
 	 * @param input_file файл
 	 * @param is_binary признак бинарного файла
-	 * @param data_length размер блока данных в кадре (байт)
+	 * @param признак включения преамбулы в кадр
+	 * @param признак включения хвостовика в кадр
 	*/
-	SignalSource(const string& input_file, bool is_binary, size_t data_length);
+	SignalSource(const string& input_file, bool is_binary, bool has_preamble, bool has_postamble);
 
 	~SignalSource();
 
 	// генерация следующего псевдослучайного отсчета
 	xip_complex nextSample();
 
-	// генерация следующего псевдослучайного отсчета из файла
+	// генерация следующего отсчета для битов из файла
 	bool nextSampleFromFile(xip_complex& out);
 
 	/**
@@ -58,12 +66,14 @@ public:
 	*/
 	static void generateBinFile(size_t byte_count, string file_name);
 
-	static const size_t preambleLength = 32;	// размер преамбулы
-	static const int8_t preambleData[preambleLength]; // преамбула
-
 private:
+	bool hasPreamble;			// признак включения преамбулы в кадр
+	bool hasPostamble;			// признак включения хвостовика в кадр
 	size_t dataLength = 0;		// размер блока данных в кадре (в символах)
 	size_t frameCounter = 0;	// счетчик символов в кадре
+	unsigned dataPos;			// позиция начала данных
+	unsigned postamblePos;		// позиция начала концевика
+	unsigned endPos;			// позиция конца кадра
 
 	ifstream inFile;			// входной файл с символами
 	bool binaryFile;			// признак бинарного файла

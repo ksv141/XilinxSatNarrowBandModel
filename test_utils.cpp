@@ -513,7 +513,7 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F,
 
 	//ofstream dbg_out("dbg_out.txt");
 
-	CorrelatorDPDI corr_stage(FRAME_DATA_SIZE, (int8_t*)SignalSource::preambleData, SignalSource::preambleLength,
+	CorrelatorDPDI corr_stage(FRAME_DATA_SIZE, (int8_t*)PREAMBLE_DATA, PREAMBLE_LENGTH,
 								M, L, F, burst_est);
 	int16_t re;
 	int16_t im;
@@ -544,7 +544,7 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 
 	ofstream dbg_out("dbg_out.txt");
 
-	PhaseTimingCorrelator corr_stage((int8_t*)SignalSource::preambleData, SignalSource::preambleLength,	burst_est);
+	PhaseTimingCorrelator corr_stage((int8_t*)PREAMBLE_DATA, PREAMBLE_LENGTH,	burst_est);
 	int16_t re;
 	int16_t im;
 	bool res = false;
@@ -1025,3 +1025,20 @@ void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_ou
 	fclose(in_file);
 	fclose(out_file);
 }
+
+void signal_frame_test(const string& in, bool is_binary, bool has_preamble, bool has_postamble)
+{
+	ofstream dbg_out("dbg_out.txt");
+
+	SignalSource sig_test(in, is_binary, has_preamble, has_postamble);
+	xip_complex sample;
+	while (true)
+	{
+		if (!sig_test.nextSampleFromFile(sample))
+			break;
+		dbg_out << sample << endl;
+	}
+
+	dbg_out.close();
+}
+

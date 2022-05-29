@@ -51,6 +51,9 @@ extern const double PIF_STS_Ki;		// коэффициент интегральной составляющей ПИФ СТ
 extern const double PIF_DOPL_Kp;	// коэффициент пропорциональной составляющей ПИФ Допл (при specific_locking_band = 0.01)
 extern const double PIF_DOPL_Ki;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
 
+extern const size_t PREAMBLE_LENGTH;
+extern const int8_t PREAMBLE_DATA[];
+
 extern const int BAUD_RATE;			// бодовая скорость в канале
 extern const int HIGH_SAMPLE_RATE;	// частота дискретизации на входе демодулятора
 
@@ -227,5 +230,14 @@ extern void signal_estimate_demodulate(const string& in, const string& dem_out);
  * @param dem_out сигнал на входе блока принятия решения на скорости 1B (PCM стерео I/Q 16-бит)
 */
 extern void signal_estimate_demodulate_dopl_test(const string& in, const string& dem_out);
+
+/**
+ * @brief тестирование структуры кадров
+ * @param in входной файл с данными
+ * @param is_binary признак бинарного файла
+ * @param признак включения преамбулы в кадр
+ * @param признак включения хвостовика в кадр
+*/
+extern void signal_frame_test(const string& in, bool is_binary, bool has_preamble, bool has_postamble);
 
 #endif // TESTUTILS_H

@@ -1,17 +1,18 @@
 #include "SignalSource.h"
 
-// преамбула, вставляемая в начало каждого кадра 0x1ACFFC1D
-const int8_t SignalSource::preambleData[SignalSource::preambleLength] = {0,0,0,1,1,0,1,0,1,1,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,1};
-
-SignalSource::SignalSource(size_t data_length)
+SignalSource::SignalSource(bool has_preamble, bool has_postamble):
+	hasPreamble(has_preamble),
+	hasPostamble(has_postamble)
 {
-	countDataLength(data_length);
+	countDataLength(FRAME_DATA_SIZE);
 }
 
-SignalSource::SignalSource(const string& input_file, bool is_binary, size_t data_length) :
+SignalSource::SignalSource(const string& input_file, bool is_binary, bool has_preamble, bool has_postamble):
+	hasPreamble(has_preamble),
+	hasPostamble(has_postamble),
 	binaryFile(is_binary)
 {
-	countDataLength(data_length);
+	countDataLength(FRAME_DATA_SIZE);
 
 	if (is_binary) {
 		inFile.open(input_file, ios::in | ios::binary);
@@ -87,13 +88,13 @@ bool SignalSource::__nextSample(bool from_file, xip_complex& out)
 {
 	unsigned int current_symbol = -1;
 
-	if (frameCounter < preambleLength) {
-		// первые 32 символа кадра - преамбула
-		current_symbol = preambleData[frameCounter];
+	if (frameCounter < dataPos) {
+		// вставка преамбулы
+		current_symbol = PREAMBLE_DATA[frameCounter];
 		out = get_cur_constell_preamble_sample(current_symbol);
 	}
-	else {
-		// остальные символы - данные
+	else if (frameCounter < postamblePos) {
+		// вставка данных
 		if (from_file) {
 			if (inFile.eof())
 				return false;
@@ -114,9 +115,14 @@ bool SignalSource::__nextSample(bool from_file, xip_complex& out)
 
 		out = get_cur_constell_sample(current_symbol);
 	}
+	else {
+		// вставка концевика
+		current_symbol = POSTAMBLE_DATA[frameCounter - postamblePos];
+		out = get_cur_constell_preamble_sample(current_symbol);
+	}
 
 	frameCounter++;
-	if (frameCounter == dataLength + preambleLength)
+	if (frameCounter == endPos)
 		frameCounter = 0;
 
 	return true;
@@ -130,4 +136,8 @@ void SignalSource::countDataLength(size_t bytes)
 	else if (current_constell == Current_constell::PSK4) {
 		dataLength = bytes * 4;
 	}
+
+	dataPos = hasPreamble ? PREAMBLE_LENGTH : 0;
+	postamblePos = dataPos + dataLength;
+	endPos = hasPostamble ? postamblePos + POSTAMBLE_LENGTH : postamblePos;
 }

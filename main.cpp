@@ -16,8 +16,50 @@ static const double _2_PI = PI * 2;
 static const double PI_2 = PI / 2;
 static const double PI_34 = PI + PI / 2;
 
+// глобальные параметры
+const int DDS_PHASE_MODULUS = 16384;				// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
+													// выбор этой величины будет влиять на коэффициент масштабирования 
+													// оценки тактового смещения в классе PhaseTimingCorrelator
+
+const int DDS_RAD_CONST = (int)(DDS_PHASE_MODULUS * 8 / _2_PI);	// радиан на одну позицию фазы << 3 == 20860 (16 бит)
+const int AGC_WND_SIZE_LOG2 = 5;					// log2 окна усреднения АРУ
+
+const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)
+const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
+const double PIF_PLL_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
+const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
+const double PIF_DOPL_Kp = 0.026311636311692643;	// коэффициент пропорциональной составляющей ПИФ Допл (при specific_locking_band = 0.01)
+const double PIF_DOPL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
+
+//********* структура кадра
+//const size_t PREAMBLE_LENGTH = 32;					// размер преамбулы (бит)
+const size_t PREAMBLE_LENGTH = 16;
+
+// преамбула 32 бита 0x1ACFFC1D
+//const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 0,0,0,1,1,0,1,0,
+//												1,1,0,0,1,1,1,1,
+//												1,1,1,1,1,1,0,0,
+//												0,0,0,1,1,1,0,1 };
+// преамбула 16 бит 0xEB90
+const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 1,1,1,0,1,0,1,1,
+												  1,0,0,1,0,0,0,0 };
+//const uint16_t FRAME_DATA_SIZE = 1115;				// размер данных в кадре (байт)
+const uint16_t FRAME_DATA_SIZE = 100;				// размер данных в кадре (байт)
+//const uint16_t FRAME_DATA_SIZE = 104;				// размер данных в кадре (байт)
+const size_t POSTAMBLE_LENGTH = 64;					// размер хвостовой последовательности (бит)
+// хвостовая последовательность 64 бита 0x8153225B1D0D73DE
+const int8_t POSTAMBLE_DATA[POSTAMBLE_LENGTH] = { 1,0,0,0,0,0,0,1,
+												  0,1,0,1,0,0,1,1,
+												  0,0,1,0,0,0,1,0,
+												  0,1,0,1,1,0,1,1,
+												  0,0,0,1,1,1,0,1,
+												  0,0,0,0,1,1,0,1,
+												  0,1,1,1,0,0,1,1,
+												  1,1,0,1,1,1,1,0 };
+
+const int BAUD_RATE = 9143;							// бодовая скорость в канале
 /**
-* Скорости в канале (бод/с):
+* Ряд скоростей (бод):
 * 9143
 * 16000
 * 24000
@@ -31,23 +73,6 @@ static const double PI_34 = PI + PI / 2;
 * 685710
 */
 
-// глобальные параметры
-const int DDS_PHASE_MODULUS = 16384;				// диапазон изменения фазы [0, 16383] --> [0, 2pi]. Для ФАПЧ и петли Доплера
-													// выбор этой величины будет влиять на коэффициент масштабирования 
-													// оценки тактового смещения в классе PhaseTimingCorrelator
-
-const int DDS_RAD_CONST = (int)(DDS_PHASE_MODULUS * 8 / _2_PI);	// радиан на одну позицию фазы << 3 == 20860 (16 бит)
-const uint16_t FRAME_DATA_SIZE = 1115;					// размер данных в кадре (байт)
-const int AGC_WND_SIZE_LOG2 = 5;					// log2 окна усреднения АРУ
-
-const double PIF_STS_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ СТС (при specific_locking_band = 0.01)
-const double PIF_STS_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ СТС (при specific_locking_band = 0.01)
-const double PIF_PLL_Kp = 0.026311636311692643;		// коэффициент пропорциональной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
-const double PIF_PLL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ ФАПЧ (при specific_locking_band = 0.01)
-const double PIF_DOPL_Kp = 0.026311636311692643;	// коэффициент пропорциональной составляющей ПИФ Допл (при specific_locking_band = 0.01)
-const double PIF_DOPL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
-
-const int BAUD_RATE = 9143;							// бодовая скорость в канале
 const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации на выходе канального фильтра
 const int HIGH_SAMPLE_RATE = 1600000;				// частота дискретизации на входе демодулятора
 
@@ -58,6 +83,7 @@ const uint32_t PHASE_BURST_ML_SATGE_3 = 5000;			// порог обнаружения сигнала кор
 
 int main()
 {
+	//set_current_constell(Current_constell::PSK2_60);
 	set_current_constell(Current_constell::PSK4);
 
 	init_xip_multiplier();
@@ -65,14 +91,14 @@ int main()
 	init_xip_cordic_rect_to_polar();
 	init_channel_matched_fir();
 
-
 	//************ Формирователь ПСП в виде бинарного файла *************
 	//SignalSource::generateBinFile(30000, "data_30.bin");
 
 	//************ Модулятор *****************
-	// Формирует кадры с добавлением преамбулы
-	Modulator mdl("data.bin", "out_mod.pcm", FRAME_DATA_SIZE);
-	//Modulator mdl("1.zip", "out_mod.pcm", FRAME_DATA_SIZE);
+	// Формирует кадры с добавлением преамбулы, без хвостовика
+	Modulator mdl("data.bin", "out_mod.pcm", true, false);
+	// Формирует кадры с добавлением преамбулы и хвостовика
+	//Modulator mdl("data.bin", "out_mod.pcm", true, true);
 	mdl.process();
 	
 	//************ Фазовые и тактовые искажения ****************

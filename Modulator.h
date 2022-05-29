@@ -27,9 +27,10 @@ public:
 	 * @brief Установка параметров модулятора
 	 * @param input_file входной бинарный файл
 	 * @param output_file выходной PCM-файл (16-бит стерео I/Q)
-	 * @param data_length размер данных в кадре (байт)
+	 * @param признак включения преамбулы в кадр
+	 * @param признак включения хвостовика в кадр
 	*/
-	Modulator(const string& input_file, const string& output_file, size_t data_length);
+	Modulator(const string& input_file, const string& output_file, bool has_preamble, bool has_postamble);
 
 	~Modulator();
 
