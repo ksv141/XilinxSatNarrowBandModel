@@ -22,6 +22,7 @@ extern const int8_t POSTAMBLE_DATA[];
 /**
 * Источник комплексного сигнала. Символы генерируются либо из ПСП, либо из ранее созданного файла.
 * Сигнал формируется в виде кадров с преамбулой 32 бита
+* Все данные кодируются Манчестерским кодом
 */
 
 class SignalSource
@@ -81,11 +82,17 @@ private:
 	int bitShift;				// количество считываемых битов из бинарного файла
 	unsigned int bitMask;
 	int bitPos;
+	bool manchesterState = false;		// флаг состояния для генерации кода Манчестера
+	unsigned lastManchesterSymbol;
 
 	// псевдослучайный источник символов
 	mls symbolSource{ /* 2^32 - длина M-последовательности */ 32, /* 4-позиционный источник */ 4 };
 
 	bool __nextSample(bool from_file, xip_complex& out);
+
+	bool __nextSampleManchester(bool from_file, xip_complex& out);
+
+	bool __nextSymbol(bool from_file, unsigned& out);
 	
 	// пересчет длины данных из байтов в отсчеты
 	void countDataLength(size_t bytes);

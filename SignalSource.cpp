@@ -43,13 +43,13 @@ SignalSource::~SignalSource()
 xip_complex SignalSource::nextSample()
 {
 	xip_complex out;
-	__nextSample(false, out);
+	__nextSampleManchester(false, out);
 	return out;
 }
 
 bool SignalSource::nextSampleFromFile(xip_complex& out)
 {
-	return __nextSample(true, out);
+	return __nextSampleManchester(true, out);
 }
 
 void SignalSource::generateSymbolFile(int n_pos, size_t count, string file_name)
@@ -86,12 +86,33 @@ void SignalSource::generateBinFile(size_t byte_count, string file_name)
 
 bool SignalSource::__nextSample(bool from_file, xip_complex& out)
 {
-	unsigned int current_symbol = -1;
+	unsigned int current_symbol = 0;
+	bool res = __nextSymbol(from_file, current_symbol);
+	out = get_cur_constell_sample(current_symbol);
+	return res;
+}
+
+bool SignalSource::__nextSampleManchester(bool from_file, xip_complex& out)
+{
+	bool res = true;
+	if (manchesterState) {
+		lastManchesterSymbol = (lastManchesterSymbol == 0) ? 1 : 0;
+	}
+	else {
+		res = __nextSymbol(from_file, lastManchesterSymbol);
+	}
+	manchesterState = !manchesterState;
+	out = get_cur_constell_sample(lastManchesterSymbol);
+	return res;
+}
+
+bool SignalSource::__nextSymbol(bool from_file, unsigned& out)
+{
+	unsigned int current_symbol = 0;
 
 	if (frameCounter < dataPos) {
 		// вставка преамбулы
-		current_symbol = PREAMBLE_DATA[frameCounter];
-		out = get_cur_constell_preamble_sample(current_symbol);
+		out = PREAMBLE_DATA[frameCounter];
 	}
 	else if (frameCounter < postamblePos) {
 		// вставка данных
@@ -113,12 +134,11 @@ bool SignalSource::__nextSample(bool from_file, xip_complex& out)
 		else
 			current_symbol = symbolSource.nextSymbol();
 
-		out = get_cur_constell_sample(current_symbol);
+		out = current_symbol;
 	}
 	else {
 		// вставка концевика
-		current_symbol = POSTAMBLE_DATA[frameCounter - postamblePos];
-		out = get_cur_constell_preamble_sample(current_symbol);
+		out = POSTAMBLE_DATA[frameCounter - postamblePos];
 	}
 
 	frameCounter++;

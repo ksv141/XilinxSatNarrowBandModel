@@ -32,20 +32,19 @@ const double PIF_DOPL_Kp = 0.026311636311692643;	// коэффициент пропорциональной
 const double PIF_DOPL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
 
 //********* структура кадра
-//const size_t PREAMBLE_LENGTH = 32;					// размер преамбулы (бит)
-const size_t PREAMBLE_LENGTH = 16;
+const size_t PREAMBLE_LENGTH = 32;					// размер преамбулы (бит)
+//const size_t PREAMBLE_LENGTH = 16;
 
 // преамбула 32 бита 0x1ACFFC1D
-//const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 0,0,0,1,1,0,1,0,
-//												1,1,0,0,1,1,1,1,
-//												1,1,1,1,1,1,0,0,
-//												0,0,0,1,1,1,0,1 };
+const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 0,0,0,1,1,0,1,0,
+												1,1,0,0,1,1,1,1,
+												1,1,1,1,1,1,0,0,
+												0,0,0,1,1,1,0,1 };
 // преамбула 16 бит 0xEB90
-const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 1,1,1,0,1,0,1,1,
-												  1,0,0,1,0,0,0,0 };
+//const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 1,1,1,0,1,0,1,1,
+//												  1,0,0,1,0,0,0,0 };
 //const uint16_t FRAME_DATA_SIZE = 1115;				// размер данных в кадре (байт)
 const uint16_t FRAME_DATA_SIZE = 100;				// размер данных в кадре (байт)
-//const uint16_t FRAME_DATA_SIZE = 104;				// размер данных в кадре (байт)
 const size_t POSTAMBLE_LENGTH = 64;					// размер хвостовой последовательности (бит)
 // хвостовая последовательность 64 бита 0x8153225B1D0D73DE
 const int8_t POSTAMBLE_DATA[POSTAMBLE_LENGTH] = { 1,0,0,0,0,0,0,1,
@@ -84,7 +83,7 @@ const uint32_t PHASE_BURST_ML_SATGE_3 = 5000;			// порог обнаружения сигнала кор
 int main()
 {
 	//set_current_constell(Current_constell::PSK2_60);
-	set_current_constell(Current_constell::PSK4);
+	set_current_constell(Current_constell::PSK2);
 
 	init_xip_multiplier();
 	init_xip_cordic_sqrt();
@@ -93,6 +92,10 @@ int main()
 
 	//************ Формирователь ПСП в виде бинарного файла *************
 	//SignalSource::generateBinFile(30000, "data_30.bin");
+
+	// Тест Манчестера
+	signal_frame_test("data.bin", true, true, false);
+	return 0;
 
 	//************ Модулятор *****************
 	// Формирует кадры с добавлением преамбулы, без хвостовика
