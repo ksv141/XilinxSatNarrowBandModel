@@ -45,6 +45,7 @@ const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 0,0,0,1,1,0,1,0,
 //												  1,0,0,1,0,0,0,0 };
 //const uint16_t FRAME_DATA_SIZE = 1115;				// размер данных в кадре (байт)
 const uint16_t FRAME_DATA_SIZE = 100;				// размер данных в кадре (байт)
+
 const size_t POSTAMBLE_LENGTH = 64;					// размер хвостовой последовательности (бит)
 // хвостовая последовательность 64 бита 0x8153225B1D0D73DE
 const int8_t POSTAMBLE_DATA[POSTAMBLE_LENGTH] = { 1,0,0,0,0,0,0,1,
@@ -56,20 +57,16 @@ const int8_t POSTAMBLE_DATA[POSTAMBLE_LENGTH] = { 1,0,0,0,0,0,0,1,
 												  0,1,1,1,0,0,1,1,
 												  1,1,0,1,1,1,1,0 };
 
-const int BAUD_RATE = 9143;							// бодовая скорость в канале
+const int BAUD_RATE = 8000;							// бодовая скорость в канале
 /**
 * Ряд скоростей (бод):
-* 9143
+* 8000
 * 16000
-* 24000
-* 18286
-* 48000
-* 36570
-* 96000
-* 85710
-* 171430
-* 342860
-* 685710
+* 32000
+* 64000
+* 128000
+* 256000
+* 512000
 */
 
 const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации на выходе канального фильтра
@@ -91,18 +88,29 @@ int main()
 	init_channel_matched_fir();
 
 	//************ Формирователь ПСП в виде бинарного файла *************
-	//SignalSource::generateBinFile(30000, "data_30.bin");
-
-	// Тест Манчестера
-	signal_frame_test("data.bin", true, true, false);
-	return 0;
+	//SignalSource::generateBinFile(10, "data_10.bin");
 
 	//************ Модулятор *****************
-	// Формирует кадры с добавлением преамбулы, без хвостовика
-	Modulator mdl("data.bin", "out_mod.pcm", true, false);
+	// Формирует кадры с добавлением преамбулы, без хвостовика (код Манчестера)
+	//Modulator mdl("data.bin", "out_mod.pcm", true, false);		// точность [+/- 2^15]
+	//Modulator mdl("data_10.bin", "out_mod.pcm", false, false);
 	// Формирует кадры с добавлением преамбулы и хвостовика
 	//Modulator mdl("data.bin", "out_mod.pcm", true, true);
-	mdl.process();
+	//mdl.process();
+
+	//************ Фазовые и тактовые искажения ****************
+	//signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 1000);
+	//signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 512);
+
+	signal_freq_shift("out_mod_tm.pcm", "out_mod_shifted.pcm", 300);
+
+	// Тестирование коррелятора на манчестерском коде
+	signal_lowpass("out_mod_shifted.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
+	int16_t freq_est = 0;
+	signal_freq_est_stage("out_mod_matched.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
+	cout << freq_est << endl;
+
+	return 0;
 	
 	//************ Фазовые и тактовые искажения ****************
 	//signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 1000);
@@ -123,8 +131,8 @@ int main()
 	signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_shifted.pcm", 383500, 1600000);
 
 	//************ Моделирование доплеровского частотного смещения ***********
-	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
-	signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 50000, 0);
+	signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
+	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 50000, 0);
 	//signal_freq_shift_dopl("out_mod.pcm", "out_mod_dopl.pcm", INIT_SAMPLE_RATE, 6000, 10, 0);
 	//signal_freq_shift_dopl("out_mod_25.pcm", "out_mod_dopl.pcm", 25000, 10000, 20, 0);
 	//signal_freq_shift_dopl("out_mod_interp_x4.pcm", "out_mod_dopl.pcm", 100000, 30000, 50, 1);

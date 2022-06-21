@@ -161,6 +161,7 @@
     <ClInclude Include="ChannelMatchedFir.h" />
     <ClInclude Include="constellation.h" />
     <ClInclude Include="CorrelatorDPDI.h" />
+    <ClInclude Include="CorrelatorDPDIManchester.h" />
     <ClInclude Include="DDS.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="Demodulator.h" />
@@ -189,6 +190,7 @@
     <ClCompile Include="ChannelMatchedFir.cpp" />
     <ClCompile Include="constellation.cpp" />
     <ClCompile Include="CorrelatorDPDI.cpp" />
+    <ClCompile Include="CorrelatorDPDIManchester.cpp" />
     <ClCompile Include="DDS.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="Demodulator.cpp" />

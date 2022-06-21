@@ -96,7 +96,6 @@ int init_xip_cordic_sqrt()
 		return -1;
 	}
 
-	//Firstly, create and exercise a simple configuration.
 	xip_sqrt_cnfg.CordicFunction = XIP_CORDIC_V6_0_F_SQRT;
 	xip_sqrt_cnfg.CoarseRotate = 0;
 	xip_sqrt_cnfg.DataFormat = XIP_CORDIC_V6_0_FORMAT_USIG_INT;
@@ -261,7 +260,6 @@ int init_xip_cordic_rect_to_polar()
 		return -1;
 	}
 
-	//Firstly, create and exercise a simple configuration.
 	xip_rect_to_polar_cnfg.CordicFunction = XIP_CORDIC_V6_0_F_TRANSLATE;
 	xip_rect_to_polar_cnfg.CoarseRotate = XIP_CORDIC_V6_0_TRUE;
 	xip_rect_to_polar_cnfg.DataFormat = XIP_CORDIC_V6_0_FORMAT_SIG_FRAC;
@@ -270,7 +268,7 @@ int init_xip_cordic_rect_to_polar()
 	xip_rect_to_polar_cnfg.OutputWidth = 16;	// фаза будет в диапазоне [-8192, 8192]
 	xip_rect_to_polar_cnfg.Precision = 0;
 	xip_rect_to_polar_cnfg.RoundMode = XIP_CORDIC_V6_0_ROUND_TRUNCATE;
-	xip_rect_to_polar_cnfg.ScaleComp = XIP_CORDIC_V6_0_SCALE_NONE;
+	xip_rect_to_polar_cnfg.ScaleComp = XIP_CORDIC_V6_0_SCALE_LUT; // XIP_CORDIC_V6_0_SCALE_NONE;
 
 	xip_rect_to_polar = xip_cordic_v6_0_create(&xip_rect_to_polar_cnfg, &msg_print, 0);
 

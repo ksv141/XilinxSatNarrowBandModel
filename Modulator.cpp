@@ -39,12 +39,18 @@ void Modulator::process()
 		// повышаем точность на 2 бита (до 15 бит)
 		xip_complex_shift(sample, 2);
 
-		fx_cmpl_point fx_sample;
-		fx_sample.set_val((int16_t)sample.re + 1, (int16_t)sample.im + 1);
+		//fx_cmpl_point fx_sample;
+		//fx_sample.set_val((int16_t)sample.re + 1, (int16_t)sample.im + 1);
 
-		tC::write_real<int16_t>(m_outFile, fx_sample.real.i_val);
-		tC::write_real<int16_t>(m_outFile, fx_sample.imag.i_val);
+		//tC::write_real<int16_t>(m_outFile, fx_sample.real.i_val);
+		//tC::write_real<int16_t>(m_outFile, fx_sample.imag.i_val);
+
+		tC::write_real<int16_t>(m_outFile, sample.re);
+		tC::write_real<int16_t>(m_outFile, sample.im);
 
 		sample_counter++;
 	}
+
+	fclose(m_outFile);
+	m_outFile = NULL;
 }

@@ -88,8 +88,10 @@ private:
 	// псевдослучайный источник символов
 	mls symbolSource{ /* 2^32 - длина M-последовательности */ 32, /* 4-позиционный источник */ 4 };
 
+	// генерация следующего отсчета в соответствии с сигнальным созвездием
 	bool __nextSample(bool from_file, xip_complex& out);
 
+	// генерация следующего отсчета в манчестерском коде в соответствии с сигнальным созвездием
 	bool __nextSampleManchester(bool from_file, xip_complex& out);
 
 	bool __nextSymbol(bool from_file, unsigned& out);

@@ -19,6 +19,7 @@
 #include "PolyphaseInterpolator.h"
 #include "LowpassFir.h"
 #include "CorrelatorDPDI.h"
+#include "CorrelatorDPDIManchester.h"
 #include "SignalSource.h"
 #include "autoganecontrol.h"
 #include "HalfBandDDC.h"
@@ -188,7 +189,7 @@ extern void signal_agc(const string& in, const string& out, unsigned window_size
  * @brief вычисление коррел€ционного отклика частотного коррел€тора
  * @param in входной файл (PCM стерео I/Q 16-бит)
 */
-extern bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint16_t F, uint32_t burst_est, int16_t& freq_est);
+extern bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t burst_est, int16_t& freq_est);
 
 /**
  * @brief вычисление коррел€ционного отклика фазового коррел€тора
