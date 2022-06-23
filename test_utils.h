@@ -20,6 +20,7 @@
 #include "LowpassFir.h"
 #include "CorrelatorDPDI.h"
 #include "CorrelatorDPDIManchester.h"
+#include "PhClcCorrelatorManchester.h"
 #include "SignalSource.h"
 #include "autoganecontrol.h"
 #include "HalfBandDDC.h"

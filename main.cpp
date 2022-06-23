@@ -73,9 +73,9 @@ const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации
 const int HIGH_SAMPLE_RATE = 1600000;				// частота дискретизации на входе демодулятора
 
 // параметры корреляторов
-const uint32_t DPDI_BURST_ML_SATGE_1 = 3000;			// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
+const uint32_t DPDI_BURST_ML_SATGE_1 = 700;				// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
 const uint32_t DPDI_BURST_ML_SATGE_2 = 3500;			// порог обнаружения сигнала коррелятора второй стадии (точная оценка частоты)
-const uint32_t PHASE_BURST_ML_SATGE_3 = 5000;			// порог обнаружения сигнала коррелятора третьей стадии (оценка фазы и тактов)
+const uint32_t PHASE_BURST_ML_SATGE_3 = 1300;			// порог обнаружения сигнала коррелятора третьей стадии (оценка фазы и тактов)
 
 int main()
 {
@@ -99,16 +99,23 @@ int main()
 	//mdl.process();
 
 	//************ Фазовые и тактовые искажения ****************
-	//signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 1000);
-	//signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 512);
+	signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 5000);
+	signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 512);
 
-	signal_freq_shift("out_mod_tm.pcm", "out_mod_shifted.pcm", 300);
+	//signal_freq_shift("out_mod_tm.pcm", "out_mod_shifted.pcm", 100);
 
-	// Тестирование коррелятора на манчестерском коде
-	signal_lowpass("out_mod_shifted.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
-	int16_t freq_est = 0;
-	signal_freq_est_stage("out_mod_matched.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
-	cout << freq_est << endl;
+	// *********** Тестирование коррелятора на манчестерском коде
+	// Согласованная фильтрация
+	signal_lowpass("out_mod_tm.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
+
+	int16_t phase = 0;
+	xip_real time_shift = 0;
+	int t_count = 0;
+	signal_phase_time_est_stage("out_mod_matched.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
+	cout << phase << endl;
+	//int16_t freq_est = 0;
+	//signal_freq_est_stage("out_mod_matched.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
+	//cout << freq_est << endl;
 
 	return 0;
 	
@@ -117,8 +124,8 @@ int main()
 	//signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 500);
 
 	//************ Передискретизация до 1600 кГц ***************
-	signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
-	signal_interpolate("out_mod_25.pcm", "out_mod_interp_x64.pcm", 64);
+	//signal_resample("out_mod.pcm", "out_mod_25.pcm", INIT_SAMPLE_RATE, 25000);
+	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x64.pcm", 64);
 	//signal_interpolate("out_mod_25.pcm", "out_mod_interp_x4.pcm", 4);
 	//signal_interpolate("out_mod.pcm", "out_mod_interp_x4.pcm", 4);
 	//signal_interpolate("out_mod_interp_x4.pcm", "out_mod_interp_x16.pcm", 4);
@@ -128,10 +135,10 @@ int main()
 	//************ Моделирование произвольного смещения несущей в пределах полосы первого обнаружителя
 	// Всего 4 обнаружителя с полосой 400 кГц каждый для перекрытия полосы 1600 кГц
 	// Все обнаружители работают одинаково
-	signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_shifted.pcm", 383500, 1600000);
+	//signal_freq_shift("out_mod_interp_x64.pcm", "out_mod_interp_x64_shifted.pcm", 383500, 1600000);
 
 	//************ Моделирование доплеровского частотного смещения ***********
-	signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
+	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 280);
 	//signal_freq_shift_dopl("out_mod_interp_x64_shifted.pcm", "out_mod_interp_x64_dopl.pcm", 1600000, 600000, 50000, 0);
 	//signal_freq_shift_dopl("out_mod.pcm", "out_mod_dopl.pcm", INIT_SAMPLE_RATE, 6000, 10, 0);
 	//signal_freq_shift_dopl("out_mod_25.pcm", "out_mod_dopl.pcm", 25000, 10000, 20, 0);
@@ -141,7 +148,7 @@ int main()
 
 
 	//************ Обнаружение сигнала и демодуляция
-	signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
+	//signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_383500.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_shifted.pcm", "out_mod_dmd_1B.pcm");
 	//signal_estimate_demodulate("out_mod_interp_x64_dopl.pcm", "out_mod_dmd_1B.pcm");

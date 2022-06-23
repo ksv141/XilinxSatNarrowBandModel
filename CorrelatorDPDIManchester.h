@@ -62,7 +62,6 @@ private:
 
 	deque<xip_complex> m_correlationReg;     // FIFO-регистр дл€ вычислени€ коррел€ции
 	vector<xip_complex> m_preamble;          // –егистр с преамбулой (в виде комплексно-сопр€женных чисел)
-	xip_complex m_prev_sum_1{ 0, 0 };		 // сумма коррел€ции на предыдущем такте
 
 	xip_complex m_corr_1{ 0, 0 };			// коррел€ци€ на 4-х суботсчетах
 	xip_complex m_corr_2{ 0, 0 };

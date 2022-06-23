@@ -103,7 +103,7 @@ void PhaseTimingCorrelator::init(int8_t* preamble_data, uint16_t preamble_length
 
     // заполняем регистр коррелятора комплексно-сопряженной преамбулой
     for (int i = 0; i < preamble_length; i++) {
-        xip_complex p = get_cur_constell_preamble_sample(preamble_data[i]);
+        xip_complex p = get_cur_constell_sample(preamble_data[i]);
         p.im = -p.im;
         m_preamble.push_back(p);
     }

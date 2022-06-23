@@ -20,7 +20,6 @@ bool CorrelatorDPDIManchester::process(xip_complex in, int16_t& dph, xip_real& c
     xip_complex rx_1{ 0, 0 };                           // текущее значение единичного коррелятора
     xip_complex reg_1{ 0, 0 };                          // предыдущее значение единичного коррелятора
     xip_complex SumL_1{ 0, 0 };                         // сумма по L дифференциальных корреляций (z)
-    xip_complex SumL_2{ 0, 0 };                         // сумма по L дифференциальных корреляций, сдвинутых на 1 такт (z)
 
     // FIFO-регистр обходим с конца
     deque<xip_complex>::reverse_iterator reg_it = m_correlationReg.rbegin();
@@ -30,59 +29,56 @@ bool CorrelatorDPDIManchester::process(xip_complex in, int16_t& dph, xip_real& c
 		rx_1 = xip_complex{ 0, 0 };
 		for (int j = 0; j < m_correlatorM; j++) {   // Вычисление значения xk для единичного коррелятора
 			xip_complex res;
-			xip_multiply_complex(*preamb_it, *reg_it, res); // rm*cm для четных элементов регистра
-			// единичный отклик [-2^26, +2^26]
-			xip_complex_shift(res, -16);            // сдвигаем до [-2^10, +2^10]
+			xip_multiply_complex(*preamb_it, *reg_it, res); // единичный отклик rm*cm [-2^28, +2^28]
+			xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
 			rx_1.re += res.re;
 			rx_1.im += res.im;
 
-			reg_it += 2;
+			reg_it += 4;
 			preamb_it++;
 		}
 		xip_complex res;
 		xip_complex reg_1_conj{ reg_1.re, -reg_1.im };
-		xip_multiply_complex(rx_1, reg_1_conj, res);  // Вычисление z для четных
-		// сумма откликов [-2^26, +2^26]
-		xip_complex_shift(res, -16);                // сдвигаем до [-2^10, +2^10]
+		xip_multiply_complex(rx_1, reg_1_conj, res);  // Вычисление z
+		// сумма откликов [-2^27, +2^27]
+		xip_complex_shift(res, -11);                // сдвигаем до [-2^16, +2^16]
 		SumL_1.re += res.re;
 		SumL_1.im += res.im;
 
-		reg_1 = rx_1;                               // Задержка на такт для четных
+		reg_1 = rx_1;                               // Запоминаем предыдущее значение единичного коррелятора
 	}
 
-    SumL_2 = m_prev_sum_1;
+    m_corr_4 = m_corr_3;                            // Храним 4 последних значения отклика
+    m_corr_3 = m_corr_2;
+    m_corr_2 = m_corr_1;
+    m_corr_1 = SumL_1;
 
-    xip_real re_sqr = 0;
-    xip_multiply_real(SumL_1.re, SumL_1.re, re_sqr);
-    xip_real im_sqr = 0;
-    xip_multiply_real(SumL_1.im, SumL_1.im, im_sqr);
-    xip_real est_1 = re_sqr + im_sqr;                   // Абсолютное значение корреляционного отклика для четных
+    xip_complex sum_1{ m_corr_1.re + m_corr_3.re,  m_corr_1.im + m_corr_3.im };     // суммарный отклик для 2-х смежных манчестерских отсчета
+    xip_complex sum_2{ m_corr_2.re + m_corr_4.re,  m_corr_2.im + m_corr_4.im };     // суммарный отклик для 2-х смежных манчестерских отсчета со сдвигом на такт по 2B
 
-    xip_multiply_real(SumL_2.re, SumL_2.re, re_sqr);
-    xip_multiply_real(SumL_2.im, SumL_2.im, im_sqr);
-    xip_real est_2 = re_sqr + im_sqr;                   // Абсолютное значение корреляционного отклика для нечетных
+    xip_real mag_1;
+    xip_real arg_1;
+    xip_cordic_rect_to_polar(sum_1, mag_1, arg_1);  // получаем ампилутуду и фазу
+    xip_real mag_2;
+    xip_real arg_2;
+    xip_cordic_rect_to_polar(sum_2, mag_2, arg_2);  // получаем ампилутуду и фазу
 
     xip_real est;
-    xip_complex maxSum;
-    if (est_1 >= est_2) {           // Выбор наибольшего значения z из четного и нечетного
-        est = est_1;
-        maxSum = SumL_1;
+    xip_real est_dph;
+    if (mag_1 >= mag_2) {           // Выбор наибольшего значения из сдвинутых на такт 2B
+        est = mag_1;
+        est_dph = arg_1;
     }
     else {
-        est = est_2;
-        maxSum = SumL_2;
+        est = mag_2;
+        est_dph = arg_2;
     }
 
-    m_prev_sum_1 = SumL_1;          // запоминаем сумму корреляции на текущем такте
     cur_est = est;
 
     if (est > m_burstEstML) {       // Порог в соответствии с критерием максимального правдоподобия
-        // Оценка смещения по частоте (v = Arg{x}/2M), в рад/симв
-        xip_real mag;
-        xip_real arg;
-        xip_cordic_rect_to_polar(maxSum, mag, arg);
-        int arg_int = (int)arg;
-        dph = arg_int >> m_argShift;
+        // Оценка смещения по частоте (v = Arg{x}/4M), в рад/симв
+        dph = (int)est_dph >> m_argShift;
         return true;
     }
     else {

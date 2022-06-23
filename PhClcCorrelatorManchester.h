@@ -1,5 +1,5 @@
-#ifndef	PHASETIMINGCORRELATOR_H
-#define PHASETIMINGCORRELATOR_H
+#ifndef	PHCLCCORRELATORMANCHESTER_H
+#define PHCLCCORRELATORMANCHESTER_H
 
 #include <cstdint>
 #include <deque>
@@ -15,10 +15,11 @@
 using namespace std;
 
 /**
- * @brief Коррелятор для фазовой и символьной синхронизации по преамбуле
+ * @brief Коррелятор для фазовой и символьной синхронизации по преамбуле для манчестерского кода на 4B
+ * Оценка кактовой ошибки по 4 точкам
  * (A Fast Synchronizer for Burst Modems with Simultaneous Symbol Timing and Carrier Phase Estimations Dengwei Fu and Alan N. Willson, Jr.)
 */
-class PhaseTimingCorrelator
+class PhClcCorrelatorManchester
 {
 public:
 	/**
@@ -27,7 +28,7 @@ public:
 	 * @param preamble_length размер преамбулы
 	 * @param burst_est Пороговое значение для корреляционного отклика (критерий максимального правдоподобия)
 	*/
-	PhaseTimingCorrelator(int8_t* preamble_data, uint16_t preamble_length, uint32_t burst_est);
+	PhClcCorrelatorManchester(int8_t* preamble_data, uint16_t preamble_length, uint32_t burst_est);
 
 	/**
 	 * @brief оценка фазового сдвига
@@ -45,19 +46,27 @@ public:
 	 * @param time_est текущий корреляционный отклик (используется для отладки)
 	 * @return есть (true) или нет (false) срабатывание условия для оценки сдвига
 	*/
-	bool symbolTimingEstimate(xip_complex in, int16_t& time_shift, xip_real& time_est);
+	//bool symbolTimingEstimate(xip_complex in, int16_t& time_shift, xip_real& time_est);
 
 	/**
 	 * @brief возвращает текущий режим коррелятора
-	 * @return 
+	 * @return
 	*/
 	bool isPhaseEstMode();
 
 	/**
 	 * @brief возвращает число попыток оценить тактовый сдвиг
-	 * @return 
+	 * @return
 	*/
 	uint8_t getSymbolTimingProcCounter();
+
+	/**
+	 * @brief для тестирования
+	 * @param in 
+	 * @param corr 
+	 * @param est 
+	*/
+	void test_corr(xip_complex in, xip_complex& corr, xip_real& est);
 
 private:
 	/**
@@ -72,9 +81,12 @@ private:
 	void process(xip_complex in);
 
 	deque<xip_complex> m_correlationReg;     // FIFO-регистр для вычисления корреляции
+	deque<xip_complex> m_corrValuesReg;		 // FIFO-регистр для хранения корреляционных откликов
 	deque<xip_real> m_timingSyncReg;		 // FIFO-регистр для тактовой синхронизации
+	xip_complex m_sumCorr_1;					 // суммарный отклик для двух манчестерских символов
+	xip_complex m_sumCorr_2;					 // суммарный отклик для двух манчестерских символов
 	vector<xip_complex> m_preamble;          // Регистр с преамбулой (в виде комплексно-сопряженных чисел)
-	xip_complex m_currentCorrelation;		 // текущее значение с выхода коррелятора
+	//xip_complex m_currentCorrelation;		 // текущее значение с выхода коррелятора
 	bool m_phaseEstMode;					 // режим оценки фазы (используется для переключения в режим оценки тактов)
 	uint8_t m_symbolTimingProcCounter;		 // счетчик попыток оценить тактовый сдвиг (условие может не выполниться)
 
@@ -82,4 +94,4 @@ private:
 	xip_real m_burstEstML;               // Пороговое значение для корреляционного отклика (критерий максимального правдоподобия)
 };
 
-#endif // PHASETIMINGCORRELATOR_H
+#endif // PHCLCCORRELATORMANCHESTER_H

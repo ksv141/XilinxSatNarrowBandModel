@@ -511,7 +511,7 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t bu
 	if (!in_file)
 		return false;
 
-	ofstream dbg_out("dbg_out.txt");
+	//ofstream dbg_out("dbg_out.txt");
 
 	CorrelatorDPDIManchester corr_stage((int8_t*)PREAMBLE_DATA, PREAMBLE_LENGTH, M, L, burst_est);
 	int16_t re;
@@ -523,28 +523,18 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t bu
 		xip_complex sample{ re, im };
 		int16_t dph = 0;
 
-		xip_complex corr[6];
-		xip_real est[6];
-		xip_real freq[6];
-		corr_stage.test_corr(sample, corr, est, freq);
-		//xip_real corr_est = 0;
-		//if (corr_stage.process(sample, dph, corr_est)) {
-		//	freq_est = dph;
-		//	res = true;
-		//	break;
-		//}
-		//dbg_out << cur_corr << freq_cur << corr_1 << freq_1 << corr_2, cur_est, ,  freq_2 << endl;
+		xip_real corr_est = 0;
+		if (corr_stage.process(sample, dph, corr_est)) {
+			freq_est = dph;
+			res = true;
+			break;
+		}
 
-		//for (int j = 0; j < 6; j++)
-		//	dbg_out << corr[j] << '\t' << est[j] << '\t' << freq[j] << '\t';
-		//dbg_out << endl;
-
-		//dbg_out << corr[0] << '\t' << est[0] << '\t' << freq[0] << endl;
-		dbg_out << est[4] << '\t' << freq[4] << endl;
+		//dbg_out << est[4] << '\t' << freq[4] << endl;
 		i++;
 	}
 
-	dbg_out.close();
+	//dbg_out.close();
 	fclose(in_file);
 	return res;
 }
@@ -557,13 +547,20 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 
 	ofstream dbg_out("dbg_out.txt");
 
-	PhaseTimingCorrelator corr_stage((int8_t*)PREAMBLE_DATA, PREAMBLE_LENGTH,	burst_est);
+	PhClcCorrelatorManchester corr_stage((int8_t*)PREAMBLE_DATA, PREAMBLE_LENGTH,	burst_est);
 	int16_t re;
 	int16_t im;
 	bool res = false;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
+
+		xip_complex corr{ 0,0 };
+		xip_real est = 0;
+
+		//corr_stage.test_corr(sample, corr, est);
+		//dbg_out << corr << '\t' << est << endl;
+
 		if (corr_stage.isPhaseEstMode()) {
 			int16_t ph = 0;
 			xip_real phase_est = 0;
@@ -571,19 +568,19 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 				phase = ph;
 			}
 		}
-		else {
-			int16_t t_shift = 0;
-			xip_real time_est = 0;
-			if (corr_stage.getSymbolTimingProcCounter()) {
-				if (corr_stage.symbolTimingEstimate(sample, t_shift, time_est)) {
-					time_shift = t_shift;
-					t_count = corr_stage.getSymbolTimingProcCounter();
-					res = true;
-					break;
-				}
-			}
-			dbg_out << time_est << endl;
-		}
+		//else {
+		//	int16_t t_shift = 0;
+		//	xip_real time_est = 0;
+		//	if (corr_stage.getSymbolTimingProcCounter()) {
+		//		if (corr_stage.symbolTimingEstimate(sample, t_shift, time_est)) {
+		//			time_shift = t_shift;
+		//			t_count = corr_stage.getSymbolTimingProcCounter();
+		//			res = true;
+		//			break;
+		//		}
+		//	}
+		//	dbg_out << time_est << endl;
+		//}
 	}
 
 	dbg_out.close();
