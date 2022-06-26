@@ -551,23 +551,33 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 	int16_t re;
 	int16_t im;
 	bool res = false;
+	int counter = 0;
 	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
 		tC::read_real<int16_t, int16_t>(in_file, im)) {
 		xip_complex sample{ re, im };
+		xip_complex_shift(sample, -1);            // уменьшаем динамический диапазон для больших уровней шума
 
 		xip_complex corr{ 0,0 };
 		xip_real est = 0;
+		int16_t ph = 0;
 
-		//corr_stage.test_corr(sample, corr, est);
-		//dbg_out << corr << '\t' << est << endl;
+		counter++;
+		//if (corr_stage.phaseEstimate(sample, ph, est))
+		//{
+		//	int pos = corr_stage.getMaxCorrPos();
+		//	dbg_out << counter-pos << '\t' << est << '\t' << pos << '\t' << ph << endl;
+		//}
 
-		if (corr_stage.isPhaseEstMode()) {
-			int16_t ph = 0;
-			xip_real phase_est = 0;
-			if (corr_stage.phaseEstimate(sample, ph, phase_est)) {
-				phase = ph;
-			}
-		}
+		corr_stage.test_corr(sample, corr, est);
+		dbg_out << counter << '\t' << corr << '\t' << est << endl;
+
+		//if (corr_stage.isPhaseEstMode()) {
+		//	int16_t ph = 0;
+		//	xip_real phase_est = 0;
+		//	if (corr_stage.phaseEstimate(sample, ph, phase_est)) {
+		//		phase = ph;
+		//	}
+		//}
 		//else {
 		//	int16_t t_shift = 0;
 		//	xip_real time_est = 0;
@@ -1050,5 +1060,75 @@ void signal_frame_test(const string& in, bool is_binary, bool has_preamble, bool
 	}
 
 	dbg_out.close();
+}
+
+void signal_pwr_measure(const string& in, unsigned wnd_size)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+
+	ofstream dbg_out("dbg_out.txt");
+
+	deque<xip_real> pwrReg(wnd_size, 0);
+	xip_real current_pwr = 0;
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		xip_complex sum_corr_conj{ sample.re, -sample.im };
+		xip_complex sum_corr_pwr;
+		xip_multiply_complex(sample, sum_corr_conj, sum_corr_pwr);
+		//xip_real_shift(sum_corr_pwr.re, -16);            // сдвигаем до [-2^16, +2^16]
+		current_pwr += sum_corr_pwr.re;
+		current_pwr -= pwrReg.back();
+		pwrReg.pop_back();
+		pwrReg.push_front(sum_corr_pwr.re);
+		xip_real awg_pwr = current_pwr / wnd_size;
+		xip_real awg_pwr_db = 10 * log10(awg_pwr);
+
+		dbg_out << awg_pwr << '\t' << awg_pwr_db << endl;
+	}
+
+	dbg_out.close();
+	fclose(in_file);
+}
+
+void signal_awgn(const string& in, const string& out, xip_real sig_pwr_db, xip_real snr_db, unsigned ns)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	//ofstream dbg_out("dbg_out.txt");
+	xip_real noise_power = sig_pwr_db - snr_db;
+	noise_power = std::pow(10, (sig_pwr_db - snr_db) / 10);
+	xip_real noise_level = std::sqrt(noise_power * ns / 2);
+	std::random_device rd{};
+	std::mt19937 gen{ rd() };
+	std::normal_distribution<double> rand_normal{ 0.0, 1.0 };
+
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+		double _re = rand_normal(gen);
+		double _im = rand_normal(gen);
+		xip_complex noise{ _re * noise_level, _im * noise_level };
+		xip_complex res{ sample.re + noise.re, sample.im + noise.im };
+		tC::write_real<int16_t>(out_file, res.re);
+		tC::write_real<int16_t>(out_file, res.im);
+
+		//dbg_out << res << endl;
+	}
+
+	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
 }
 

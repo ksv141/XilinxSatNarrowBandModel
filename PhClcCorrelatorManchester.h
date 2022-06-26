@@ -68,6 +68,12 @@ public:
 	*/
 	void test_corr(xip_complex in, xip_complex& corr, xip_real& est);
 
+	/**
+	 * @brief дл€ тестировани€
+	 * @return 
+	*/
+	int getMaxCorrPos();
+
 private:
 	/**
 	 * @brief инициализаци€ регистров коррел€тора
@@ -82,13 +88,13 @@ private:
 
 	deque<xip_complex> m_correlationReg;     // FIFO-регистр дл€ вычислени€ коррел€ции
 	deque<xip_complex> m_corrValuesReg;		 // FIFO-регистр дл€ хранени€ коррел€ционных откликов
+	deque<xip_complex> m_corrSumValuesReg;		 // FIFO-регистр дл€ хранени€ коррел€ционных откликов
 	deque<xip_real> m_timingSyncReg;		 // FIFO-регистр дл€ тактовой синхронизации
-	xip_complex m_sumCorr_1;					 // суммарный отклик дл€ двух манчестерских символов
-	xip_complex m_sumCorr_2;					 // суммарный отклик дл€ двух манчестерских символов
+	deque<xip_real> m_corrMnchReg;			 // FIFO-регистр дл€ сумм коррел€ционных откликов полусимволов манчестерского кода
 	vector<xip_complex> m_preamble;          // –егистр с преамбулой (в виде комплексно-сопр€женных чисел)
-	//xip_complex m_currentCorrelation;		 // текущее значение с выхода коррел€тора
 	bool m_phaseEstMode;					 // режим оценки фазы (используетс€ дл€ переключени€ в режим оценки тактов)
 	uint8_t m_symbolTimingProcCounter;		 // счетчик попыток оценить тактовый сдвиг (условие может не выполнитьс€)
+	int m_maxCorrPos;						 // позици€ максимального отклика в регистре m_corrValuesReg
 
 	uint16_t m_preambleLength;           // –азмер преамбулы
 	xip_real m_burstEstML;               // ѕороговое значение дл€ коррел€ционного отклика (критерий максимального правдоподоби€)

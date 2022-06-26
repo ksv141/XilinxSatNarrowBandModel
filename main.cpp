@@ -75,7 +75,7 @@ const int HIGH_SAMPLE_RATE = 1600000;				// частота дискретизации на входе демод
 // параметры корреляторов
 const uint32_t DPDI_BURST_ML_SATGE_1 = 700;				// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
 const uint32_t DPDI_BURST_ML_SATGE_2 = 3500;			// порог обнаружения сигнала коррелятора второй стадии (точная оценка частоты)
-const uint32_t PHASE_BURST_ML_SATGE_3 = 1300;			// порог обнаружения сигнала коррелятора третьей стадии (оценка фазы и тактов)
+const uint32_t PHASE_BURST_ML_SATGE_3 = 2000;			// порог обнаружения сигнала коррелятора третьей стадии (оценка фазы и тактов)
 
 int main()
 {
@@ -98,8 +98,14 @@ int main()
 	//Modulator mdl("data.bin", "out_mod.pcm", true, true);
 	//mdl.process();
 
+	// *********** AWGN *******************
+	//signal_pwr_measure("out_mod.pcm", 128);
+	xip_real sig_pwr = 78.24;	// измеренная мощность сигнала (дБ)
+	xip_real snr = 3;			// С/Ш (дБ)
+	signal_awgn("out_mod.pcm", "out_mod_awgn.pcm", sig_pwr, snr, 2);
+
 	//************ Фазовые и тактовые искажения ****************
-	signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 5000);
+	signal_freq_phase_shift("out_mod_awgn.pcm", "out_mod_ph.pcm", 0, 5000);
 	signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 512);
 
 	//signal_freq_shift("out_mod_tm.pcm", "out_mod_shifted.pcm", 100);

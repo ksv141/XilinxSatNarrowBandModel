@@ -242,4 +242,21 @@ extern void signal_estimate_demodulate_dopl_test(const string& in, const string&
 */
 extern void signal_frame_test(const string& in, bool is_binary, bool has_preamble, bool has_postamble);
 
+/**
+ * @brief измерение мощности сигнала методом скользящего среднего (результат в отладочном файле)
+ * @param in входной файл с данными
+ * @param wnd_size размер окна усреднения
+*/
+extern void signal_pwr_measure(const string& in, unsigned wnd_size);
+
+/**
+ * @brief искажение сигнала шумами (АБГШ)
+ * @param in входной файл с сигналом
+ * @param out выходной файл с сигналом
+ * @param sig_pwr_db мощность сигнала (дБ)
+ * @param snr_db С/Ш (дБ)
+ * @param ns число отсчетов насимвол
+*/
+extern void signal_awgn(const string& in, const string& out, xip_real sig_pwr_db, xip_real snr_db, unsigned ns);
+
 #endif // TESTUTILS_H
