@@ -13,30 +13,6 @@ bool PhClcCorrelatorManchester::phaseEstimate(xip_complex in, int16_t& phase, xi
     m_phaseEstMode = true;              // переход в режим оценки фазы, если коррелятор в нем не находился
     process(in);
 
-    //xip_real mag_1;
-    //xip_real arg_1;
-    //xip_cordic_rect_to_polar(m_sumCorr, mag_1, arg_1);  // получаем ампилутуду и фазу
-
-    //xip_real est = mag_1;
-    //xip_real est_ph = arg_1;
-    //if (mag_1 >= mag_2) {           // Выбор наибольшего значения из сдвинутых на такт 2B
-    //    est = mag_1;
-    //    est_ph = arg_1;
-    //}
-    //else {
-    //    est = mag_2;
-    //    est_ph = arg_2;
-    //}
-
-    //phase_est = est;
-
-    //if (est > m_burstEstML) {
-    //    phase = (int16_t)est_ph;
-    //    m_phaseEstMode = false;         // переключение в режим оценки тактов
-    //    m_symbolTimingProcCounter = 2;
-    //    return true;
-    //}
-
     if (m_corrMnchReg.back() > m_burstEstML) {      // при превышении порога ищем максимальный из 4-х отсчетов, чтобы исключить ложный максимум
         deque<xip_real>::iterator max_it;
         max_it = std::max_element(m_corrMnchReg.begin(), m_corrMnchReg.end());
@@ -50,12 +26,35 @@ bool PhClcCorrelatorManchester::phaseEstimate(xip_complex in, int16_t& phase, xi
         std::fill(m_corrMnchReg.begin(), m_corrMnchReg.end(), 0);
         std::fill(m_corrSumValuesReg.begin(), m_corrSumValuesReg.end(), xip_complex{0,0});
 
+        m_symbolTimingProcCounter = 2;
         m_phaseEstMode = false;         // переключение в режим оценки тактов
 
         return true;
     }
 
     return false;
+}
+
+bool PhClcCorrelatorManchester::symbolTimingEstimate(xip_complex in, int16_t& time_shift, xip_real& time_est)
+{
+    process(in);
+    time_est = m_timingSyncReg[0];
+    m_symbolTimingProcCounter--;
+
+    // два средних отсчета в регистре должны быть наибольшими
+    //if ((m_timingSyncReg[0] > m_timingSyncReg[1]) || (m_timingSyncReg[0] > m_timingSyncReg[2]) ||
+    //    (m_timingSyncReg[3] > m_timingSyncReg[1]) || (m_timingSyncReg[3] > m_timingSyncReg[2]))
+    //    return false;
+
+    xip_complex rt{ m_timingSyncReg[2] - m_timingSyncReg[0], m_timingSyncReg[3] - m_timingSyncReg[1] };
+
+    xip_real mag;
+    xip_real arg;
+    xip_cordic_rect_to_polar(rt, mag, arg);     //mu_est = 2.0f / static_cast<float>(M_PI_2) * std::arg(rt);
+    xip_real_shift(arg, -2); // !!!!!! подобрано для DDS_PHASE_MODULUS = 16384 и LAGRANGE_INTERVALS = 1024 !!!!
+    time_shift = (int16_t)arg;
+
+    return true;
 }
 
 bool PhClcCorrelatorManchester::isPhaseEstMode()

@@ -88,12 +88,12 @@ int main()
 	init_channel_matched_fir();
 
 	//************ Формирователь ПСП в виде бинарного файла *************
-	//SignalSource::generateBinFile(10, "data_10.bin");
+	//SignalSource::generateBinFile(100000, "data_1.bin");
 
 	//************ Модулятор *****************
 	// Формирует кадры с добавлением преамбулы, без хвостовика (код Манчестера)
 	//Modulator mdl("data.bin", "out_mod.pcm", true, false);		// точность [+/- 2^15]
-	//Modulator mdl("data_10.bin", "out_mod.pcm", false, false);
+	//Modulator mdl("data_1.bin", "out_mod.pcm", true, false);
 	// Формирует кадры с добавлением преамбулы и хвостовика
 	//Modulator mdl("data.bin", "out_mod.pcm", true, true);
 	//mdl.process();
@@ -102,17 +102,17 @@ int main()
 	//signal_pwr_measure("out_mod.pcm", 128);
 	xip_real sig_pwr = 78.24;	// измеренная мощность сигнала (дБ)
 	xip_real snr = 3;			// С/Ш (дБ)
-	signal_awgn("out_mod.pcm", "out_mod_awgn.pcm", sig_pwr, snr, 2);
+	//signal_awgn("out_mod.pcm", "out_mod_awgn.pcm", sig_pwr, snr, 2);
 
 	//************ Фазовые и тактовые искажения ****************
-	signal_freq_phase_shift("out_mod_awgn.pcm", "out_mod_ph.pcm", 0, 5000);
-	signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 512);
+	//signal_freq_phase_shift("out_mod_awgn.pcm", "out_mod_ph.pcm", 0, 5000);
+	//signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 512);
 
 	//signal_freq_shift("out_mod_tm.pcm", "out_mod_shifted.pcm", 100);
 
 	// *********** Тестирование коррелятора на манчестерском коде
 	// Согласованная фильтрация
-	signal_lowpass("out_mod_tm.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
+	//signal_lowpass("out_mod_tm.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
 
 	int16_t phase = 0;
 	xip_real time_shift = 0;

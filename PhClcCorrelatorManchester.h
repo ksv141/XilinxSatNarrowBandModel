@@ -46,6 +46,15 @@ public:
 	 * @param time_est текущий коррел€ционный отклик (используетс€ дл€ отладки)
 	 * @return есть (true) или нет (false) срабатывание услови€ дл€ оценки сдвига
 	*/
+	bool symbolTimingEstimate(xip_complex in, int16_t& time_shift, xip_real& time_est);
+
+	/**
+	 * @brief оценка тактового сдвига
+	 * @param in входной отсчет
+	 * @param time_shift оценка сдвига тактов
+	 * @param time_est текущий коррел€ционный отклик (используетс€ дл€ отладки)
+	 * @return есть (true) или нет (false) срабатывание услови€ дл€ оценки сдвига
+	*/
 	//bool symbolTimingEstimate(xip_complex in, int16_t& time_shift, xip_real& time_est);
 
 	/**

@@ -562,14 +562,14 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 		int16_t ph = 0;
 
 		counter++;
-		//if (corr_stage.phaseEstimate(sample, ph, est))
-		//{
-		//	int pos = corr_stage.getMaxCorrPos();
-		//	dbg_out << counter-pos << '\t' << est << '\t' << pos << '\t' << ph << endl;
-		//}
+		if (corr_stage.phaseEstimate(sample, ph, est))
+		{
+			int pos = corr_stage.getMaxCorrPos();
+			dbg_out << counter-pos << '\t' << est << '\t' << pos << '\t' << ph << endl;
+		}
 
-		corr_stage.test_corr(sample, corr, est);
-		dbg_out << counter << '\t' << corr << '\t' << est << endl;
+		//corr_stage.test_corr(sample, corr, est);
+		//dbg_out << counter << '\t' << corr << '\t' << est << endl;
 
 		//if (corr_stage.isPhaseEstMode()) {
 		//	int16_t ph = 0;
