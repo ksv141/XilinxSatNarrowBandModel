@@ -227,6 +227,13 @@ extern void signal_ddc_estimate(const string& in, unsigned& corr_num, int16_t& f
 extern void signal_estimate_demodulate(const string& in, const string& dem_out);
 
 /**
+ * @brief тестирование демодуляции и тактовой синхронизации манчестерского кода
+ * @param in входной файл (PCM стерео I/Q 16-бит)
+ * @param dem_out сигнал на входе блока принятия решения на скорости 1B (PCM стерео I/Q 16-бит)
+*/
+extern void signal_estimate_demodulate_mnch_test(const string& in, const string& dem_out);
+
+/**
  * @brief тестирование компенсации Доплера на скорости 2B
  * @param in входной файл (PCM стерео I/Q 16-бит)
  * @param dem_out сигнал на входе блока принятия решения на скорости 1B (PCM стерео I/Q 16-бит)

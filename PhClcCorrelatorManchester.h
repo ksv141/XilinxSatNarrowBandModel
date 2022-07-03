@@ -14,6 +14,8 @@
 
 using namespace std;
 
+extern const unsigned int LAGRANGE_INTERVALS;
+
 /**
  * @brief Коррелятор для фазовой и символьной синхронизации по преамбуле для манчестерского кода на 4B
  * Оценка кактовой ошибки по 4 точкам
@@ -34,40 +36,11 @@ public:
 	 * @brief оценка фазового сдвига
 	 * @param in входной отсчет
 	 * @param phase оценка сдвига фазы --> [-8192, 8192]
+	 * @param time_shift оценка сдвига тактов
 	 * @param phase_est текущий корреляционный отклик (используется для отладки)
 	 * @return есть (true) или нет (false) срабатывание порога коррелятора
 	*/
-	bool phaseEstimate(xip_complex in, int16_t& phase, xip_real& phase_est);
-
-	/**
-	 * @brief оценка тактового сдвига
-	 * @param in входной отсчет
-	 * @param time_shift оценка сдвига тактов
-	 * @param time_est текущий корреляционный отклик (используется для отладки)
-	 * @return есть (true) или нет (false) срабатывание условия для оценки сдвига
-	*/
-	bool symbolTimingEstimate(xip_complex in, int16_t& time_shift, xip_real& time_est);
-
-	/**
-	 * @brief оценка тактового сдвига
-	 * @param in входной отсчет
-	 * @param time_shift оценка сдвига тактов
-	 * @param time_est текущий корреляционный отклик (используется для отладки)
-	 * @return есть (true) или нет (false) срабатывание условия для оценки сдвига
-	*/
-	//bool symbolTimingEstimate(xip_complex in, int16_t& time_shift, xip_real& time_est);
-
-	/**
-	 * @brief возвращает текущий режим коррелятора
-	 * @return
-	*/
-	bool isPhaseEstMode();
-
-	/**
-	 * @brief возвращает число попыток оценить тактовый сдвиг
-	 * @return
-	*/
-	uint8_t getSymbolTimingProcCounter();
+	bool phaseEstimate(xip_complex in, int16_t& phase, int16_t& time_shift, xip_real& phase_est);
 
 	/**
 	 * @brief для тестирования
@@ -83,6 +56,12 @@ public:
 	*/
 	int getMaxCorrPos();
 
+	/**
+	 * @brief возвращает буфер накопленных отсчетов (для последующей демодуляции)
+	 * @return 
+	*/
+	deque<xip_complex>& getCorrelationReg();
+
 private:
 	/**
 	 * @brief инициализация регистров коррелятора
@@ -95,14 +74,14 @@ private:
 	*/
 	void process(xip_complex in);
 
+	const unsigned m_corrRegSize = 4;		 // Размеры регистров для вычисления фазы и тактового сдвига
+
 	deque<xip_complex> m_correlationReg;     // FIFO-регистр для вычисления корреляции
-	deque<xip_complex> m_corrValuesReg;		 // FIFO-регистр для хранения корреляционных откликов
-	deque<xip_complex> m_corrSumValuesReg;		 // FIFO-регистр для хранения корреляционных откликов
+	deque<xip_complex> m_corrValuesReg;		 // FIFO-регистр для хранения корреляционных откликов (для суммирования полусимволов)
+	deque<xip_complex> m_corrSumValuesReg;		 // FIFO-регистр для хранения суммарных корреляционных откликов (для оценки фазы)
 	deque<xip_real> m_timingSyncReg;		 // FIFO-регистр для тактовой синхронизации
 	deque<xip_real> m_corrMnchReg;			 // FIFO-регистр для сумм корреляционных откликов полусимволов манчестерского кода
 	vector<xip_complex> m_preamble;          // Регистр с преамбулой (в виде комплексно-сопряженных чисел)
-	bool m_phaseEstMode;					 // режим оценки фазы (используется для переключения в режим оценки тактов)
-	uint8_t m_symbolTimingProcCounter;		 // счетчик попыток оценить тактовый сдвиг (условие может не выполниться)
 	int m_maxCorrPos;						 // позиция максимального отклика в регистре m_corrValuesReg
 
 	uint16_t m_preambleLength;           // Размер преамбулы

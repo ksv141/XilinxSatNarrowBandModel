@@ -372,6 +372,10 @@ void signal_decimate(const string& in, const string& out, unsigned decim_factor)
 		coeff_file = "pph_decimator_x4.fcf";
 		coeff_count = 96;
 	}
+	else if (decim_factor == 16) {
+		coeff_file = "pph_decimator_x16.fcf";
+		coeff_count = 384;
+	}
 	else
 	{
 		cerr << "invalid decimation factor" << endl;
@@ -418,6 +422,10 @@ void signal_interpolate(const string& in, const string& out, unsigned interp_fac
 	else if (interp_factor == 4) {
 		coeff_file = "pph_interpolator_x4.fcf";
 		coeff_count = 96;
+	}
+	else if (interp_factor == 16) {
+		coeff_file = "pph_interpolator_x16.fcf";
+		coeff_count = 384;
 	}
 	else
 	{
@@ -560,12 +568,13 @@ bool signal_phase_time_est_stage(const string& in, uint32_t burst_est, int16_t& 
 		xip_complex corr{ 0,0 };
 		xip_real est = 0;
 		int16_t ph = 0;
+		int16_t ts = 0;
 
 		counter++;
-		if (corr_stage.phaseEstimate(sample, ph, est))
+		if (corr_stage.phaseEstimate(sample, ph, ts, est))
 		{
 			int pos = corr_stage.getMaxCorrPos();
-			dbg_out << counter-pos << '\t' << est << '\t' << pos << '\t' << ph << endl;
+			dbg_out << counter-pos << '\t' << est << '\t' << pos << '\t' << ph << '\t' << ts << endl;
 		}
 
 		//corr_stage.test_corr(sample, corr, est);
@@ -866,6 +875,45 @@ void signal_estimate_demodulate(const string& in, const string& dem_out)
 		}
 	}
 	//dbg_out.close();
+	fclose(in_file);
+	fclose(out_file);
+}
+
+void signal_estimate_demodulate_mnch_test(const string& in, const string& dem_out)
+{
+	FILE* in_file = fopen(in.c_str(), "rb");
+	if (!in_file)
+		return;
+	FILE* out_file = fopen(dem_out.c_str(), "wb");
+	if (!out_file)
+		return;
+
+	LagrangeInterp dmd_interp(16000, 16000, 1);	// интерполятор на 2B (манчестерских)
+	AutoGaneControl agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr());	// АРУ
+	int i = 0;				// счетчик для 2B --> B
+	int16_t re;
+	int16_t im;
+	while (tC::read_real<int16_t, int16_t>(in_file, re) &&
+		tC::read_real<int16_t, int16_t>(in_file, im)) {
+		xip_complex sample{ re, im };
+
+		dmd_interp.process(sample);
+		while (dmd_interp.next(sample)) {
+			// 2B --> B
+			if (i == 1) {
+				i = 0;
+				continue;
+			}
+			i = 1;
+
+			// АРУ для точной оценки ошибки тактовой синхры
+			// уровень сигнала нормируется относительно уровня сигнального созвездия
+			if (!agc.process(sample, sample))
+				continue;
+			// для сигнального созвездия +/-4096 сигнал с выхода АРУ будет в диапазоне [-2^14, 2^14]
+		}
+	}
+
 	fclose(in_file);
 	fclose(out_file);
 }
