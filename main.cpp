@@ -93,11 +93,11 @@ int main()
 
 	//************ Модулятор *****************
 	// Формирует кадры с добавлением преамбулы, без хвостовика (код Манчестера)
-	//Modulator mdl("data.bin", "out_mod.pcm", true, false);		// точность [+/- 2^15]
+	Modulator mdl("data.bin", "out_mod.pcm", true, false);		// точность [+/- 2^15]
 	//Modulator mdl("data_1.bin", "out_mod.pcm", true, false);
 	// Формирует кадры с добавлением преамбулы и хвостовика
 	//Modulator mdl("data.bin", "out_mod.pcm", true, true);
-	//mdl.process();
+	mdl.process();
 
 	// *********** AWGN *******************
 	//signal_pwr_measure("out_mod.pcm", 128);
@@ -106,8 +106,8 @@ int main()
 	//signal_awgn("out_mod.pcm", "out_mod_awgn.pcm", sig_pwr, snr, 2);
 
 	//************ Фазовые и тактовые искажения ****************
-	//signal_freq_phase_shift("out_mod_awgn.pcm", "out_mod_ph.pcm", 0, 5000);
-	signal_time_shift("out_mod.pcm", "out_mod_tm.pcm", 0);
+	signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 5000);
+	signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 200);
 
 	//signal_freq_shift("out_mod_tm.pcm", "out_mod_shifted.pcm", 100);
 
@@ -115,10 +115,12 @@ int main()
 	// Согласованная фильтрация
 	signal_lowpass("out_mod_tm.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
 
-	int16_t phase = 0;
-	xip_real time_shift = 0;
-	int t_count = 0;
-	signal_phase_time_est_stage("out_mod_matched.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
+	signal_estimate_demodulate_mnch_test("out_mod_matched.pcm", "out_mod_dmd.pcm");
+
+	//int16_t phase = 0;
+	//xip_real time_shift = 0;
+	//int t_count = 0;
+	//signal_phase_time_est_stage("out_mod_matched.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
 	//cout << phase << endl;
 	//int16_t freq_est = 0;
 	//signal_freq_est_stage("out_mod_matched.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);

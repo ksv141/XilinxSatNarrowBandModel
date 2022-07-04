@@ -911,6 +911,13 @@ void signal_estimate_demodulate_mnch_test(const string& in, const string& dem_ou
 			if (!agc.process(sample, sample))
 				continue;
 			// для сигнального созвездия +/-4096 сигнал с выхода АРУ будет в диапазоне [-2^14, 2^14]
+
+			//*********************************************************************
+			xip_complex est = nearest_point_psk2(sample);		// жесткое решение
+
+			//*********************************************************************
+			tC::write_real<int16_t>(out_file, sample.re);
+			tC::write_real<int16_t>(out_file, sample.im);
 		}
 	}
 
