@@ -106,8 +106,8 @@ int main()
 	//signal_awgn("out_mod.pcm", "out_mod_awgn.pcm", sig_pwr, snr, 2);
 
 	//************ Фазовые и тактовые искажения ****************
-	signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 5000);
-	signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 200);
+	signal_freq_phase_shift("out_mod.pcm", "out_mod_ph.pcm", 0, 1000);
+	signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 512);
 
 	//signal_freq_shift("out_mod_tm.pcm", "out_mod_shifted.pcm", 100);
 

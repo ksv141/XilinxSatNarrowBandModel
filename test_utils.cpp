@@ -890,6 +890,11 @@ void signal_estimate_demodulate_mnch_test(const string& in, const string& dem_ou
 
 	LagrangeInterp dmd_interp(16000, 16000, 1);	// интерполятор на 2B (манчестерских)
 	AutoGaneControl agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr());	// АРУ
+	DDS pll_dds(DDS_PHASE_MODULUS);				// генератор ФАПЧ
+	Pif pif_pll(PIF_PLL_Kp, PIF_PLL_Ki);		// ПИФ ФАПЧ
+	xip_real err_pll = 0;						// ошибка фазы (ФАПЧ)
+	StsEstimate m_stsEst;						// блок оценки ошибки тактовой синхры
+	Pif pif_sts(PIF_STS_Kp, PIF_STS_Ki);		// ПИФ СТС
 	int i = 0;				// счетчик для 2B --> B
 	int16_t re;
 	int16_t im;
@@ -911,10 +916,54 @@ void signal_estimate_demodulate_mnch_test(const string& in, const string& dem_ou
 			if (!agc.process(sample, sample))
 				continue;
 			// для сигнального созвездия +/-4096 сигнал с выхода АРУ будет в диапазоне [-2^14, 2^14]
+			
+			//******** петля ФАПЧ, компенсация частотного смещения ****************
+			xip_complex pll_corr{ 0, 0 };
+			pll_dds.process(err_pll, pll_corr);					// сигнал ГУН
+			xip_multiply_complex(sample, pll_corr, sample);		// компенсация
+			xip_complex_shift(sample, -(int)(pll_dds.getOutputWidth() - 1));
 
 			//*********************************************************************
 			xip_complex est = nearest_point_psk2(sample);		// жесткое решение
 
+				//******** оценка частотного сдвига ***********************************
+			xip_complex err_pll_sample{ sample.re, -sample.im };  // комплексно-сопряженное от текущего отсчета
+			xip_multiply_complex(err_pll_sample, est, err_pll_sample);
+			err_pll = err_pll_sample.im;	// ошибка ФАПЧ
+
+			// примем максимальный диапазон отклонения фазы [-0.5, 0.5] рад
+			// для сигнального созвездия +/-4096 сдвиг будет в диапазоне [-0.5*2^25, 0.5*2^25] --> рад << 25
+			// приведем к диапазону [-2^15, 2^15] для работы ПИФ
+			xip_real_shift(err_pll, -10);
+			pif_pll.process(err_pll, err_pll);	// сглаживание и интеграция сигнала ошибки в ПИФ
+
+			// переведем в диапазон работы DDS --> [0, 16384] --> [0, 2pi]
+			xip_multiply_real(err_pll, DDS_RAD_CONST, err_pll);
+			xip_real_shift(err_pll, -18);
+			if (err_pll < 0)
+				err_pll += DDS_PHASE_MODULUS;
+			//*********************************************************************
+			
+			//************ оценка ошибки тактовой синхры **************************
+			xip_real sts_err = m_stsEst.getErr(sample, est);
+			// для сигнального созвездия +/-4096 ошибка будет в диапазоне [-2^26, 2^26]
+
+			// уменьшаем динамический диапазон до диапазона ПИФ --> [-2^15, 2^15] 
+			// величину сдвига нужно подобирать исходя из ресурсов. 
+			// для максимальной точности можно без сдвига
+			// для минимальной точности и экономии ресурса можно сдвинуть сразу до [-2^10, 2^10]
+			// меньше [-2^10, 2^10] ученьшать нецелесообразно, т.к. это диапазон интерполятора
+			xip_real_shift(sts_err, -11);
+
+			pif_sts.process(sts_err, sts_err);	// сглаживание и интеграция сигнала ошибки в ПИФ
+
+			// уменьшаем динамический диапазон до диапазона интерполятора --> [-2^10, 2^10]
+			xip_real_shift(sts_err, -3);
+
+			// коррекция смещения интерполятора
+			dmd_interp.shift((int32_t)sts_err);
+			//*********************************************************************
+			
 			//*********************************************************************
 			tC::write_real<int16_t>(out_file, sample.re);
 			tC::write_real<int16_t>(out_file, sample.im);
