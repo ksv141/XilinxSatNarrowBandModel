@@ -266,4 +266,6 @@ extern void signal_pwr_measure(const string& in, unsigned wnd_size);
 */
 extern void signal_awgn(const string& in, const string& out, xip_real sig_pwr_db, xip_real snr_db, unsigned ns);
 
+extern void test_agc();
+
 #endif // TESTUTILS_H

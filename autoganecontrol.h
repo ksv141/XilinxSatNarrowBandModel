@@ -26,15 +26,20 @@ public:
     // результат не готов, когда регистр еще не заполнен
     bool process(const xip_complex& in, xip_complex& out);
 
+    void process(const xip_complex& in);
+
+    bool next(xip_complex& out);
+
     // сброс регистра в 0
     void reset();
 
 private:
 	double m_normPower;
 
-    std::deque<double> m_pwrReg;          // регистр накопления мощности
+    std::deque<xip_complex> m_agcBuf;          // буфер АРУ
+    xip_complex m_inSample{ 0, 0 };            // последний входной отсчет
 
-	double m_currentPower;
+	xip_real m_currentPower;
 
     unsigned m_windowSizeLog2;               // log2 окна усреднения АРУ
     unsigned m_windowSize;                   // окно усреднения АРУ

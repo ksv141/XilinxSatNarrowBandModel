@@ -88,6 +88,11 @@ int main()
 	init_xip_cordic_rect_to_polar();
 	init_channel_matched_fir();
 
+	// тест АРУ
+	test_agc();
+	return 0;
+
+
 	//************ Формирователь ПСП в виде бинарного файла *************
 	//SignalSource::generateBinFile(100000, "data_1.bin");
 

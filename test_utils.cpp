@@ -1236,3 +1236,20 @@ void signal_awgn(const string& in, const string& out, xip_real sig_pwr_db, xip_r
 	fclose(out_file);
 }
 
+void test_agc()
+{
+	AutoGaneControl agc(AGC_WND_SIZE_LOG2, get_cur_constell_pwr());	// Раг
+	ofstream dbg_out("dbg_out.txt");
+	int N = 1000;
+	for (int i = 0; i < N; i++) {
+		xip_complex x{ 10000, 10000 };
+		agc.process(x);
+		xip_complex out{ 0, 0 };
+		while (agc.next(out)) {
+			dbg_out << out << endl;
+		}
+	}
+
+	dbg_out.close();
+}
+

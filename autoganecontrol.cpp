@@ -7,7 +7,7 @@ AutoGaneControl::AutoGaneControl(unsigned window_size_log2, double norm_power):
     m_counter(0)
 {
 	m_windowSize = 1 << m_windowSizeLog2;
-	m_pwrReg.resize(m_windowSize, 0);
+	m_agcBuf.resize(m_windowSize, xip_complex{ 0, 0 });
 
 	m_normPowerSqrt = sqrt(norm_power);
 	init_xip_fir(window_size_log2);
@@ -44,6 +44,62 @@ bool AutoGaneControl::process(const xip_complex& in, xip_complex& out)
 	int32_division(in_mul, sum_pwr, out.re);
 	xip_multiply_real(in.im, m_normPowerSqrt, in_mul);
 	int32_division(in_mul, sum_pwr, out.im);
+
+	//xip_complex_shift(out, -1);
+
+	return true;
+}
+
+void AutoGaneControl::process(const xip_complex& in)
+{
+	xip_real re_sqr = 0;
+	xip_multiply_real(in.re, in.re, re_sqr);
+	xip_real im_sqr = 0;
+	xip_multiply_real(in.im, in.im, im_sqr);
+
+	xip_fir_process(re_sqr, im_sqr, m_currentPower);
+
+	if (m_counter < m_windowSize) {
+		m_counter++;
+		m_agcBuf.push_front(in);
+		m_agcBuf.pop_back();
+	}
+	else
+	{
+		m_agcBuf.push_front(in);
+	}
+	// регулировка выполняется после заполнения буфера АРУ
+	//if (m_counter < m_windowSize) {
+	//	m_counter++;
+	//	m_agcBuf.pop_back();
+	//	m_agcBuf.push_front(in);
+	//}
+	//else {
+	//	m_inSample = in;
+	//}
+}
+
+bool AutoGaneControl::next(xip_complex& out)
+{
+	xip_real pwr = m_currentPower;
+	xip_real_shift(pwr, -(int)m_windowSizeLog2);		// усреднение за окно
+	xip_sqrt_real(pwr, pwr);
+
+	if (m_counter < m_windowSize) // регулировка выполняется после заполнения буфера АРУ
+		return false;
+
+	xip_complex in{ 0,0 };
+	if (m_agcBuf.empty())
+		return false;
+
+	in = m_agcBuf.back();
+	m_agcBuf.pop_back();
+
+	xip_real in_mul;
+	xip_multiply_real(in.re, m_normPowerSqrt, in_mul);
+	int32_division(in_mul, pwr, out.re);
+	xip_multiply_real(in.im, m_normPowerSqrt, in_mul);
+	int32_division(in_mul, pwr, out.im);
 
 	//xip_complex_shift(out, -1);
 
