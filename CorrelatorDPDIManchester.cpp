@@ -106,7 +106,8 @@ void CorrelatorDPDIManchester::test_corr(xip_complex in, xip_complex* corr, xip_
             xip_complex res;
             xip_multiply_complex(*preamb_it, *reg_it, res); // единичный отклик rm*cm [-2^28, +2^28]
             xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
-            rx_1.re += res.re;
+			//xip_complex_shift(res, -12);            // сдвигаем до [-2^12, +2^12]
+			rx_1.re += res.re;
             rx_1.im += res.im;
 
             reg_it += 4;
@@ -140,24 +141,24 @@ void CorrelatorDPDIManchester::test_corr(xip_complex in, xip_complex* corr, xip_
 
     xip_real mag;
     xip_real arg;
-    xip_cordic_rect_to_polar(m_corr_1, mag, arg);
-    est[0] = mag;
-    dph[0] = (int)arg >> m_argShift;
-    xip_cordic_rect_to_polar(m_corr_2, mag, arg);
-    est[1] = mag;
-    dph[1] = (int)arg >> m_argShift;
-    xip_cordic_rect_to_polar(m_corr_3, mag, arg);
-    est[2] = mag;
-    dph[2] = (int)arg >> m_argShift;
-    xip_cordic_rect_to_polar(m_corr_4, mag, arg);
-    est[3] = mag;
-    dph[3] = (int)arg >> m_argShift;
+    //xip_cordic_rect_to_polar(m_corr_1, mag, arg);
+    //est[0] = mag;
+    //dph[0] = (int)arg >> m_argShift;
+    //xip_cordic_rect_to_polar(m_corr_2, mag, arg);
+    //est[1] = mag;
+    //dph[1] = (int)arg >> m_argShift;
+    //xip_cordic_rect_to_polar(m_corr_3, mag, arg);
+    //est[2] = mag;
+    //dph[2] = (int)arg >> m_argShift;
+    //xip_cordic_rect_to_polar(m_corr_4, mag, arg);
+    //est[3] = mag;
+    //dph[3] = (int)arg >> m_argShift;
     xip_cordic_rect_to_polar(sum_1, mag, arg);
     est[4] = mag;
     dph[4] = (int)arg >> m_argShift;
-    xip_cordic_rect_to_polar(sum_2, mag, arg);
-    est[5] = mag;
-    dph[5] = (int)arg >> m_argShift;
+    //xip_cordic_rect_to_polar(sum_2, mag, arg);
+    //est[5] = mag;
+    //dph[5] = (int)arg >> m_argShift;
 
 }
 

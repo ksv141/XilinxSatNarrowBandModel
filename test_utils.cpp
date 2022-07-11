@@ -519,7 +519,7 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t bu
 	if (!in_file)
 		return false;
 
-	//ofstream dbg_out("dbg_out.txt");
+	ofstream dbg_out("dbg_out.txt");
 
 	CorrelatorDPDIManchester corr_stage((int8_t*)PREAMBLE_DATA, PREAMBLE_LENGTH, M, L, burst_est);
 	int16_t re;
@@ -532,17 +532,22 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t bu
 		int16_t dph = 0;
 
 		xip_real corr_est = 0;
-		if (corr_stage.process(sample, dph, corr_est)) {
-			freq_est = dph;
-			res = true;
-			break;
-		}
+		//if (corr_stage.process(sample, dph, corr_est)) {
+		//	freq_est = dph;
+		//	res = true;
+		//	break;
+		//}
 
-		//dbg_out << est[4] << '\t' << freq[4] << endl;
+		xip_complex corr[6];
+		xip_real est[6];
+		xip_real freq[6];
+		corr_stage.test_corr(sample, corr, est, freq);
+
+		dbg_out << est[4] << '\t' << freq[4] << endl;
 		i++;
 	}
 
-	//dbg_out.close();
+	dbg_out.close();
 	fclose(in_file);
 	return res;
 }
