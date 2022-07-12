@@ -29,7 +29,7 @@ public:
 	 * @param burst_est Пороговое значение для корреляционного отклика (критерий максимального правдоподобия)
 	*/
 	CorrelatorDPDIManchester(int8_t* preamble_data, uint16_t preamble_length,
-		uint16_t M, uint16_t L, uint32_t burst_est);
+		uint16_t M, uint16_t L, uint32_t burst_est, uint16_t baud_mul);
 
 	/**
 	 * @brief оценка частоты
@@ -47,7 +47,7 @@ public:
 	 * @param cur_corr 
 	 * @param cur_est 
 	*/
-	void test_corr(xip_complex in, xip_complex* corr, xip_real* est, xip_real* dph);
+	void test_corr(xip_complex in, xip_real* est, xip_real* dph);
 
 	/**
 	 * @brief возвращает буфер коррелятора
@@ -68,10 +68,14 @@ private:
 	xip_complex m_corr_3{ 0, 0 };
 	xip_complex m_corr_4{ 0, 0 };
 
+	deque<xip_complex> m_corr;				// регистр корреляции на N суботсчетах (размер равен m_baudMul)
+
 	uint16_t m_preambleLength;           // Размер преамбулы
 	uint16_t m_correlatorM;              // Размер единичного коррелятора
 	uint16_t m_correlatorL;              // Количество единичных корреляторов
 	xip_real m_burstEstML;               // Пороговое значение для корреляционного отклика (критерий максимального правдоподобия)
+	uint16_t m_baudMul;					 // Коэффициент увеличения бодовой скорости, на которой работает коррелятор
+										 // Без манчестера - 2B, с манчестером - 4B/8B/16B...
 
 	uint16_t m_argShift;				 // величина битового сдвига для вычисления v = Arg{x}/4M (с учетом 2B и манчестера)
 };

@@ -104,7 +104,7 @@ int main()
 	// Обнаруженное смещение -331. Сносим в 0
 	//signal_freq_phase_shift("out_61kHz_x4.pcm", "out_61kHz_x4_freq.pcm", 286, 0);
 	// Согласованная фильтрация
-	//signal_lowpass("out_61kHz_x4_freq.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
+	signal_lowpass("out_61kHz_x4_freq.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
 	// Домодуляция
 	signal_estimate_demodulate_mnch_test("out_mod_matched.pcm", "out_mod_dmd.pcm");
 
@@ -152,9 +152,9 @@ int main()
 	//int t_count = 0;
 	//signal_phase_time_est_stage("out_mod_matched.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
 	//cout << phase << endl;
-	//int16_t freq_est = 0;
-	//signal_freq_est_stage("out_mod_matched.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
-	//cout << freq_est << endl;
+	int16_t freq_est = 0;
+	signal_freq_est_stage("out_mod_matched.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
+	cout << freq_est << endl;
 
 	//signal_freq_phase_shift("out_mod_matched.pcm", "out_mod_freq.pcm", -305, 0);
 
