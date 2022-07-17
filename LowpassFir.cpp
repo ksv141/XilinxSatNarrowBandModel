@@ -1,11 +1,15 @@
 #include "LowpassFir.h"
 
-LowpassFir::LowpassFir(const string& coeff_file, unsigned num_coeff, unsigned is_halfband, unsigned num_datapath):
-	m_numCoeff(num_coeff),
+LowpassFir::LowpassFir(const string& coeff_file, unsigned num_coeff, unsigned coeff_begin, unsigned coeff_step, 
+	unsigned is_halfband, unsigned num_datapath):
 	m_isHalfBand(is_halfband),
 	m_numDataPath(num_datapath)
 {
-	init_xip_fir(coeff_file, num_coeff);
+	unsigned N_1 = num_coeff - coeff_begin;
+	m_numCoeff = N_1 / coeff_step;
+	if (N_1 % coeff_step)
+		m_numCoeff++;
+	init_xip_fir(coeff_file, num_coeff, coeff_begin, coeff_step);
 }
 
 LowpassFir::~LowpassFir()
@@ -63,9 +67,15 @@ int LowpassFir::process(const xip_complex* in, xip_complex* out)
 	return 0;
 }
 
-int LowpassFir::init_xip_fir(const string& coeff_file, unsigned num_coeff)
+void LowpassFir::print_coeff()
 {
-	if (load_coeff(coeff_file, num_coeff)) {
+	for (int i = 0; i < m_numCoeff; i++)
+		std::cout << i << '\t' << m_firCoeff[i] << std::endl;
+}
+
+int LowpassFir::init_xip_fir(const string& coeff_file, unsigned num_coeff, unsigned coeff_begin, unsigned coeff_step)
+{
+	if (load_coeff(coeff_file, num_coeff, coeff_begin, coeff_step)) {
 		printf("Enable to load fir coeffs\n");
 		return -1;
 	}
@@ -131,16 +141,22 @@ int LowpassFir::init_xip_fir(const string& coeff_file, unsigned num_coeff)
 	return 0;
 }
 
-int LowpassFir::load_coeff(const string& coeff_file, unsigned num_coeff)
+int LowpassFir::load_coeff(const string& coeff_file, unsigned num_coeff, unsigned coeff_begin, unsigned coeff_step)
 {
-	m_firCoeff = new double[num_coeff];
+	m_firCoeff = new double[m_numCoeff];
 
 	ifstream in(coeff_file);
 	if (!in.is_open())
 		return -1;
 
+	double coef = 0;
+	unsigned j = 0;
 	for (unsigned i = 0; i < num_coeff; i++) {
-		in >> m_firCoeff[i];
+		in >> coef;
+		if (i >= coeff_begin && ((i - coeff_begin) % coeff_step == 0)) {
+			m_firCoeff[j] = coef;
+			j++;
+		}
 	}
 	in.close();
 

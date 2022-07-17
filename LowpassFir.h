@@ -24,8 +24,11 @@ public:
 	 * @param num_coeff количество коэффициентов фильтра
 	 * @param is_halfband фильтр полуполосный (0 - нет, 1 - да)
 	 * @param num_datapath количество параллельных потоков
+	 * @param coeff_begin номер начального коэффициента для загрузки (для полифазного фильтра)
+	 * @param coeff_step шаг коэффициентов для загрузки (для полифазного фильтра)
 	*/
-	LowpassFir(const string& coeff_file, unsigned num_coeff, unsigned is_halfband = 0, unsigned num_datapath = 1);
+	LowpassFir(const string& coeff_file, unsigned num_coeff, unsigned coeff_begin = 0, unsigned coeff_step = 1, 
+		unsigned is_halfband = 0, unsigned num_datapath = 1);
 
 	~LowpassFir();
 
@@ -46,20 +49,28 @@ public:
 	*/
 	int process(const xip_complex* in, xip_complex* out);
 
+	void print_coeff();
+
 private:
 	/**
 	 * @brief инициализация библиотеки xip fir и загрузка коэффициентов
+	 * @param coeff_file файл с коэффициентами фильтра
+	 * @param num_coeff количество коэффициентов фильтра
+	 * @param coeff_begin номер начального коэффициента для загрузки (для полифазного фильтра)
+	 * @param coeff_step шаг коэффициентов для загрузки (для полифазного фильтра)
 	 * @return
 	*/
-	int init_xip_fir(const string& coeff_file, unsigned num_coeff);
+	int init_xip_fir(const string& coeff_file, unsigned num_coeff, unsigned coeff_begin = 0, unsigned coeff_step = 1);
 
 	/**
 	 * @brief загрузка коэффициентов фильтра в память
 	 * @param coeff_file файл с коэффициентами фильтра
 	 * @param num_coeff количество коэффициентов фильтра
+	 * @param coeff_begin номер начального коэффициента для загрузки (для полифазного фильтра)
+	 * @param coeff_step шаг коэффициентов для загрузки (для полифазного фильтра)
 	 * @return
 	*/
-	int load_coeff(const string& coeff_file, unsigned num_coeff);
+	int load_coeff(const string& coeff_file, unsigned num_coeff, unsigned coeff_begin = 0, unsigned coeff_step = 1);
 
 	/**
 	 * @brief деинициализация библиотеки xip fir и освобождение памяти

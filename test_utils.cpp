@@ -521,7 +521,11 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t bu
 
 	ofstream dbg_out("dbg_out.txt");
 
-	CorrelatorDPDIManchester corr_stage((int8_t*)PREAMBLE_DATA, PREAMBLE_LENGTH, M, L, burst_est, 4);
+	LowpassFir fir_1("rc_root_x4_25_41.fcf", 41, 0, 2);
+	LowpassFir fir_2("rc_root_x4_25_41.fcf", 41, 1, 2);
+
+	CorrelatorDPDIManchester corr_1((int8_t*)PREAMBLE_DATA, PREAMBLE_LENGTH, M, L, burst_est, 4);
+	CorrelatorDPDIManchester corr_2((int8_t*)PREAMBLE_DATA, PREAMBLE_LENGTH, M, L, burst_est, 4);
 	int16_t re;
 	int16_t im;
 	bool res = false;
@@ -538,11 +542,19 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t bu
 		//	break;
 		//}
 
-		xip_real est[6];
-		xip_real freq[6];
-		corr_stage.test_corr(sample, est, freq);
+		xip_complex sample_1;
+		xip_complex sample_2;
+		fir_1.process(sample, sample_1);
+		fir_2.process(sample, sample_2);
 
-		dbg_out << est[4] << '\t' << freq[4] << endl;
+		xip_real est_1;
+		xip_real freq_1;
+		corr_1.test_corr(sample_1, est_1, freq_1);
+		xip_real est_2;
+		xip_real freq_2;
+		corr_2.test_corr(sample_2, est_2, freq_2);
+
+		dbg_out << est_1 << '\t' << freq_1 << '\t' << est_2 << '\t' << freq_2 << endl;
 		i++;
 	}
 

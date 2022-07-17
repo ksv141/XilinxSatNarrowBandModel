@@ -87,14 +87,14 @@ bool CorrelatorDPDIManchester::process(xip_complex in, int16_t& dph, xip_real& c
     }
 }
 
-void CorrelatorDPDIManchester::test_corr(xip_complex in, xip_real* est, xip_real* dph)
+void CorrelatorDPDIManchester::test_corr(xip_complex in, xip_real& est, xip_real& dph)
 {
     // помещаем отсчет в FIFO
     m_correlationReg.pop_back();
     m_correlationReg.push_front(in);
 
     xip_complex rx{ 0, 0 };                           // текущее значение единичного коррелятора
-    xip_complex prev_rx{ 0, 0 };                          // предыдущее значение единичного коррелятора
+    xip_complex prev_rx{ 0, 0 };                      // предыдущее значение единичного коррелятора
     xip_complex SumL{ 0, 0 };                         // сумма по L дифференциальных корреляций (z)
 
     // FIFO-регистр обходим с конца
@@ -106,8 +106,8 @@ void CorrelatorDPDIManchester::test_corr(xip_complex in, xip_real* est, xip_real
         for (int j = 0; j < m_correlatorM; j++) {   // Вычисление значения xk для единичного коррелятора
             xip_complex res;
             xip_multiply_complex(*preamb_it, *reg_it, res); // единичный отклик rm*cm [-2^28, +2^28]
-            xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
-			//xip_complex_shift(res, -12);            // сдвигаем до [-2^12, +2^12]
+            //xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
+			xip_complex_shift(res, -14);            // сдвигаем до [-2^12, +2^12]
 			rx.re += res.re;
             rx.im += res.im;
 
@@ -128,35 +128,14 @@ void CorrelatorDPDIManchester::test_corr(xip_complex in, xip_real* est, xip_real
 	m_corr.push_front(SumL);
 	m_corr.pop_back();
 
-    m_corr_4 = m_corr_3;
-    m_corr_3 = m_corr_2;
-    m_corr_2 = m_corr_1;
-    m_corr_1 = SumL;
-
-    xip_complex sum_1{ m_corr_1.re + m_corr_3.re,  m_corr_1.im + m_corr_3.im };
-    xip_complex sum_2{ m_corr_2.re + m_corr_4.re,  m_corr_2.im + m_corr_4.im };
+    unsigned sum_mnch_step = m_baudMul / 2;
+    xip_complex sum_mnch{ m_corr[0].re + m_corr[sum_mnch_step].re,  m_corr[0].im + m_corr[sum_mnch_step].im };
 
     xip_real mag;
     xip_real arg;
-    //xip_cordic_rect_to_polar(m_corr_1, mag, arg);
-    //est[0] = mag;
-    //dph[0] = (int)arg >> m_argShift;
-    //xip_cordic_rect_to_polar(m_corr_2, mag, arg);
-    //est[1] = mag;
-    //dph[1] = (int)arg >> m_argShift;
-    //xip_cordic_rect_to_polar(m_corr_3, mag, arg);
-    //est[2] = mag;
-    //dph[2] = (int)arg >> m_argShift;
-    //xip_cordic_rect_to_polar(m_corr_4, mag, arg);
-    //est[3] = mag;
-    //dph[3] = (int)arg >> m_argShift;
-    xip_cordic_rect_to_polar(sum_1, mag, arg);
-    est[4] = mag;
-    dph[4] = (int)arg >> m_argShift;
-    //xip_cordic_rect_to_polar(sum_2, mag, arg);
-    //est[5] = mag;
-    //dph[5] = (int)arg >> m_argShift;
-
+    xip_cordic_rect_to_polar(sum_mnch, mag, arg);
+    est = mag;
+    dph = (int)arg >> m_argShift;
 }
 
 deque<xip_complex>& CorrelatorDPDIManchester::getBuffer()

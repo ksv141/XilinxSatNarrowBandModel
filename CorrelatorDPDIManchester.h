@@ -47,7 +47,7 @@ public:
 	 * @param cur_corr 
 	 * @param cur_est 
 	*/
-	void test_corr(xip_complex in, xip_real* est, xip_real* dph);
+	void test_corr(xip_complex in, xip_real& est, xip_real& dph);
 
 	/**
 	 * @brief возвращает буфер коррелятора
