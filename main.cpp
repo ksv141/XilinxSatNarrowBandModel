@@ -144,9 +144,9 @@ int main()
 	// 
 	// *********** AWGN *******************
 	//signal_pwr_measure("out_mod.pcm", 128);
-	//xip_real sig_pwr = 78.24;	// измеренная мощность сигнала (дБ)
-	//xip_real snr = 10;			// С/Ш (дБ)
-	//signal_awgn("out_mod.pcm", "out_mod_awgn.pcm", sig_pwr, snr, 2);
+	xip_real sig_pwr = 78.24;	// измеренная мощность сигнала (дБ)
+	xip_real snr = 3;			// С/Ш (дБ)
+	signal_awgn("out_mod_tm.pcm", "out_mod_awgn.pcm", sig_pwr, snr, 2);
 
 	// *********** Тестирование коррелятора на манчестерском коде
 	// Согласованная фильтрация
@@ -158,7 +158,7 @@ int main()
 	//signal_phase_time_est_stage("out_mod_matched.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
 	//cout << phase << endl;
 	int16_t freq_est = 0;
-	signal_freq_est_stage("out_mod_tm.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
+	signal_freq_est_stage("out_mod_awgn.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
 	cout << freq_est << endl;
 
 	//signal_freq_phase_shift("out_mod_matched.pcm", "out_mod_freq.pcm", -305, 0);
