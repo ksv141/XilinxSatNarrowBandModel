@@ -132,11 +132,13 @@ int main()
 
 	//************ Передискретизация на 8B ************
 	//signal_resample("out_mod.pcm", "out_mod_8B.pcm", 1, 2);
+	//signal_interpolate("out_mod.pcm", "out_mod_8B.pcm", 2);
+
 
 	//************ Фазовые и тактовые искажения ****************
 	//signal_resample("out_mod.pcm", "out_mod_res.pcm", 8000, 8001);
 	//signal_freq_phase_shift("out_mod_res.pcm", "out_mod_ph.pcm", 0, 0);
-	//signal_time_shift("out_mod_ph.pcm", "out_mod_tm.pcm", 512);
+	signal_time_shift("out_mod.pcm", "out_mod_tm.pcm", 256);
 
 	//signal_freq_shift("out_mod_tm.pcm", "out_mod_shifted.pcm", 300);
 	// 
@@ -156,7 +158,7 @@ int main()
 	//signal_phase_time_est_stage("out_mod_matched.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
 	//cout << phase << endl;
 	int16_t freq_est = 0;
-	signal_freq_est_stage("out_mod_8B.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
+	signal_freq_est_stage("out_mod_tm.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
 	cout << freq_est << endl;
 
 	//signal_freq_phase_shift("out_mod_matched.pcm", "out_mod_freq.pcm", -305, 0);

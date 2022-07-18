@@ -427,6 +427,10 @@ void signal_interpolate(const string& in, const string& out, unsigned interp_fac
 		coeff_file = "pph_interpolator_x16.fcf";
 		coeff_count = 384;
 	}
+	else if (interp_factor == 2) {
+		coeff_file = "pph_interpolator_x2.fcf";
+		coeff_count = 48;
+	}
 	else
 	{
 		cerr << "invalid interpolation factor" << endl;
@@ -554,7 +558,7 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t bu
 		xip_real freq_2;
 		corr_2.test_corr(sample_2, est_2, freq_2);
 
-		dbg_out << est_1 << '\t' << freq_1 << '\t' << est_2 << '\t' << freq_2 << endl;
+		dbg_out << est_1 << '\t' << est_2 << endl;
 		i++;
 	}
 
