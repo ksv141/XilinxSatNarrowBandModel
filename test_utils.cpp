@@ -551,14 +551,54 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t bu
 		fir_1.process(sample, sample_1);
 		fir_2.process(sample, sample_2);
 
+		xip_complex corr_val_1;
+		xip_complex corr_val_2;
 		xip_real est_1;
-		xip_real freq_1;
-		corr_1.test_corr(sample_1, est_1, freq_1);
 		xip_real est_2;
-		xip_real freq_2;
-		corr_2.test_corr(sample_2, est_2, freq_2);
+		int pos_1;
+		int pos_2;
 
-		dbg_out << est_1 << '\t' << est_2 << endl;
+		bool est_freq_1 = corr_1.freqEstimate(sample_1, corr_val_1, pos_1, est_1);
+		bool est_freq_2 = corr_2.freqEstimate(sample_2, corr_val_2, pos_2, est_2);
+
+		int channel;
+		xip_real est;
+		int pos;
+		int16_t freq;
+		if (est_freq_1) {
+			est_2 = corr_2.getMaxCorrVal(corr_val_2, pos_2);
+			if (est_1 > est_2) {
+				channel = 1;
+				est = est_1;
+				pos = pos_1;
+				freq = corr_1.countFreq(corr_val_1);
+			}
+			else {
+				channel = 2;
+				est = est_2;
+				pos = pos_2;
+				freq = corr_2.countFreq(corr_val_2);
+			}
+		}
+		else if (est_freq_2) {
+			est_1 = corr_1.getMaxCorrVal(corr_val_1, pos_1);
+			if (est_1 > est_2) {
+				channel = 1;
+				est = est_1;
+				pos = pos_1;
+				freq = corr_1.countFreq(corr_val_1);
+			}
+			else {
+				channel = 2;
+				est = est_2;
+				pos = pos_2;
+				freq = corr_2.countFreq(corr_val_2);
+			}
+		}
+
+		if (est_freq_1 || est_freq_2)
+			dbg_out << channel << '\t' << est << '\t' << pos << '\t' << freq << endl;
+
 		i++;
 	}
 

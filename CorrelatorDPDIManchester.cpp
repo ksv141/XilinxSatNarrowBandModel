@@ -9,85 +9,52 @@ CorrelatorDPDIManchester::CorrelatorDPDIManchester(int8_t* preamble_data, uint16
 	m_baudMul(baud_mul)
 {
 	m_argShift = static_cast<uint16_t>(log2(baud_mul * M));
+    m_sumMnchStep = baud_mul / 2;
 	init(preamble_data, preamble_length);
 }
 
-bool CorrelatorDPDIManchester::process(xip_complex in, int16_t& dph, xip_real& cur_est)
+bool CorrelatorDPDIManchester::freqEstimate(const xip_complex& in, xip_complex& corr_val, int& max_corr_pos, xip_real& cur_est)
 {
-    // помещаем отсчет в FIFO
-    m_correlationReg.pop_back();
-    m_correlationReg.push_front(in);
+    process(in);
 
-    xip_complex rx_1{ 0, 0 };                           // текущее значение единичного коррелятора
-    xip_complex reg_1{ 0, 0 };                          // предыдущее значение единичного коррелятора
-    xip_complex SumL_1{ 0, 0 };                         // сумма по L дифференциальных корреляций (z)
+    if (m_corrMnchReg.back() > m_burstEstML) {      // при превышении порога ищем максимальный из 4-х отсчетов, чтобы исключить ложный максимум
+        deque<xip_real>::iterator max_it;
+        max_it = std::max_element(m_corrMnchReg.begin(), m_corrMnchReg.end());
+        cur_est = *max_it;
+        int pos = std::distance(m_corrMnchReg.begin(), max_it);    // позиция максимального отклика
+        corr_val = m_corrSumValuesReg[pos];
+        max_corr_pos = pos;
 
-    // FIFO-регистр обходим с конца
-    deque<xip_complex>::reverse_iterator reg_it = m_correlationReg.rbegin();
+        // обнуляем регистры, если нужно повторить поиск корреляции
+        std::fill(m_corrMnchReg.begin(), m_corrMnchReg.end(), 0);
+        std::fill(m_corrSumValuesReg.begin(), m_corrSumValuesReg.end(), xip_complex{ 0,0 });
 
-	vector<xip_complex>::iterator preamb_it = m_preamble.begin();
-	for (int i = 0; i < m_correlatorL; i++) {       // Вычисление корреляционного отклика z по L корреляторам
-		rx_1 = xip_complex{ 0, 0 };
-		for (int j = 0; j < m_correlatorM; j++) {   // Вычисление значения xk для единичного коррелятора
-			xip_complex res;
-			xip_multiply_complex(*preamb_it, *reg_it, res); // единичный отклик rm*cm [-2^28, +2^28]
-			xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
-			rx_1.re += res.re;
-			rx_1.im += res.im;
-
-			reg_it += 4;
-			preamb_it++;
-		}
-		xip_complex res;
-		xip_complex reg_1_conj{ reg_1.re, -reg_1.im };
-		xip_multiply_complex(rx_1, reg_1_conj, res);  // Вычисление z
-		// сумма откликов [-2^27, +2^27]
-		xip_complex_shift(res, -11);                // сдвигаем до [-2^16, +2^16]
-		SumL_1.re += res.re;
-		SumL_1.im += res.im;
-
-		reg_1 = rx_1;                               // Запоминаем предыдущее значение единичного коррелятора
-	}
-
-    m_corr_4 = m_corr_3;                            // Храним 4 последних значения отклика
-    m_corr_3 = m_corr_2;
-    m_corr_2 = m_corr_1;
-    m_corr_1 = SumL_1;
-
-    xip_complex sum_1{ m_corr_1.re + m_corr_3.re,  m_corr_1.im + m_corr_3.im };     // суммарный отклик для 2-х смежных манчестерских отсчета
-    xip_complex sum_2{ m_corr_2.re + m_corr_4.re,  m_corr_2.im + m_corr_4.im };     // суммарный отклик для 2-х смежных манчестерских отсчета со сдвигом на такт по 2B
-
-    xip_real mag_1;
-    xip_real arg_1;
-    xip_cordic_rect_to_polar(sum_1, mag_1, arg_1);  // получаем ампилутуду и фазу
-    xip_real mag_2;
-    xip_real arg_2;
-    xip_cordic_rect_to_polar(sum_2, mag_2, arg_2);  // получаем ампилутуду и фазу
-
-    xip_real est;
-    xip_real est_dph;
-    if (mag_1 >= mag_2) {           // Выбор наибольшего значения из сдвинутых на такт 2B
-        est = mag_1;
-        est_dph = arg_1;
-    }
-    else {
-        est = mag_2;
-        est_dph = arg_2;
-    }
-
-    cur_est = est;
-
-    if (est > m_burstEstML) {       // Порог в соответствии с критерием максимального правдоподобия
-        // Оценка смещения по частоте (v = Arg{x}/(N*M)), в рад/симв
-        dph = (int)est_dph >> m_argShift;
         return true;
     }
-    else {
-        return false;
-    }
+
+    return false;
 }
 
-void CorrelatorDPDIManchester::test_corr(xip_complex in, xip_real& est, xip_real& dph)
+xip_real CorrelatorDPDIManchester::getMaxCorrVal(xip_complex& corr_val, int& max_corr_pos)
+{
+    deque<xip_real>::iterator max_it;
+    max_it = std::max_element(m_corrMnchReg.begin(), m_corrMnchReg.end());
+    xip_real cur_est = *max_it;
+    int pos = std::distance(m_corrMnchReg.begin(), max_it);    // позиция максимального отклика
+    corr_val = m_corrSumValuesReg[pos];
+    max_corr_pos = pos;
+    return cur_est;
+}
+
+int16_t CorrelatorDPDIManchester::countFreq(const xip_complex& corr_val)
+{
+    xip_real mag;
+    xip_real arg;
+    xip_cordic_rect_to_polar(corr_val, mag, arg);
+    return static_cast<int16_t>((int)arg >> m_argShift);
+}
+
+void CorrelatorDPDIManchester::test_corr(const xip_complex& in, xip_real& est, xip_real& dph)
 {
     // помещаем отсчет в FIFO
     m_correlationReg.pop_back();
@@ -106,8 +73,8 @@ void CorrelatorDPDIManchester::test_corr(xip_complex in, xip_real& est, xip_real
         for (int j = 0; j < m_correlatorM; j++) {   // Вычисление значения xk для единичного коррелятора
             xip_complex res;
             xip_multiply_complex(*preamb_it, *reg_it, res); // единичный отклик rm*cm [-2^28, +2^28]
-            //xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
-			xip_complex_shift(res, -14);            // сдвигаем до [-2^12, +2^12]
+            xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
+			//xip_complex_shift(res, -14);            // сдвигаем до [-2^12, +2^12]
 			rx.re += res.re;
             rx.im += res.im;
 
@@ -128,14 +95,23 @@ void CorrelatorDPDIManchester::test_corr(xip_complex in, xip_real& est, xip_real
 	m_corr.push_front(SumL);
 	m_corr.pop_back();
 
-    unsigned sum_mnch_step = m_baudMul / 2;
-    xip_complex sum_mnch{ m_corr[0].re + m_corr[sum_mnch_step].re,  m_corr[0].im + m_corr[sum_mnch_step].im };
+    xip_complex sum_mnch{ m_corr[0].re + m_corr[m_sumMnchStep].re,  m_corr[0].im + m_corr[m_sumMnchStep].im };
 
-    xip_real mag;
-    xip_real arg;
-    xip_cordic_rect_to_polar(sum_mnch, mag, arg);
-    est = mag;
-    dph = (int)arg >> m_argShift;
+    // вычисляем энергию отклика и продвигаем в регистр для поиска максимума
+    xip_complex sum_corr_conj{ sum_mnch.re, -sum_mnch.im };
+    xip_complex sum_corr_pwr;
+    xip_multiply_complex(sum_mnch, sum_corr_conj, sum_corr_pwr);
+    xip_real_shift(sum_corr_pwr.re, -16);            // сдвигаем до [-2^16, +2^16]
+    m_corrMnchReg.pop_back();
+    m_corrMnchReg.push_front(sum_corr_pwr.re);
+
+    est = sum_corr_pwr.re;
+
+    //xip_real mag;
+    //xip_real arg;
+    //xip_cordic_rect_to_polar(sum_mnch, mag, arg);
+    //est = mag;
+    //dph = (int)arg >> m_argShift;
 }
 
 deque<xip_complex>& CorrelatorDPDIManchester::getBuffer()
@@ -158,7 +134,69 @@ void CorrelatorDPDIManchester::init(int8_t* preamble_data, uint16_t preamble_len
     }
 
     // размер регистра равен размеру преамбулы с кратностью относительно бодовой скорости
-    m_correlationReg.resize(m_preamble.size() * m_baudMul, xip_complex{ 0, 0 });
+    m_correlationReg.resize(m_preamble.size() * m_baudMul + m_baudMul, xip_complex{ 0, 0 });
+
 	// размер регистра равен кратности коррелятора относительно бодовой скорости
 	m_corr.resize(m_baudMul, xip_complex{ 0, 0 });
+
+    // размер подобран для поиска максимального отклика с учетом боковых ложных максимумов (полукорреляция)
+    m_corrMnchReg.resize(m_baudMul, 0);
+    m_corrSumValuesReg.resize(m_baudMul, xip_complex{ 0, 0 });
+}
+
+void CorrelatorDPDIManchester::process(const xip_complex& in)
+{
+    // помещаем отсчет в FIFO
+    m_correlationReg.pop_back();
+    m_correlationReg.push_front(in);
+
+    xip_complex rx{ 0, 0 };                           // текущее значение единичного коррелятора
+    xip_complex prev_rx{ 0, 0 };                      // предыдущее значение единичного коррелятора
+    xip_complex SumL{ 0, 0 };                         // сумма по L дифференциальных корреляций (z)
+
+    // FIFO-регистр обходим с конца
+    deque<xip_complex>::reverse_iterator reg_it = m_correlationReg.rbegin() + m_baudMul;
+
+    vector<xip_complex>::iterator preamb_it = m_preamble.begin();
+    for (int i = 0; i < m_correlatorL; i++) {       // Вычисление корреляционного отклика z по L корреляторам
+        rx = xip_complex{ 0, 0 };
+        for (int j = 0; j < m_correlatorM; j++) {   // Вычисление значения xk для единичного коррелятора
+            xip_complex res;
+            xip_multiply_complex(*preamb_it, *reg_it, res); // единичный отклик rm*cm [-2^28, +2^28]
+            xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
+            //xip_complex_shift(res, -14);            // сдвигаем до [-2^12, +2^12]
+            rx.re += res.re;
+            rx.im += res.im;
+
+            reg_it += m_baudMul;
+            preamb_it++;
+        }
+        xip_complex res;
+        xip_complex prev_rx_conj{ prev_rx.re, -prev_rx.im };
+        xip_multiply_complex(rx, prev_rx_conj, res);  // Вычисление z
+        // сумма откликов [-2^27, +2^27]
+        xip_complex_shift(res, -11);                // сдвигаем до [-2^16, +2^16]
+        SumL.re += res.re;
+        SumL.im += res.im;
+
+        prev_rx = rx;                               // Запоминаем предыдущее значение единичного коррелятора
+    }
+
+    m_corr.push_front(SumL);                        // Храним 4 последних значения отклика
+    m_corr.pop_back();
+
+    // суммарный отклик для 2-х смежных манчестерских отсчета
+    xip_complex sum_mnch{ m_corr[0].re + m_corr[m_sumMnchStep].re,  m_corr[0].im + m_corr[m_sumMnchStep].im };
+
+    // продвигаем в регистр для последующей оценки частоты
+    m_corrSumValuesReg.pop_back();
+    m_corrSumValuesReg.push_front(sum_mnch);
+
+    // вычисляем энергию отклика и продвигаем в регистр для поиска максимума
+    xip_complex sum_corr_conj{ sum_mnch.re, -sum_mnch.im };
+    xip_complex sum_corr_pwr;
+    xip_multiply_complex(sum_mnch, sum_corr_conj, sum_corr_pwr);
+    xip_real_shift(sum_corr_pwr.re, -16);            // сдвигаем до [-2^16, +2^16]
+    m_corrMnchReg.pop_back();
+    m_corrMnchReg.push_front(sum_corr_pwr.re);
 }

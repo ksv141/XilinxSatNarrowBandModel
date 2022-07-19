@@ -73,7 +73,7 @@ const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации
 const int HIGH_SAMPLE_RATE = 1600000;				// частота дискретизации на входе демодулятора
 
 // параметры корреляторов
-const uint32_t DPDI_BURST_ML_SATGE_1 = 700;				// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
+const uint32_t DPDI_BURST_ML_SATGE_1 = 350;				// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
 const uint32_t DPDI_BURST_ML_SATGE_2 = 3500;			// порог обнаружения сигнала коррелятора второй стадии (точная оценка частоты)
 const uint32_t PHASE_BURST_ML_SATGE_3 = 2000;			// порог обнаружения сигнала коррелятора третьей стадии (оценка фазы и тактов)
 //const uint32_t PHASE_BURST_ML_SATGE_3 = 1700;			// порог обнаружения сигнала коррелятора третьей стадии (оценка фазы и тактов)
@@ -138,7 +138,7 @@ int main()
 	//************ Фазовые и тактовые искажения ****************
 	//signal_resample("out_mod.pcm", "out_mod_res.pcm", 8000, 8001);
 	//signal_freq_phase_shift("out_mod_res.pcm", "out_mod_ph.pcm", 0, 0);
-	signal_time_shift("out_mod.pcm", "out_mod_tm.pcm", 256);
+	signal_time_shift("out_mod.pcm", "out_mod_tm.pcm", 0);
 
 	//signal_freq_shift("out_mod_tm.pcm", "out_mod_shifted.pcm", 300);
 	// 
@@ -146,7 +146,7 @@ int main()
 	//signal_pwr_measure("out_mod.pcm", 128);
 	xip_real sig_pwr = 78.24;	// измеренная мощность сигнала (дБ)
 	xip_real snr = 3;			// С/Ш (дБ)
-	signal_awgn("out_mod_tm.pcm", "out_mod_awgn.pcm", sig_pwr, snr, 2);
+	//signal_awgn("out_mod_tm.pcm", "out_mod_awgn.pcm", sig_pwr, snr, 2);
 
 	// *********** Тестирование коррелятора на манчестерском коде
 	// Согласованная фильтрация
@@ -158,7 +158,7 @@ int main()
 	//signal_phase_time_est_stage("out_mod_matched.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
 	//cout << phase << endl;
 	int16_t freq_est = 0;
-	signal_freq_est_stage("out_mod_awgn.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
+	signal_freq_est_stage("out_mod_tm.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
 	cout << freq_est << endl;
 
 	//signal_freq_phase_shift("out_mod_matched.pcm", "out_mod_freq.pcm", -305, 0);
