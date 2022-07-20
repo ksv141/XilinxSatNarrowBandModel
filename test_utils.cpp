@@ -561,6 +561,14 @@ bool signal_freq_est_stage(const string& in, uint16_t M, uint16_t L, uint32_t bu
 		bool est_freq_1 = corr_1.freqEstimate(sample_1, corr_val_1, pos_1, est_1);
 		bool est_freq_2 = corr_2.freqEstimate(sample_2, corr_val_2, pos_2, est_2);
 
+		//xip_real dph_1 = 0;
+		//xip_real dph_2 = 0;
+		//corr_1.test_corr(sample_1, est_1, dph_1);
+		//corr_2.test_corr(sample_2, est_2, dph_2);
+
+		//dbg_out << est_1 << '\t' << est_2 << endl;
+
+
 		int channel;
 		xip_real est;
 		int pos;

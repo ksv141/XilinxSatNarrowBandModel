@@ -73,8 +73,8 @@ void CorrelatorDPDIManchester::test_corr(const xip_complex& in, xip_real& est, x
         for (int j = 0; j < m_correlatorM; j++) {   // Вычисление значения xk для единичного коррелятора
             xip_complex res;
             xip_multiply_complex(*preamb_it, *reg_it, res); // единичный отклик rm*cm [-2^28, +2^28]
-            xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
-			//xip_complex_shift(res, -14);            // сдвигаем до [-2^12, +2^12]
+            //xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
+			xip_complex_shift(res, -14);            // сдвигаем до [-2^12, +2^12]
 			rx.re += res.re;
             rx.im += res.im;
 
@@ -163,8 +163,8 @@ void CorrelatorDPDIManchester::process(const xip_complex& in)
         for (int j = 0; j < m_correlatorM; j++) {   // Вычисление значения xk для единичного коррелятора
             xip_complex res;
             xip_multiply_complex(*preamb_it, *reg_it, res); // единичный отклик rm*cm [-2^28, +2^28]
-            xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
-            //xip_complex_shift(res, -14);            // сдвигаем до [-2^12, +2^12]
+            //xip_complex_shift(res, -16);            // сдвигаем до [-2^12, +2^12]
+            xip_complex_shift(res, -14);            // сдвигаем до [-2^12, +2^12]
             rx.re += res.re;
             rx.im += res.im;
 

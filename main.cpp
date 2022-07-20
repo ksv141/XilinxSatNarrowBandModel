@@ -32,17 +32,17 @@ const double PIF_DOPL_Kp = 0.026311636311692643;	// коэффициент пропорциональной
 const double PIF_DOPL_Ki = 0.00035088206622480023;	// коэффициент интегральной составляющей ПИФ Допл (при specific_locking_band = 0.01)
 
 //********* структура кадра
-const size_t PREAMBLE_LENGTH = 32;					// размер преамбулы (бит)
-//const size_t PREAMBLE_LENGTH = 16;
+//const size_t PREAMBLE_LENGTH = 32;					// размер преамбулы (бит)
+const size_t PREAMBLE_LENGTH = 16;
 
 // преамбула 32 бита 0x1ACFFC1D
-const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 0,0,0,1,1,0,1,0,
-												1,1,0,0,1,1,1,1,
-												1,1,1,1,1,1,0,0,
-												0,0,0,1,1,1,0,1 };
+//const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 0,0,0,1,1,0,1,0,
+//												1,1,0,0,1,1,1,1,
+//												1,1,1,1,1,1,0,0,
+//												0,0,0,1,1,1,0,1 };
 // преамбула 16 бит 0xEB90
-//const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 1,1,1,0,1,0,1,1,
-//												  1,0,0,1,0,0,0,0 };
+const int8_t PREAMBLE_DATA[PREAMBLE_LENGTH] = { 1,1,1,0,1,0,1,1,
+												  1,0,0,1,0,0,0,0 };
 //const uint16_t FRAME_DATA_SIZE = 1115;				// размер данных в кадре (байт)
 const uint16_t FRAME_DATA_SIZE = 100;				// размер данных в кадре (байт)
 
@@ -73,7 +73,8 @@ const int INIT_SAMPLE_RATE = 2 * BAUD_RATE;			// начальная частота дискретизации
 const int HIGH_SAMPLE_RATE = 1600000;				// частота дискретизации на входе демодулятора
 
 // параметры корреляторов
-const uint32_t DPDI_BURST_ML_SATGE_1 = 350;				// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
+const uint32_t DPDI_BURST_ML_SATGE_1 = 50;				// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
+//const uint32_t DPDI_BURST_ML_SATGE_1 = 350;				// порог обнаружения сигнала коррелятора первой стадии (грубая оценка частоты)
 const uint32_t DPDI_BURST_ML_SATGE_2 = 3500;			// порог обнаружения сигнала коррелятора второй стадии (точная оценка частоты)
 const uint32_t PHASE_BURST_ML_SATGE_3 = 2000;			// порог обнаружения сигнала коррелятора третьей стадии (оценка фазы и тактов)
 //const uint32_t PHASE_BURST_ML_SATGE_3 = 1700;			// порог обнаружения сигнала коррелятора третьей стадии (оценка фазы и тактов)
@@ -88,27 +89,28 @@ int main()
 	init_xip_cordic_rect_to_polar();
 	init_channel_matched_fir();
 
-	//************** Демодуляция Fd_312.500_bez_encoder.iq (Fs=312500, B=15250) **************
+	//************** Демодуляция Fd_312.500_bez_encoder.iq (Fs=312500, B=15258) **************
 	// ФНЧ на 70 кГц
 	//signal_lowpass("Fd_312.500_bez_encoder.iq", "out_lowpass_70kHz.pcm", "lowpass_312500_70000_Hz.fcf", 23); // точность [+/- 2^15]
-	// Передискретизация интерполятором c 312500 на 16B=244000
-	//signal_resample("out_lowpass_70kHz.pcm", "out_244kHz.pcm", 312500, 244000);
+	// Передискретизация интерполятором c 312500 на 16B=244128
+	//signal_resample("out_lowpass_70kHz.pcm", "out_244kHz.pcm", 312500, 244128);
 	// Передискретизация полифазным фильтром с 16B до 4B (удвоенная манчестерская частота)
 	//signal_decimate("out_244kHz.pcm", "out_61kHz_x4.pcm", 4);
 	// Согласованная фильтрация
 	//signal_lowpass("out_61kHz_x4.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
 	// Обнаружение сигнала
 	//int16_t freq_est = 0;
-	//signal_freq_est_stage("out_mod_matched.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
+	//signal_freq_est_stage("out_61kHz_x4.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
+	//signal_freq_est_stage("out_61kHz_x4.pcm", 4, 4, DPDI_BURST_ML_SATGE_1, freq_est);
 	//cout << freq_est << endl;
-	// Обнаруженное смещение -331. Сносим в 0
+	// Обнаруженное смещение -286. Сносим в 0
 	//signal_freq_phase_shift("out_61kHz_x4.pcm", "out_61kHz_x4_freq.pcm", 286, 0);
 	// Согласованная фильтрация
 	//signal_lowpass("out_61kHz_x4_freq.pcm", "out_mod_matched.pcm", "rc_root_x2_25_19.fcf", 19); // точность [+/- 2^15]
 	// Домодуляция
-	//signal_estimate_demodulate_mnch_test("out_mod_matched.pcm", "out_mod_dmd.pcm");
+	signal_estimate_demodulate_mnch_test("out_mod_matched.pcm", "out_mod_dmd.pcm");
 
-	//return 0;
+	return 0;
 
 	// Тестирование упаковщика бит
 	//BitReceiver br(PREAMBLE_DATA, PREAMBLE_LENGTH, FRAME_DATA_SIZE, "data_dmd.bin");
@@ -157,9 +159,9 @@ int main()
 	//int t_count = 0;
 	//signal_phase_time_est_stage("out_mod_matched.pcm", PHASE_BURST_ML_SATGE_3, phase, time_shift, t_count);
 	//cout << phase << endl;
-	int16_t freq_est = 0;
-	signal_freq_est_stage("out_mod_tm.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
-	cout << freq_est << endl;
+	//int16_t freq_est = 0;
+	//signal_freq_est_stage("out_mod_tm.pcm", 4, 8, DPDI_BURST_ML_SATGE_1, freq_est);
+	//cout << freq_est << endl;
 
 	//signal_freq_phase_shift("out_mod_matched.pcm", "out_mod_freq.pcm", -305, 0);
 
